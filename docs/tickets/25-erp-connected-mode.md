@@ -4,7 +4,8 @@
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [ERP ADR-0011](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0011-ecosystem-and-sherwhyve.md),
 [สเปก ERP #1](https://github.com/SuruchBoss/PaynEat-ERP/issues/1), `docs/DECISIONS.md` #66
-**Blocked by:** [PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9) (สัญญาเชื่อมต่อ v1 ต้อง merge แล้ว),
+**Blocked by:** [#80](https://github.com/SuruchBoss/PaynEat/issues/80) (T01 migration แบบมีเวอร์ชัน — ตาราง mirror ต้องเข้าผ่านทางนี้, `docs/DECISIONS.md` #77),
+[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9) (สัญญาเชื่อมต่อ v1 ต้อง merge แล้ว),
 `24-telemetry-contract.md`
 
 ## ปัญหา

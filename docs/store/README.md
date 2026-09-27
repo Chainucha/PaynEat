@@ -36,8 +36,9 @@
   - บัญชี**องค์กร**ต้องมีหมายเลข D-U-N-S แต่ไม่ติดเงื่อนไข 12 คน/14 วัน
 - **ตรวจเครื่องหมายการค้าชื่อ PaynEat** (ERP ADR-0015 ข้อ 10) ก่อนเปิดหน้า store สาธารณะ — closed testing ยังไม่สาธารณะ
   เริ่มได้เลย แต่ต้องเสร็จก่อนขอ production
-- **ตัดสินใจ applicationId ให้จบก่อนอัปโหลดครั้งแรก**: ตอนนี้คือ `com.payneat.payneat_pos`
-  (`app/android/app/build.gradle.kts`) **เปลี่ยนไม่ได้อีกเลยหลังอัปโหลด .aab แรก** — ถ้าอยากได้ชื่ออื่นต้องแก้ใน PR ก่อน
+- **applicationId ตัดสินแล้ว: `suruch.boss.payneat`** (`app/android/app/build.gradle.kts`, เจ้าของเลือกเมื่อ 2026-09-27 —
+  `docs/DECISIONS.md` #78) **เปลี่ยนไม่ได้อีกเลยหลังอัปโหลด .aab แรก** ตอนสร้างแอปใน Play Console ให้ตรวจว่าตรงกับชื่อนี้
+  bundle identifier ของ iOS ใช้ชื่อเดียวกันไว้แล้วสำหรับตอนขึ้น App Store
 
 ### 2. สร้าง upload key
 

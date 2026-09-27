@@ -431,6 +431,11 @@ flutter run -d chrome --dart-define=DEMO_MODE=true
 > 💡 โหมดนี้สลับที่ `_bindDataSources()` **จุดเดียว** โดยไม่แก้หน้าจอ, controller หรือ use case เลย
 > เป็นตัวอย่างรูปธรรมว่าทำไมถึงแยกชั้นแบบ Clean Architecture
 
+**📱 จาก Google Play (อยู่ระหว่างทดสอบแบบปิด)** — build โหมดสาธิตเดียวกันนี้เป็นแอป Android ที่ลงนามแล้ว CI สร้างให้ทุกครั้งที่ติด
+tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ตอนนี้ยังไม่เปิดสาธารณะ และยัง**ต่อเซิร์ฟเวอร์ร้านจริงไม่ได้**
+จนกว่า ticket 29b จะให้ใส่ที่อยู่เซิร์ฟเวอร์ตอนใช้งาน — ใช้กับร้านจริงวันนี้ให้ใช้ทางเลือก A/B/D แล้วเปิดแอปผ่านเบราว์เซอร์ของเครื่อง
+หรือ build แอปเองด้วย `--dart-define=API_BASE_URL=...` ร้านที่อยากร่วมทดสอบทักมาได้ที่ [GitHub Issues](https://github.com/SuruchBoss/PaynEat/issues)
+
 ---
 
 ### 🅳 ทางเลือก D — Windows + Docker Desktop บรรทัดเดียว (ไม่ต้องมีโค้ดในเครื่อง)
@@ -950,6 +955,12 @@ cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุ
   ท้ายข้อความ error ให้ร้านแจ้งแล้วโยงหา log ได้) · `/metrics` แบบ Prometheus นับตาม route template อยู่พอร์ต 9464
   แยกจาก API ที่ docker compose ไม่เปิดออกนอกเครื่อง · ชื่อ เบอร์ อีเมล เลขผู้เสียภาษี ที่อยู่ รหัสผ่าน token QR token
   body และ query string ไม่เคยถึง log (มีเทสต์ยืนยัน) (ดู `docs/tickets/24-telemetry-contract.md`, `docs/DECISIONS.md` #68)
+- **ช่องทาง Google Play** — ติด tag `vX.Y.Z` แล้ว CI build ไฟล์ `.aab` ที่ลงนามด้วย upload key จาก GitHub Secrets (ไม่มี key
+  ใน repo) `versionCode` คำนวณจาก tag และตรวจว่าไม่ได้ลงนามด้วย debug key ก่อนแนบกับ GitHub Release · PR ที่แตะไฟล์ Android
+  build แบบเดียวกันด้วย key ทิ้งให้เห็นว่ายังลงนามได้ · ไอคอนแอปเป็นโลโก้ PaynEat (adaptive icon ของ Android 8+ และไอคอนตามธีม
+  Android 13+) · [หน้านโยบายความเป็นส่วนตัว](https://suruchboss.github.io/PaynEat/privacy.html) สามภาษา บอกตรงๆ ว่าตัวสแกน
+  บาร์โค้ด (Google ML Kit) ส่งข้อมูลวินิจฉัยให้ Google · คำตอบ Data safety ข้อความและภาพหน้า store สองภาษาใน `docs/store/`
+  (ดู `docs/tickets/29-android-google-play.md`, `docs/DECISIONS.md` #75)
 
 ---
 
@@ -1261,7 +1272,11 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 cd backend && npm test      # 388 เคส
 cd app && flutter test      # 492 เคส
 cd app && flutter test test_e2e   # 49 เคส (ต้อง npm ci ใน backend ก่อน)
+node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
+
+badge นับเทสต์ของ backend และแอป (388 + 492 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ `versionCode` ที่เพิ่มขึ้นเสมอ
+และ tag ผิดรูป/เกินช่วงหยุดพร้อมเหตุผล — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปจริงคุยกับ backend จริง (49 เคส)** — `app/test_e2e/` เปิด backend ตัวจริง
 (`node src/server.js`) บนพอร์ตสุ่ม + ฐานข้อมูลชั่วคราวใหม่ทุกไฟล์ แล้วให้โค้ดชั้น data/domain ตัวจริงของ
@@ -1695,9 +1710,14 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   ของเชนร้านที่มีโรงงานของตัวเอง เมื่อเชื่อมต่อ ERP เป็นเจ้าของวัตถุดิบ/สาขา เมนู ราคา และสูตร และ POS ส่งยอดขาย
   เข้า ERP ผ่าน outbox ครั้งเดียวแน่นอนแม้เน็ตหลุด — **ไม่เชื่อมต่อก็ใช้ได้เหมือนเดิมทุกอย่าง** (ดู tickets 25–28 และ
   `docs/DECISIONS.md` #66)
-- [ ] **แอปบน Google Play** — แอปเดียวใช้ได้ทุกร้าน: ใส่ที่อยู่เซิร์ฟเวอร์ร้านหรือสแกน QR ตอนเปิดครั้งแรก และลองโหมดสาธิตได้
-  โดยไม่มีเซิร์ฟเวอร์ ฟรีเหมือนเดิม — App Store ตามมาเมื่อมีร้านขอ ส่วนเซิร์ฟเวอร์ยังติดตั้งในร้าน (ดู ticket 29 และ
-  `docs/DECISIONS.md` #69)
+- [x] **ช่องทางขึ้น Google Play (ticket 29a)** — ทำแล้ว: CI build `.aab` ที่ลงนามด้วย upload key จาก GitHub Secrets เมื่อติด tag
+  (`versionCode` จาก tag แนบกับ GitHub Release) เป็นโหมดสาธิตสำหรับการทดสอบแบบปิด, ไอคอนแอป PaynEat แทนโลโก้ Flutter,
+  หน้านโยบายความเป็นส่วนตัวสามภาษา, คำตอบ Data safety และข้อความ/ภาพหน้า store ไทย-อังกฤษใน `docs/store/`
+  (ดู `docs/DECISIONS.md` #75) — ที่เหลือเป็นงานในบัญชีของเจ้าของ: เปิดบัญชี Play Console, ใส่ upload key ใน Secrets
+  และหาผู้ทดสอบ 12 คนต่อเนื่อง 14 วัน
+- [ ] **แอปบน Google Play ใช้ได้ทุกร้าน (ticket 29b)** — ใส่ที่อยู่เซิร์ฟเวอร์ร้านหรือสแกน QR ตอนเปิดครั้งแรก และกดลองโหมดสาธิต
+  ได้โดยไม่มีเซิร์ฟเวอร์ ฟรีเหมือนเดิม ทำหลัง ticket 25 — App Store ตามมาเมื่อมีร้านขอ ส่วนเซิร์ฟเวอร์ยังติดตั้งในร้าน
+  (ดู ticket 29 และ `docs/DECISIONS.md` #69)
 - [ ] **เว็บเปิดเร็วขึ้นสำหรับคนที่ไม่ได้ใช้ภาษาเกาหลี** — ฟอนต์เกาหลีเต็มชุด (3.2MB) โหลดเฉพาะเมื่อต้องใช้ ข้อมูลเกาหลียังไม่เป็น
   กล่องสี่เหลี่ยมแม้ในร้านที่ไม่มีอินเทอร์เน็ต (ดู ticket 30)
 - [x] **log/metric ตามสัญญา telemetry ของระบบนิเวศ** — ทำแล้ว: log แบบ JSON ตามสัญญา v1.1 (ค่าเริ่มต้นไม่มีชื่อ vendor,

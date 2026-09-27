@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # สร้างหน้า Landing ทั้ง 3 ภาษา (docs/landing/index.html, index.en.html, index.ko.html) จากเทมเพลตเดียว
+# พร้อมหน้าคู่มือติดตั้ง (install*.html) และนโยบายความเป็นส่วนตัว (privacy*.html)
 # และเขียนหัวข้อ "เมนูแก้ปัญหา" ลง README.md / README.en.md / README.ko.md (ระหว่าง <!-- stories:start/end -->)
 # ธีม "เว็บสั่งอาหารของร้านใหญ่" — ปัญหาของร้านถูกเล่าเป็น "เมนู" แต่ละจานรวมหลายฟีเจอร์ (docs/DECISIONS.md #70)
 #
@@ -15,6 +16,7 @@ from pathlib import Path
 
 from content import LANGS, TESTS
 from install_content import ACCOUNTS, INSTALL_LANGS
+from privacy_content import PRIVACY_LANGS
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / 'docs' / 'landing'
@@ -984,6 +986,73 @@ def install_page(c, ic):
                     css=CSS + INSTALL_CSS, script=INSTALL_JS)
 
 
+# ---------------------------------------------------------------------------------------------
+# หน้า "นโยบายความเป็นส่วนตัว" (docs/landing/privacy*.html) — URL ที่กรอกใน Google Play Console (ticket 29a, DECISIONS #75)
+# เนื้อหาอยู่ที่ privacy_content.py ใช้ header/hero/footer ชุดเดียวกับคู่มือติดตั้ง
+
+PRIVACY_PAGES = ('privacy.html', 'privacy.en.html', 'privacy.ko.html')
+
+PRIVACY_CSS = r"""
+/* ---- นโยบายความเป็นส่วนตัว ---- */
+.ghero .updated{margin-top:18px;font-size:14.5px;color:var(--muted)}
+.policy{max-width:46em;display:grid;gap:clamp(22px,3vw,30px)}
+.policy section{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(20px,3vw,30px);
+  box-shadow:var(--shadow-sm)}
+.policy h2{font-size:clamp(21px,2.4vw,26px);font-weight:700;text-wrap:balance}
+.policy p,.policy ul{margin:12px 0 0;color:var(--ink-2)}
+.policy ul{padding-left:1.25em;display:grid;gap:6px}
+.policy b{color:var(--ink)}
+.policy a{color:var(--brand-ink)}
+"""
+
+
+def privacy_header(c, pc):
+    langs = []
+    for code, label, href in (('th', 'ไทย', PRIVACY_PAGES[0]), ('en', 'EN', PRIVACY_PAGES[1]), ('ko', '한국어', PRIVACY_PAGES[2])):
+        current = ' aria-current="page"' if code == pc['code'] else ''
+        cls = ' class="ko"' if code == 'ko' else ''
+        langs.append(f'<a href="{href}" hreflang="{code}" lang="{code}"{cls}{current}>{label}</a>')
+    return f"""<a class="skip" href="#policy">{e(pc['skip'])}</a>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="{pc['home']}" aria-label="PaynEat POS">{LOGO}<span>PaynEat</span><small>POS</small></a>
+  <nav class="links" aria-label="{e(c['nav_label'])}"><a class="home" href="{pc['home']}">← {e(pc['home_label'])}</a></nav>
+  <div class="lang" role="navigation" aria-label="{e(c['lang_label'])}">{''.join(langs)}</div>
+  <a class="cart" href="{DEMO}">🖥 {e(c['cart'])}</a>
+</div></header>"""
+
+
+def privacy_block(item):
+    """ย่อหน้าเป็น str (HTML), รายการเป็น list ของ str (HTML)"""
+    if isinstance(item, list):
+        return '<ul>' + ''.join(f'<li>{li}</li>' for li in item) + '</ul>'
+    return f'<p>{item}</p>'
+
+
+def privacy_page(c, pc):
+    chips = ''.join(f'<li>{e(chip)}</li>' for chip in pc['chips'])
+    sections = ''.join(
+        f'<section id="{sid}" aria-labelledby="{sid}-h"><h2 id="{sid}-h">{e(title)}</h2>'
+        + ''.join(privacy_block(item) for item in items) + '</section>'
+        for sid, title, items in pc['sections']
+    )
+    body = ''.join([
+        privacy_header(c, pc),
+        '<main>',
+        f"""<section class="ghero" id="top"><div class="wrap"><div class="panel">
+  <p class="crumb"><a href="{pc['home']}">PaynEat POS</a><span aria-hidden="true">/</span><span>{e(pc['kick'])}</span></p>
+  <h1>{e(pc['heading'])}</h1>
+  <p class="lead">{e(pc['lead'])}</p>
+  <ul class="chips">{chips}</ul>
+  <p class="updated">{e(pc['updated_label'])} {e(pc['updated'])}</p>
+</div></div></section>""",
+        f'<section class="section" id="policy"><div class="wrap"><article class="policy">{sections}</article></div></section>',
+        '</main>',
+        footer(c, home=pc['home']),
+    ])
+    return document(pc['code'], pc['file'], PRIVACY_PAGES, pc['title'], pc['description'], c['og_image'], body,
+                    css=CSS + INSTALL_CSS + PRIVACY_CSS)
+
+
 README_START = '<!-- stories:start -->'
 README_END = '<!-- stories:end -->'
 README_WIDTH = {'phone': 220, 'tablet': 560, 'desktop': 560}
@@ -1053,6 +1122,10 @@ def main():
         html = install_page(c, ic)
         (OUT / ic['file']).write_text(html, encoding='utf-8')
         print(f"docs/landing/{ic['file']}  {len(html.encode('utf-8')) // 1024} KB")
+    for c, pc in zip(LANGS, PRIVACY_LANGS):
+        html = privacy_page(c, pc)
+        (OUT / pc['file']).write_text(html, encoding='utf-8')
+        print(f"docs/landing/{pc['file']}  {len(html.encode('utf-8')) // 1024} KB")
 
 
 if __name__ == '__main__':

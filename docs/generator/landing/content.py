@@ -403,6 +403,7 @@ TH = {
         'links': [
             ('ดูโค้ดบน GitHub', REPO),
             ('คู่มือติดตั้ง', 'install.html'),
+            ('นโยบายความเป็นส่วนตัว', 'privacy.html'),
             ('ความปลอดภัย (SECURITY.md)', f'{REPO}/blob/main/SECURITY.md'),
             ('บันทึกการตัดสินใจ', f'{REPO}/blob/main/docs/DECISIONS.md'),
             ('PaynEat ERP', ERP),
@@ -816,6 +817,7 @@ EN = {
         'links': [
             ('Code on GitHub', REPO),
             ('Install guide', 'install.en.html'),
+            ('Privacy policy', 'privacy.en.html'),
             ('Security (SECURITY.md)', f'{REPO}/blob/main/SECURITY.md'),
             ('Design decisions', f'{REPO}/blob/main/docs/DECISIONS.md'),
             ('PaynEat ERP', ERP),
@@ -1226,6 +1228,7 @@ KO = {
         'links': [
             ('GitHub에서 코드 보기', REPO),
             ('설치 안내', 'install.ko.html'),
+            ('개인정보 처리방침', 'privacy.ko.html'),
             ('보안 (SECURITY.md)', f'{REPO}/blob/main/SECURITY.md'),
             ('설계 결정 기록', f'{REPO}/blob/main/docs/DECISIONS.md'),
             ('PaynEat ERP', ERP),

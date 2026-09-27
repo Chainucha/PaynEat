@@ -97,6 +97,9 @@
 > 바꾸거나 `AUTO_SEED`를 끄셔야 합니다 — 안 바꾸면 서버가 켜지지 않도록 막아두었습니다.
 > 자세한 내용은 [SECURITY.md](SECURITY.md)에 있습니다.
 
+> 📱 **Google Play 앱은 비공개 테스트 중입니다** — 데모 모드 빌드라 아직 실제 매장 서버에 연결할 수 없습니다. 앱에서 서버 주소를
+> 입력하는 기능(티켓 29b)이 나오기 전까지 실제 매장은 위의 방법으로 서버를 설치하고 기기의 브라우저로 여세요.
+
 ---
 
 <!-- stories:start -->
@@ -396,6 +399,9 @@ POS는 매출과 고객 정보를 동시에 들고 있습니다. 보안은 나�
   모든 요청에 `x-request-id`가 붙습니다 — 실제 백엔드에 연결하면 오류 메시지 끝에 **요청 ID**가 표시되어, 매장에서 그
   ID로 문제를 알려 주시면 해당 요청의 로그를 바로 찾을 수 있습니다. `/metrics`(Prometheus)는 API와 다른 포트(9464)에
   있고 docker compose가 외부로 열지 않습니다 (`docs/DECISIONS.md` #68)
+- **앱은 개발자에게 아무것도 보내지 않습니다** — 광고도 사용 분석도 없습니다. 유일한 예외는 바코드 스캐너가 쓰는
+  Google ML Kit로, Google에 진단 데이터를 보냅니다. [개인정보 처리방침](https://suruchboss.github.io/PaynEat/privacy.ko.html)에
+  그대로 적어 두었습니다 (`docs/DECISIONS.md` #75)
 
 ### 운영 배포 전에 꼭 확인하세요
 
@@ -450,6 +456,7 @@ Developer Certificate of Origin(DCO)에 따라 서명(sign-off)해야 합니다 
 cd backend && npm test      # 388건 — 매장 전체 흐름 17단계 테스트 포함
 cd app && flutter test      # 492건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (929건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 49건은 실제 백엔드(`node src/server.js`)를 매번 새 임시 DB로 띄우고, 앱의

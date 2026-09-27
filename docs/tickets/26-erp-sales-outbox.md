@@ -21,13 +21,22 @@ ERP ต้องรู้ว่าแต่ละสาขาขายอะไ�
   - เมนูและตัวเลือกระบุด้วย**รหัสของ ERP** ที่ได้จาก ticket 27 (เมนูที่ยังไม่ผูกขายไม่ได้ในโหมดเชื่อมต่อ จึงไม่มีบรรทัดที่ไม่มีรหัส)
   - ให้บันทึกความหมายนี้ในสัญญาฝั่ง ERP ด้วย ดูคอมเมนต์ใน PaynEat-ERP#9
 - **outbox**: เขียนแถว event ลงตาราง outbox **ใน transaction เดียวกับการชำระเงิน** ถ้าการชำระเงินล้ม ต้องไม่มีแถว outbox
-  - idempotency key คงที่ต่อบรรทัดขาย (เช่น `<pos-instance>:<order-item-id>`) และไม่เปลี่ยนเมื่อ retry
+  - idempotency key คงที่ต่อบรรทัดขาย และไม่เปลี่ยนเมื่อ retry: **`<รหัส POS instance>-<order_item id เติม 0 ข้างหน้าให้ครบ 8 หลัก>`**
+    (ตัวอย่าง `SILOM-POS-00001234`) ต้องตรง `^[A-Za-z0-9_-]{8,64}$` ตามสัญญา 1.0.0 — ห้ามใช้ `:` เพราะ ERP จะแทน
+    `x-request-id` ด้วย id ของตัวเองแล้วการโยงหาย การเติม 0 ทำให้ยาวอย่างน้อย 8 ตัวเสมอ
   - ทำเฉพาะโหมดเชื่อมต่อ ส่วนโหมดเดี่ยวไม่เขียนแถวใดๆ
-- **ตัวส่ง** (background): ส่งตามลำดับ retry แบบ exponential backoff ใส่ `x-request-id` = idempotency key
-  - ERP ตอบ "ซ้ำ" = สำเร็จ
-  - 422 = dead-letter พร้อมเหตุผล
-  - credential ถูกเพิกถอน (401) = หยุดส่งทั้งคิวและแจ้งเตือน admin
-  - พยายามครบ N ครั้งแล้วยังไม่ผ่าน = dead-letter
+- **ตัวส่ง** (background): `POST /api/v1/sales-events` ทีละ event ตามลำดับ ใส่ `x-request-id` = idempotency key
+  ตามสัญญา POS v1 **1.0.0** ใน `contracts/` ของ PaynEat-ERP (PR PaynEat-ERP#55) — ทำตามตารางคำตอบของสัญญา:
+  - `201` หรือ `200` ที่มี `duplicate: true` = สำเร็จ ทำเครื่องหมายว่าส่งแล้ว
+  - `422 SALES_EVENT_REJECTED` = dead-letter พร้อม `details.reason` (`schema_invalid`, `pos_instance_mismatch`,
+    `branch_not_served`, `idempotency_key_reused`)
+  - `401 POS_CREDENTIAL_REJECTED` (`credential_revoked` / `credential_unknown`) = หยุดส่งทั้งคิวและแจ้งเตือน admin
+  - `429` = รอตาม `Retry-After` แล้วส่งตัวเดิมต่อ ไม่นับเป็นครั้งที่ล้ม
+  - `5xx` / เน็ตหลุด = retry แบบ exponential backoff ด้วย key เดิม พยายามครบ N ครั้งแล้วยังไม่ผ่าน = dead-letter
+- **รูปแบบ event** ตาม sales event v1: `schemaVersion: 1`, `idempotencyKey`, `posInstance`, `branchCode`, `saleTime`
+  (เวลาชำระพร้อม offset), `menuItemCode` และ**อย่างใดอย่างหนึ่ง**ระหว่าง `quantity` (จำนวนเต็มเป็นข้อความ) กับ `weightKg`
+  (กิโลกรัมเป็นข้อความ ทศนิยมไม่เกิน 3 ตำแหน่ง — แปลงจาก `weight_grams` ตรงๆ ไม่ผ่าน float) และ `modifiers: [{code, quantity}]`
+  ไม่มีฟิลด์ correlation id แยก เพราะ idempotency key คือ correlation id
 - **หน้าจอสถานะ outbox** (admin/manager): จำนวนที่รอส่ง, อายุของรายการที่เก่าที่สุด, รายการ dead-letter พร้อมเหตุผล
   และปุ่มส่งใหม่
 - **telemetry v1.2** (หัวข้อ "POS↔ERP integration lines"):
@@ -35,7 +44,7 @@ ERP ต้องรู้ว่าแต่ละสาขาขายอะไ�
   - log `outbox.delivery.failed` (`WARNING`, และ `ERROR` เมื่อ dead-letter) โดยมี idempotency key เป็น `correlation_id`
   - **ทุกบรรทัดเรื่องการส่ง รวมบรรทัดที่ล้มเหลว** มี `pos_instance` และ `location_code` ของสาขาใน event นั้น ห้ามเดาค่า
     ถ้าไม่รู้ให้เว้นไว้
-- **contract test**: event ที่ POS สร้างต้องผ่าน JSON Schema ของ sales event v1 จาก ERP ใน CI
+- **contract test**: event ที่ POS สร้างต้องผ่าน JSON Schema ของ sales event v1 จาก ERP ใน CI โดยปักสัญญาเวอร์ชัน 1.0.0
 
 ## ขอบเขตที่ตั้งใจไม่ทำ (ช่องว่างที่รู้ตัว บันทึกใน DECISIONS #66)
 - คืนเงินหรือ void หลังชำระแล้ว ยังไม่ส่งเข้า ERP ใน v1 (อาหารที่คืนเงินส่วนใหญ่ถูกทำไปแล้ว ส่วนต่างให้ ERP จับด้วยการตรวจนับ)

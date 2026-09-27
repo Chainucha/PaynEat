@@ -1920,6 +1920,8 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   `docs/DECISIONS.md` #69)
 - [ ] **A faster web app for anyone not using Korean** — the full Korean font (3.2MB) loads only when needed, and Korean
   data still never shows as empty boxes, even in a shop with no internet (see ticket 30)
+- [ ] **Link previews and web-app icons that match the real thing** — no stale figures in the share image, and the
+  PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — done: JSON logs per contract v1.1 (no vendor
   names by default, `LOG_FORMAT=gcp` for Google Cloud), a full `x-request-id` round trip with the app showing
   the request ID on errors, `/metrics` by route template on port 9464, never exposed outside the machine, and no

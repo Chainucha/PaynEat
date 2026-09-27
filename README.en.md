@@ -1894,6 +1894,8 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
 - [ ] **The app on Google Play** — one app for every restaurant: enter the shop server's address or scan a QR code on
   first start, or try demo mode with no server at all. Free, like everything else. The App Store follows when a
   restaurant asks for it; the server itself still installs in the shop (see ticket 29 and `docs/DECISIONS.md` #69)
+- [ ] **A faster web app for anyone not using Korean** — the full Korean font (3.2MB) loads only when needed, and Korean
+  data still never shows as empty boxes, even in a shop with no internet (see ticket 30)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — done: JSON logs per contract v1.1 (no vendor
   names by default, `LOG_FORMAT=gcp` for Google Cloud), a full `x-request-id` round trip with the app showing
   the request ID on errors, `/metrics` by route template on port 9464, never exposed outside the machine, and no

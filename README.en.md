@@ -2,10 +2,10 @@
 
 **Language:** [ไทย](README.md) · English · [한국어](README.ko.md)
 
-> A complete POS workflow: a waiter takes an order on a tablet → it pops up on the kitchen display instantly →
-> the cashier closes the bill → the manager watches sales on the web dashboard
+> A complete POS workflow: a waiter takes an order on a tablet → the order appears on the kitchen display immediately →
+> the cashier closes the bill → the manager monitors sales on the web dashboard
 
-> **Flutter (GetX + Clean Architecture)** + **Node.js / Express + SQLite + Socket.IO** — one codebase runs on
+> **Flutter (GetX + Clean Architecture)** + **Node.js / Express + SQLite + Socket.IO** — a single codebase runs on
 > Android, iOS, and Web
 
 <p align="center">
@@ -19,14 +19,14 @@
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
-**TL;DR** — A full restaurant point-of-sale system built to demonstrate end-to-end product engineering:
-a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) talking to a
-Node.js REST + WebSocket backend. Covers the complete floor-to-cash workflow: table map, order taking with
+**Overview** — A full restaurant point-of-sale system that demonstrates end-to-end product engineering:
+a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
+with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
 control and 1003 automated tests.
 
-> 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivatives are very
-> welcome, just keep the [`NOTICE`](NOTICE) file as required by the Apache License 2.0. Say hi on
+> 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
+> welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
 > [LinkedIn](https://www.linkedin.com/in/suruchboss)
 
 ---
@@ -234,49 +234,50 @@ Each item is a problem big restaurants really face every day, and each is fixed 
 > · [Thai edition](docs/video/PaynEat-POS-Demo-TH.mp4)
 > · [English edition](docs/video/PaynEat-POS-Demo-EN.mp4)
 >
-> Walks through the real usage path from opening the table map to closing the bill, built from 14 real
-> screenshots ([how it's regenerated](docs/video/README.md))
+> Follows the actual usage path from opening the table map to closing the bill, assembled from 14 screenshots
+> of the running application ([regeneration instructions](docs/video/README.md))
 
 > 📄 **Full feature walkthrough — 33 screens (30-page PDF)**
 > · [Thai edition](docs/PaynEat-POS-Features-TH.pdf) — explains the design and mechanics behind every screen
-> · [English edition](docs/PaynEat-POS-Features-EN.pdf) — written for restaurant owners: what each screen solves for the business
+> · [English edition](docs/PaynEat-POS-Features-EN.pdf) — written for restaurant owners: the business problem each screen addresses
 >
-> Every image is rendered straight from real code via the golden tests in
-> [`app/tool/screenshots`](app/tool/screenshots), so they can be regenerated any time the code changes
-> ([how to regenerate](docs/generator/README.md))
+> Every image is rendered directly from the application code by the golden tests in
+> [`app/tool/screenshots`](app/tool/screenshots), so the images can be regenerated whenever the code changes
+> ([regeneration instructions](docs/generator/README.md))
 
-> 🌐 **Landing page — a big restaurant's food-ordering site, not a single line of JavaScript**
+> 🌐 **Landing page — styled as a large restaurant's food-ordering site, built without any JavaScript**
 > · [Live on GitHub Pages](https://suruchboss.github.io/PaynEat/index.en.html) (English)
 > · [Thai version](https://suruchboss.github.io/PaynEat/)
 > · [Korean version](https://suruchboss.github.io/PaynEat/index.ko.html)
-> · [Install guide as a web page](https://suruchboss.github.io/PaynEat/install.en.html) — the "Install" item in the top menu (visible on phones too) and every "Install guide" link on the landing page lead here instead of the README on GitHub
+> · [Install guide as a web page](https://suruchboss.github.io/PaynEat/install.en.html) — the "Install" item in the top menu (also visible on phones) and every "Install guide" link on the landing page point here rather than to the README on GitHub
 > · [Korean README](README.ko.md)
 >
-> The system is told as a **problem menu of nine sets**, the way a food-ordering site works: pick your restaurant's
-> symptom from round category icons → a menu card for each set (ingredients = features, "what you get" = the outcome)
-> → a detail section with real screens and a "taste it in the demo" recipe → pricing as a basket where every line is
-> ฿0.00. On phones a floating basket bar leads to the demo. All three languages share one design, each with screenshots
-> genuinely in that language, and the butcher-counter set still carries the demo's scale label `2000101012504` drawn as a
-> genuine EAN-13 that scans off the screen — see `docs/DECISIONS.md` #70 (replacing the designs of #39/#53)
+> The system is presented as a **problem menu of nine sets**, modelled on a food-ordering site: the visitor selects the
+> restaurant's symptom from round category icons → a menu card for each set (ingredients = features, "what you get" =
+> the outcome) → a detail section with application screens and a "taste it in the demo" recipe → pricing presented as a
+> basket in which every line is ฿0.00. On phones, a floating basket bar links to the demo. All three languages share one
+> design, each with screenshots captured in that language, and the butcher-counter set includes the demo's scale label
+> `2000101012504` rendered as a valid EAN-13 barcode that can be scanned from the screen — see `docs/DECISIONS.md` #70
+> (which replaces the designs of #39/#53)
 >
 > The HTML is **generated** from [`docs/generator/landing/`](docs/generator/landing/) — `content.py` holds the copy in three
-> languages, `install_content.py` the install guide and `build_landing.py` the template. Running
-> `python3 docs/generator/landing/build_landing.py` writes `docs/landing/index*.html`, `docs/landing/install*.html` and the [problem menu](#-the-problem-menu) section of all three READMEs together. Images live in
-> `docs/landing/img/story/` (39 WebP files, about 1.5 MB; recapture with `app/tool/screenshots/story_test.dart`, then shrink with
-> `publish_story.py`). The AI assistant GIF lives in `docs/ai-demo/`, which `deploy-pages.yml` copies into the site.
+> languages, `install_content.py` the install guide, and `build_landing.py` the template. Running
+> `python3 docs/generator/landing/build_landing.py` writes `docs/landing/index*.html`, `docs/landing/install*.html` and the [problem menu](#-the-problem-menu) section of all three READMEs. Images are stored in
+> `docs/landing/img/story/` (39 WebP files, about 1.5 MB; recapture them with `app/tool/screenshots/story_test.dart`, then compress them with
+> `publish_story.py`). The AI assistant GIF is stored in `docs/ai-demo/`, which `deploy-pages.yml` copies into the site.
 
 > 🤖 **Live demo of the AI ask-your-data assistant (real Claude API call, not a mock)**
 >
 > <img src="docs/ai-demo/ai-assistant-demo.gif" width="780"><br>
 > <sub>Full-resolution still: <a href="docs/ai-demo/ai-assistant-live.png">ai-assistant-live.png</a></sub>
 >
-> Recorded from a real session: log in as admin → open the "AI Assistant" tab → type a question in
-> Thai → Claude calls a tool that pulls real sales data straight from the database (no scripted
-> response) → it answers with a chart and "sources" chips citing the exact endpoint it called.
-> ⚠️ **Unlike the gallery above**: this asset is **not** produced by a frozen-clock golden test, so
-> it isn't byte-for-byte reproducible (it needs a real `ANTHROPIC_API_KEY` and the seeded sample
-> data, and the model's wording can vary run to run). How to re-capture it, and why it's kept
-> separate from the golden-test set, is documented in
+> Recorded from a live session: log in as admin → open the "AI Assistant" tab → type a question in
+> Thai → Claude calls a tool that retrieves sales data directly from the database (no scripted
+> response) → the answer includes a chart and "sources" chips citing the exact endpoint that was called.
+> ⚠️ **Unlike the gallery above**, this asset is **not** produced by a frozen-clock golden test, so
+> it is not byte-for-byte reproducible (it requires a real `ANTHROPIC_API_KEY` and the seeded sample
+> data, and the model's wording can vary between runs). The re-capture procedure, and the reason the asset is
+> kept separate from the golden-test set, are documented in
 > [`docs/DECISIONS.md` #33](docs/DECISIONS.md)
 
 ---
@@ -285,8 +286,8 @@ Each item is a problem big restaurants really face every day, and each is fixed 
 
 - [The problem menu](#-the-problem-menu)
 - [Video, documents and landing page](#-video-documents-and-landing-page)
-- [Why this project](#-why-this-project)
-- [How to run it](#-how-to-run-it)
+- [Project goals](#-project-goals)
+- [Installation and getting started](#-installation-and-getting-started)
 - [Features](#-features)
 - [Tech stack](#-tech-stack)
 - [Architecture](#-architecture)
@@ -295,38 +296,40 @@ Each item is a problem big restaurants really face every day, and each is fixed 
 - [Realtime](#-realtime)
 - [API](#-api)
 - [Testing](#-testing)
-- [What's next](#-whats-next)
+- [Roadmap](#-roadmap)
 
 ---
 
-## 🎯 Why this project
+## 🎯 Project goals
 
-This project was built to be more than a to-do-list app — a system with real business rules to manage.
+The project is intended to go beyond a to-do-list-style sample application and to model a system with real
+business rules.
 
-A restaurant is a great problem for that — it has more hidden edge cases than it looks:
+A restaurant is well suited to this purpose because it involves more edge cases than are apparent at first,
+including:
 
-- When can an order still be edited? (Once the kitchen has started cooking it, editing is locked — a manager
-  has to void the item instead)
-- Is VAT calculated before or after the service charge? What about discounts?
-- Can the same table have two open bills at once?
-- A customer wants to split payment — half by QR, half in cash — that has to be supported
-- The kitchen and the waiters are on different devices and need to see the same state instantly
-- Money must never drift from floating-point rounding errors
+- When an order can still be edited (once the kitchen starts cooking an item, editing is locked and a manager
+  must void the item instead)
+- Whether VAT is calculated before or after the service charge, and how discounts are applied
+- Whether a single table may have two open bills at the same time
+- Supporting split payments, such as half by QR and half in cash
+- Keeping the kitchen and the waiters, who use different devices, in the same state at all times
+- Preventing monetary amounts from drifting because of floating-point rounding errors
 
-So this project prioritizes **correct business logic and a maintainable structure** over flashy UI.
+The project therefore prioritizes **correct business logic and a maintainable structure** over visual polish.
 
 ---
 
-## 🚀 How to run it
+## 🚀 Installation and getting started
 
-> Takes about 5 minutes · if you get stuck, see [Troubleshooting](#-troubleshooting) at the end of this section
+> Setup takes about 5 minutes. For common problems, see [Troubleshooting](#-troubleshooting) at the end of this section.
 >
-> **Not an IT person?** On Windows with Docker Desktop, skip to **Option D** below (paste one line — no code download, no build),
-> or just open the [live demo](https://suruchboss.github.io/PaynEat/app/).
+> **For non-technical users:** on Windows with Docker Desktop, use **Option D** below (a single command — no code download and no build),
+> or open the [live demo](https://suruchboss.github.io/PaynEat/app/).
 >
-> 📘 **Prefer an easy-to-read web page?** The [install guide](https://suruchboss.github.io/PaynEat/install.en.html) walks through all four ways step by step, with
-> copy buttons for every command, the demo accounts, a go-live checklist and troubleshooting — readable on a phone, no GitHub
-> needed (also in [Thai](https://suruchboss.github.io/PaynEat/install.html) and [Korean](https://suruchboss.github.io/PaynEat/install.ko.html)).
+> 📘 **Web-based install guide:** the [install guide](https://suruchboss.github.io/PaynEat/install.en.html) describes all four installation methods step by step,
+> with copy buttons for every command, the demo accounts, a go-live checklist, and troubleshooting. It is readable on a phone and does not
+> require GitHub (also available in [Thai](https://suruchboss.github.io/PaynEat/install.html) and [Korean](https://suruchboss.github.io/PaynEat/install.ko.html)).
 
 ### Step 0 — Get the code
 
@@ -355,17 +358,18 @@ cp .env.example .env     # first time only (Windows: copy .env.example .env)
 npm run dev
 ```
 
-`.env` holds a `JWT_SECRET` for local runs — the backend deliberately has no built-in default and refuses to
+`.env` provides a `JWT_SECRET` for local use. The backend intentionally has no built-in default and refuses to
 start without one (see `SECURITY.md`).
-A line containing `PaynEat POS API listening on http://localhost:3000` means it worked (the database and sample
-data are created automatically — nothing else to configure). Logs are JSON, one object per line, per the PaynEat
-ecosystem telemetry contract (ticket 24); every request the app makes shows up as a line like this, with its request ID:
+A line containing `PaynEat POS API listening on http://localhost:3000` indicates that the backend has started (the
+database and sample data are created automatically; no further configuration is required). Logs are written as JSON,
+one object per line, in accordance with the PaynEat ecosystem telemetry contract (ticket 24); each request from the app
+produces a line similar to the following, including its request ID:
 
 ```
 {"severity":"INFO","time":"2026-09-25T10:15:30.123Z","message":"PaynEat POS API listening on http://localhost:3000 (REST /api/v1, docs /docs, health /health, realtime socket.io)","labels":{"app":"payneat-pos-api","event":"app.log","correlation_id":"process-…"}}
 ```
 
-**Terminal 2 — App** (open a new window, keep the first one running)
+**Terminal 2 — App** (open a new terminal window and leave the first one running)
 
 ```bash
 cd app
@@ -373,62 +377,62 @@ flutter pub get
 flutter run -d chrome        # runs on web — fastest option
 ```
 
-Or if you want to see it on a phone/tablet:
+To run the app on a phone or tablet:
 
 ```bash
 flutter devices              # list connected devices
 flutter run                  # pick the device it finds
 ```
 
-> 📱 **Android emulator**: the app automatically points to `10.0.2.2:3000` (the host machine's loopback) —
-> no extra configuration needed
-> 📱 **Real phone on the same Wi-Fi**: pass your computer's IP, e.g.
+> 📱 **Android emulator**: the app automatically connects to `10.0.2.2:3000` (the host machine's loopback address);
+> no additional configuration is required
+> 📱 **Physical phone on the same Wi-Fi network**: pass the computer's IP address, e.g.
 > `flutter run --dart-define=API_BASE_URL=http://192.168.1.15:3000`
-> (find your IP with `ipconfig` on Windows / `ifconfig | grep inet` on macOS-Linux)
+> (find the IP address with `ipconfig` on Windows / `ifconfig | grep inet` on macOS-Linux)
 
 ---
 
 ### 🅱️ Option B — Docker (no Node or Flutter install needed)
 
-Best if you just want to see the system working without installing any toolchain.
+Suitable for evaluating the complete system without installing a development toolchain.
 
-**Requires only:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+**Requirement:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ```bash
 docker compose up --build
 ```
 
-The first run takes about 5–10 minutes (it downloads the Flutter SDK to build the web app). Subsequent runs
-are much faster.
+The first run takes about 5–10 minutes because it downloads the Flutter SDK to build the web app. Subsequent runs
+are considerably faster.
 
-Once you see `payneat-web` and `payneat-api` come up, open your browser:
+When both `payneat-web` and `payneat-api` have started, open the following in a browser:
 
-| Open this | You'll find |
+| URL | Contents |
 |---|---|
 | **http://localhost:8080** | 👈 **Start here** — the app's login page |
 | http://localhost:3000/docs | Interactive API docs (Swagger UI) |
 | http://localhost:3000/health | Health check for the API |
 
-**Want the live scale and document email (tour steps 27–28) in Docker?** Both are off by default — create a
-`.env` file **next to `docker-compose.yml`** (not `backend/.env`) with these two lines, then run
-`docker compose up --build` again:
+**Live scale and document e-mail in Docker (tour steps 27–28).** Both features are disabled by default. To enable
+them, create a `.env` file **next to `docker-compose.yml`** (not `backend/.env`) containing the following two lines,
+then run `docker compose up --build` again:
 
 ```bash
 SCALE_DRIVER=simulator
 MAIL_TRANSPORT=json
 ```
 
-You get a simulated scale that starts reporting right away, and emails are fully built but never actually sent
-(never use `simulator` in a real shop — the weights are made up).
+This enables a simulated scale that begins reporting immediately; e-mails are fully composed but never sent. Do not
+use `simulator` in a production shop, because the weights it reports are not real.
 
-Stop the system with `Ctrl+C`, then `docker compose down`
-(want a clean slate? `docker compose down -v`)
+Stop the system with `Ctrl+C`, then run `docker compose down`
+(use `docker compose down -v` to also delete all stored data).
 
 ---
 
 ### 🆑 Option C — Just look at the app, no backend needed
 
-If you just want to see the Flutter side without running a server:
+To run the Flutter app without a server:
 
 ```bash
 cd app
@@ -436,351 +440,347 @@ flutter pub get
 flutter run -d chrome --dart-define=DEMO_MODE=true
 ```
 
-The app uses local mock data instead — every feature works.
-(No cross-device realtime updates since there's no server, and data resets on page refresh.)
+The app uses local mock data instead, and every feature is available.
+Because there is no server, realtime updates across devices are not available, and data is reset when the page is refreshed.
 
-> 💡 This mode is switched at a **single point** (`_bindDataSources()`) without touching any screen,
-> controller, or use case — a concrete example of why the Clean Architecture split is worth it.
+> 💡 This mode is selected at a **single point** (`_bindDataSources()`) without changes to any screen,
+> controller, or use case — a concrete benefit of the Clean Architecture layering.
 
-**📱 From Google Play (in closed testing)** — this same demo-mode build is a signed Android app that CI builds for every
-`vX.Y.Z` tag (see [`docs/store/README.md`](docs/store/README.md), in Thai). It is not public yet and **cannot connect to a
-real shop server** until ticket 29b adds entering the server address in the app — for a real restaurant today, use
-option A/B/D and open the app in the device's browser, or build the app yourself with `--dart-define=API_BASE_URL=...`.
-Restaurants that want to join the test can ask on [GitHub Issues](https://github.com/SuruchBoss/PaynEat/issues).
+**📱 From Google Play (closed testing)** — the same demo-mode build is available as a signed Android app, which CI builds
+for every `vX.Y.Z` tag (see [`docs/store/README.md`](docs/store/README.md), in Thai). It is not yet public and **cannot
+connect to a shop server** until ticket 29b adds server-address entry to the app. For production use today, run
+option A/B/D and open the app in the device's browser, or build the app with `--dart-define=API_BASE_URL=...`.
+Restaurants interested in joining the test can request access via [GitHub Issues](https://github.com/SuruchBoss/PaynEat/issues).
 
 ---
 
 ### 🅳 Option D — Windows + Docker Desktop in one line (no code on your machine)
 
-For people who aren't in IT but want the real system (a server, realtime across windows, the simulated scale, PDFs) on
-their own computer — no git, Node or Flutter, and nothing to build: GitHub Actions builds the images every time `main`
-changes ([`demo-images.yml`](.github/workflows/demo-images.yml)) and puts them on the [`demo` release](https://github.com/SuruchBoss/PaynEat/releases/tag/demo).
+Intended for non-technical users who want to run the complete system (a server, realtime updates across windows, the
+simulated scale, PDFs) on their own computer without git, Node, or Flutter, and without building anything. GitHub Actions
+builds the images whenever `main` changes ([`demo-images.yml`](.github/workflows/demo-images.yml)) and publishes them to the [`demo` release](https://github.com/SuruchBoss/PaynEat/releases/tag/demo).
 
-1. Open **Docker Desktop** and wait until the bottom-left says **Engine running**
-2. Open **PowerShell** (press the Windows key, type `PowerShell`, Enter), paste this line and press Enter:
+1. Open **Docker Desktop** and wait until the bottom-left corner shows **Engine running**
+2. Open **PowerShell** (press the Windows key, type `PowerShell`, and press Enter), paste the following line, and press Enter:
 
    ```powershell
    [Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object Net.WebClient).DownloadString('https://github.com/SuruchBoss/PaynEat/releases/download/demo/install-demo.ps1'))
    ```
 
-3. Wait about 3–5 minutes (the first download is about 200 MB). Your browser opens **http://localhost:8080** → log in with `admin` / `admin123`
+3. Wait about 3–5 minutes (the first download is about 200 MB). The browser opens **http://localhost:8080**; log in with `admin` / `admin123`
 
-It is set up for demos: the simulated scale runs right away, emails are fully built but never sent, and after a reboot
-PaynEat comes back up on its own when Docker Desktop starts. The `PaynEat-Demo` folder in your user folder has
-double-click **Start / Stop / Reset PaynEat data** files (Reset = wipe every bill you tried and restore the sample data) —
-paste the same line again to update to the latest version (your data stays). The script it runs is
-[`deploy/demo/install-demo.ps1`](deploy/demo/install-demo.ps1) if you want to read it first.
+This installation is configured for demonstrations: the simulated scale runs immediately, e-mails are fully composed but
+never sent, and after a reboot PaynEat restarts automatically when Docker Desktop starts. The `PaynEat-Demo` folder in the
+user's home folder contains double-click **Start / Stop / Reset PaynEat data** files (Reset deletes every test bill and
+restores the sample data). Running the same line again updates to the latest version and keeps existing data. The script
+is available for review at [`deploy/demo/install-demo.ps1`](deploy/demo/install-demo.ps1).
 
-> ⚠️ Demo settings only (demo accounts, simulated scale, a published `JWT_SECRET`) — a real shop uses Option A/B with
-> [SECURITY.md](SECURITY.md) · the images are x86-64 (a typical Windows PC)
+> ⚠️ Demo settings only (demo accounts, simulated scale, a published `JWT_SECRET`). A production shop should use Option A/B
+> and follow [SECURITY.md](SECURITY.md). The images are x86-64 (a typical Windows PC).
 
 ---
 
 ### 👤 Login accounts
 
-The login page (demo mode) has a demo-account chip for every role — **one tap signs you in**, no typing needed.
+In demo mode, the login page provides a demo-account chip for every role; **a single tap signs in** without typing credentials.
 
-| Role | username | password | What they see |
+| Role | username | password | Access |
 |---|---|---|---|
 | Admin | `admin` | `admin123` | Everything (dashboard, menu management, staff, reports, settings) |
-| Manager | `manager` | `manager123` | Same as admin but can't delete user accounts |
+| Manager | `manager` | `manager123` | Same as admin, except deleting user accounts |
 | Waiter | `waiter1` | `waiter123` | Table map, orders, kitchen display |
 | Kitchen | `kitchen` | `kitchen123` | Kitchen display only |
 | Cashier | `cashier` | `cashier123` | Table map, orders, reports |
-| Waiter (2 branches) | `waiter2` | `waiter123` | Same as `waiter1` but has access to both the Sukhumvit and Thonglor branches — no quick-tap button on the login page, type it manually to try the branch picker (real backend only, see the tour below) |
+| Waiter (2 branches) | `waiter2` | `waiter123` | Same as `waiter1`, with access to both the Sukhumvit and Thonglor branches. There is no quick-sign-in chip on the login page; enter the credentials manually to try the branch picker (real backend only; see the tour below) |
 
-> ⚠️ **These accounts are for demo purposes only.** If you deploy this backend for real use (not just
-> running it locally), always change these passwords or disable `AUTO_SEED` first — see
+> ⚠️ **These accounts are for demonstration purposes only.** Before deploying this backend for production use (beyond
+> running it locally), change these passwords or disable `AUTO_SEED`. See
 > [`SECURITY.md`](SECURITY.md) for the full pre-deployment checklist.
 
 
-> 🧑‍🍳 **Letting a customer or staff try it with no one guiding them (UAT)?** — the login page and the QR menu
-> have a **globe** button in the top corner that switches ไทย / English / 한국어 before anyone signs in (the first
-> launch follows the device language). In demo mode (Option C / the demo link) **data lives on each device
-> separately** — a waiter ordering on a phone won't show up on a kitchen tablet. To try several devices at once,
-> run Option B with `API_BASE_URL=http://<your computer's IP>:3000` in a `.env` next to `docker-compose.yml` and open
-> `http://<your computer's IP>:8080` everywhere (step by step in [the install guide, way 3](https://suruchboss.github.io/PaynEat/install.en.html#docker)) —
-> Option D and Option B's default point the app at `localhost:3000`, so they only open on that computer (or try every role
-> on one device by switching accounts)
-> — see what was adjusted for this UAT in `docs/DECISIONS.md` #62
+> 🧑‍🍳 **Unguided user acceptance testing (UAT)** — the login page and the QR menu have a **globe** button in the top
+> corner that switches between ไทย / English / 한국어 before sign-in (the first launch follows the device language). In
+> demo mode (Option C / the demo link), **data is stored separately on each device**, so an order placed on a waiter's
+> phone does not appear on a kitchen tablet. To test several devices together, run Option B with
+> `API_BASE_URL=http://<your computer's IP>:3000` in a `.env` next to `docker-compose.yml` and open
+> `http://<your computer's IP>:8080` on every device (step-by-step instructions in [the install guide, way 3](https://suruchboss.github.io/PaynEat/install.en.html#docker)).
+> Option D and the default Option B configuration point the app at `localhost:3000`, so they are reachable only from that
+> computer (alternatively, test every role on one device by switching accounts). The adjustments made for UAT are
+> described in `docs/DECISIONS.md` #62
 
 ---
 
-### 🗺 5-minute tour — follow this to see the full cycle in action
+### 🗺 5-minute tour — a guided walkthrough of the full workflow
 
-> **Tip:** open **two browser windows side by side** (one as the waiter, one as the kitchen — use an
-> incognito window for the second one) to see orders bounce between screens in real time.
-> *(Works with Option A, B and D — Option C has no server, so no realtime.)*
+> **Tip:** open **two browser windows side by side** (one as the waiter and one as the kitchen, using an
+> incognito window for the second) to observe orders moving between screens in real time.
+> *(Applies to Options A, B, and D. Option C has no server and therefore no realtime updates.)*
 
-1. **Log in as a waiter** (`waiter1`) → see the table map split by zone; green means available
-2. **Tap table A1** → opens the order-taking screen
-3. **Tap "Stir-fried Pork with Basil"** → a sheet pops up to pick spice level and extras; try adding a
-   "Fried Egg (+15)" and typing a note to the kitchen
+1. **Log in as a waiter** (`waiter1`) → the table map is displayed, grouped by zone; green indicates an available table
+2. **Tap table A1** → the order-taking screen opens
+3. **Tap "Stir-fried Pork with Basil"** → a sheet appears for selecting the spice level and extras; add a
+   "Fried Egg (+15)" and enter a note for the kitchen
 4. **Tap the "Link a customer to this order (optional)" bar above the cart** → search by phone number;
-   if none found, tap **"Add new customer"**, enter a name + phone, then tap **"Save and select"** →
-   the bar instantly switches to showing the customer's name
-5. **Look at the cart on the right** → see the subtotal + 10% Service Charge + 7% VAT calculated instantly
-6. **Tap "Confirm & Send to Kitchen"** → lands on the order detail page with a bill number
-7. **Switch to the kitchen window** (`kitchen`) → the ticket appears on its own, no refresh needed.
-   Tap **"Start Cooking" → "Ready"** and watch the ticket move across columns
-8. **Back to the waiter window** → the status updates immediately; tap **"Served"**
-9. **Tap "Checkout / Close Bill"** → because you linked a customer in step 4, you'll see a **"Loyalty
-   points"** box showing their points balance (a brand-new customer has none to redeem yet). Try a split
-   payment: pick **"QR"** and pay 100 THB first → you'll see a **real, scannable PromptPay QR code**
-   (bound to the 100 THB automatically — try changing the amount and watch the QR update), then pay the
-   rest in cash (the system tracks the remaining balance and calculates change) — once fully paid, the
-   customer automatically earns points based on the purchase amount (25 THB per point by default)
-10. **You land on the receipt page** → see a **"Request tax invoice"** button — choose abbreviated
-    (issued instantly) or full (enter the customer's name + address) → get a document with a
-    continuous running number (e.g. `INV69-000001`) right away
-11. **Go back to the table map** → table A1 has already turned green again
-12. **Tap "New takeaway/delivery"** (the floating button in the bottom-right of the table map) → opens
-    the order-taking screen with no table attached (the header reads "Takeaway order") → add any menu
-    item and tap **"Confirm & Send to Kitchen"** → you'll see a message reading **"Order ... opened —
-    queue number N"**, and the same number shows up as a 🎫 badge on the order detail page (the queue
-    number runs on its own daily counter for takeaway orders only — a delivery rider references the
-    order by its bill number instead)
+   if no match is found, tap **"Add new customer"**, enter a name and phone number, then tap **"Save and select"** →
+   the bar immediately displays the customer's name
+5. **Review the cart on the right** → the subtotal, 10% Service Charge, and 7% VAT are calculated immediately
+6. **Tap "Confirm & Send to Kitchen"** → the order detail page opens with a bill number
+7. **Switch to the kitchen window** (`kitchen`) → the ticket appears automatically, without a refresh.
+   Tap **"Start Cooking" → "Ready"**; the ticket moves across the columns
+8. **Return to the waiter window** → the status has already been updated; tap **"Served"**
+9. **Tap "Checkout / Close Bill"** → because a customer was linked in step 4, a **"Loyalty
+   points"** box shows the customer's points balance (a new customer has no points to redeem yet). To test a split
+   payment, select **"QR"** and pay 100 THB first → the system displays a **real, scannable PromptPay QR code**
+   bound to the 100 THB (changing the amount regenerates the QR); then pay the remainder in cash (the system
+   tracks the remaining balance and calculates change). Once the bill is fully paid, the customer automatically
+   earns points based on the purchase amount (25 THB per point by default)
+10. **The receipt page opens** → tap **"Request tax invoice"** and choose abbreviated (issued immediately) or full
+    (enter the customer's name and address) → a document with a continuous running number (e.g. `INV69-000001`)
+    is issued immediately
+11. **Return to the table map** → table A1 is green (available) again
+12. **Tap "New takeaway/delivery"** (the floating button in the bottom-right corner of the table map) → the
+    order-taking screen opens with no table attached (the header reads "Takeaway order") → add any menu
+    item and tap **"Confirm & Send to Kitchen"** → the message **"Order ... opened — queue number N"** is
+    displayed, and the same number appears as a 🎫 badge on the order detail page (the queue number uses a
+    separate daily counter for takeaway orders only; delivery riders reference the order by its bill number
+    instead)
 13. **Switch back to the kitchen window** → the new ticket shows a 🥡 "takeaway" icon instead of a table
-    icon, so it's instantly distinguishable from a dine-in order without opening its details
-14. **Log out and log back in as `admin`** → open **Dashboard**, and the sale you just made is already in the
-    report, complete with the hourly chart and payment-method breakdown (best sellers are on the
-    **Reports** page)
-15. **Open the Customers/Loyalty page** (the 🎁 icon in the left nav — visible to both `admin` and
-    `manager`) → see the customer you created in step 4 with the points they just earned; tap their name
-    to see their purchase history (the order you just closed should be in there)
-16. **Open the Ingredients/Stock page** (the 📦 icon in the left nav) → "ปลาทับทิม" (tilapia — ingredient
-    names aren't translated) is already highlighted with a low-stock alert straight out of the seed data
-17. **Open the Audit Log page** (the 🕘 icon in the left nav — visible to `admin` only, not `manager`) →
-    filter by action type with the chips at the top; it's empty for now — go void the tax invoice you
-    issued in step 10 first (tap **"Void this invoice"** on that receipt page), then come back here and
-    you'll see a brand-new log entry with who did it, when, and the reason you typed — try the
-    **"Date range"** button to filter to just today, then tap the **download 📥** icon to export a
-    CSV file (opens in the browser, web only — see the 💰 Cashier/🖥️ Admin sections)
-18. **Open the AI Assistant page** (the ✨ icon in the left nav — visible to both `admin` and `manager`) →
-    type or tap an example question like **"What are today's sales?"** — the assistant always calls a
-    tool to pull real data before answering (never guesses or makes up a number), which you can verify
-    from the **"Sources"** chip under every answer naming exactly which tool it used — a question about
-    plottable numbers (like best-selling items) comes back with a bar chart attached too (you need to set
-    `ANTHROPIC_API_KEY` first for it to actually answer — without it you get a clear "not enabled" message
-    instead of a crash; see `docs/tickets/15-ai-ask-your-data.md`, `docs/DECISIONS.md` #33)
-19. **Log out and log back in as `cashier`** → open the **"Shift"** menu (the cashier icon in the left
-    nav) → enter a starting cash amount and tap **"Open shift"** → go take an order and collect payment
-    for a bill (repeat a shortened version of steps 2-9) → come back to the **"Shift"** page and tap
-    **"Close shift"**, entering the actual cash counted → you'll immediately see the variance against
-    what the system expected, plus a **"View Z-report"** button — tap it to see a full breakdown of that
-    shift's sales/tax/discounts (manual vs. promotion, separately)/payment methods, then tap **"Export
-    CSV"** to download it right away — past shifts under **"Shift history"** below can have their
-    Z-report viewed the same way (an open shift can't, since its cash reconciliation isn't computed
-    until it's closed; see `docs/tickets/12-report-export.md`)
-20. **Open the "Reports" menu** (visible from `cashier` upward) → tap the **download 📥** icon in the
-    top-right of the bar after picking a date range → export **"Sales summary"**, **"Top items"**, or
-    **"Sales by day"** → get a CSV file for the currently selected date range right away (browser only,
-    same as exporting the audit log in step 17)
-21. **(Option A/B/D with a real backend only — Demo Mode has a single branch, so skip this step there)**
-    Log out and log back in as `waiter2`/`waiter123` (type it manually, no quick-tap button) → you land
-    straight on the **"Select branch"** page because this account has access to 2 branches → pick
-    **"Thonglor branch"** → the table map now shows a completely different set of table names/menu items
-    (a seafood/grill theme), with no overlap with the Sukhumvit branch you've used for the whole tour
-22. **Log out and log back in as `admin`** → open the **Profile** page (the person icon in the bottom
-    bar/rail) → see a **"Current branch"** card, tap **"Switch branch"** → pick **"All branches"** (only
-    `admin` gets this option) → go back to **Dashboard/Reports** and you'll see sales totals combined
-    across both branches immediately, without switching branch-by-branch to add them up yourself
-23. **Log in as `waiter1` (or `manager`)** → back on the table map, tap the **⋯** button on table A1's card (or long-press the card) → pick
-    **"View self-order QR"** → see a real, scannable QR code for that table, then tap **"Copy link"**
-    and open it in a new tab/window (simulating a customer scanning it with their own phone) → you land
-    straight on table A1's menu, **no login at all** — add an item to the cart and tap **"Send to
-    Kitchen"** → switch back to the waiter/kitchen window and the item the customer just ordered shows
-    up in table A1's existing order immediately, exactly as if a staff member had entered it (stock
-    deduction/promotion calculation happen automatically too). Try it again on an **empty table** with
-    no order yet — the customer's very first order lands on the kitchen screen immediately too, rather
-    than sitting as a draft waiting for staff to send it (#46) — see `docs/tickets/17-qr-self-order.md`
+    icon, which distinguishes it from dine-in orders without opening its details
+14. **Log out and log in as `admin`** → open **Dashboard**; the sale just completed is already included in the
+    report, with the hourly chart and payment-method breakdown (best sellers are on the **Reports** page)
+15. **Open the Customers/Loyalty page** (the 🎁 icon in the left navigation, visible to `admin` and
+    `manager`) → the customer created in step 4 is listed with the points just earned; tap the name to view
+    the purchase history, which includes the order just closed
+16. **Open the Ingredients/Stock page** (the 📦 icon in the left navigation) → "ปลาทับทิม" (tilapia; ingredient
+    names are not translated) is already highlighted with a low-stock alert from the seed data
+17. **Open the Audit Log page** (the 🕘 icon in the left navigation, visible to `admin` only, not `manager`) →
+    filter by action type with the chips at the top. The log is empty at this point; first void the tax invoice
+    issued in step 10 (tap **"Void this invoice"** on that receipt page), then return here to see a new entry
+    recording who performed the action, when, and the reason entered. Use the **"Date range"** button to filter
+    to today, then tap the **download 📥** icon to export a CSV file (opens in the browser; web only — see the
+    💰 Cashier/🖥️ Admin sections)
+18. **Open the AI Assistant page** (the ✨ icon in the left navigation, visible to `admin` and `manager`) →
+    type or tap an example question such as **"What are today's sales?"**. The assistant always calls a tool to
+    retrieve real data before answering and never estimates or invents a number; the **"Sources"** chip under
+    each answer names the tool used. Questions about plottable figures (such as best-selling items) also return
+    a bar chart. `ANTHROPIC_API_KEY` must be set for the assistant to answer; without it, a clear "not enabled"
+    message is shown instead of an error (see `docs/tickets/15-ai-ask-your-data.md`, `docs/DECISIONS.md` #33)
+19. **Log out and log in as `cashier`** → open the **"Shift"** menu (the cashier icon in the left
+    navigation) → enter a starting cash amount and tap **"Open shift"** → take an order and collect payment
+    for a bill (an abbreviated version of steps 2-9) → return to the **"Shift"** page and tap
+    **"Close shift"**, entering the cash actually counted → the variance against the expected amount is
+    displayed immediately, together with a **"View Z-report"** button. The Z-report shows a full breakdown of
+    the shift's sales/tax/discounts (manual and promotion, separately)/payment methods; tap **"Export
+    CSV"** to download it. The Z-report of any past shift under **"Shift history"** can be viewed in the same
+    way (not for an open shift, because its cash reconciliation is computed only at close; see
+    `docs/tickets/12-report-export.md`)
+20. **Open the "Reports" menu** (available to `cashier` and above) → select a date range, then tap the
+    **download 📥** icon at the top right of the bar → export **"Sales summary"**, **"Top items"**, or
+    **"Sales by day"** → a CSV file for the selected date range is downloaded immediately (browser only,
+    as with the audit-log export in step 17)
+21. **(Option A/B/D with a real backend only — Demo Mode has a single branch, so skip this step)**
+    Log out and log in as `waiter2`/`waiter123` (enter the credentials manually; there is no quick-sign-in chip) →
+    the **"Select branch"** page opens directly because this account has access to 2 branches → select
+    **"Thonglor branch"** → the table map shows an entirely different set of table names/menu items
+    (a seafood/grill theme), with no overlap with the Sukhumvit branch used throughout the tour
+22. **Log out and log in as `admin`** → open the **Profile** page (the person icon in the bottom
+    bar/rail) → on the **"Current branch"** card, tap **"Switch branch"** → select **"All branches"** (available
+    to `admin` only) → return to **Dashboard/Reports**; sales totals are combined across both branches
+    immediately, with no need to switch branches and add the figures manually
+23. **Log in as `waiter1` (or `manager`)** → on the table map, tap the **⋯** button on table A1's card (or long-press the card) → select
+    **"View self-order QR"** → a real, scannable QR code for the table is displayed; tap **"Copy link"**
+    and open the link in a new tab/window (simulating a customer scanning it with a personal phone) → table A1's
+    menu opens directly, **with no login** — add an item to the cart and tap **"Send to
+    Kitchen"** → in the waiter/kitchen window, the item appears in table A1's existing order immediately,
+    exactly as if a staff member had entered it (stock deduction and promotion calculation are also applied
+    automatically). Repeat on an **empty table** with no open order: the customer's first order also reaches
+    the kitchen screen immediately, rather than remaining as a draft for staff to send (#46) — see
+    `docs/tickets/17-qr-self-order.md`
 
-24. **Switch the whole app's language** → open the **Profile** page (the person icon in the bottom
-    bar/rail) → under **Language**, switch between **ไทย / English / 한국어** → every screen changes
-    instantly without a restart, and the choice is remembered per device. Menu and zone names stay
-    exactly as the restaurant typed them (Korean gets the Latin menu names rather than Thai script),
-    while names already printed on kitchen tickets and past receipts do not move — those were
-    captured when the order was placed (see `docs/DECISIONS.md` #39)
+24. **Switch the application language** → open the **Profile** page (the person icon in the bottom
+    bar/rail) → under **Language**, select **ไทย / English / 한국어** → every screen changes
+    immediately without a restart, and the choice is stored per device. Menu and zone names remain
+    exactly as entered by the restaurant (the Korean interface shows the Latin menu names rather than Thai
+    script), while names already printed on kitchen tickets and past receipts do not change, because they
+    were recorded when the order was placed (see `docs/DECISIONS.md` #39)
 
-25. **Butcher counter: weigh + scan a scale label** (works in every option, Demo Mode included) → log
-    in as `cashier` → tap **"New takeaway/delivery"** → pick the **"Fresh Meat & Take-home"** category →
-    tap **"Beef Ribeye"** (its price tag reads **฿1,200.00/kg**) → a weighing dialog opens; type what the
-    scale shows, e.g. `0.485` → it previews **0.485 kg = ฿582.00** before you add it to the cart — then
+25. **Butcher counter: weigh an item and scan a scale label** (available in every option, including Demo Mode) →
+    log in as `cashier` → tap **"New takeaway/delivery"** → select the **"Fresh Meat & Take-home"** category →
+    tap **"Beef Ribeye"** (price **฿1,200.00/kg**) → a weighing dialog opens; enter the weight shown on the
+    scale, e.g. `0.485` → the dialog previews **0.485 kg = ฿582.00** before the item is added to the cart. Next,
     use the **"Scan barcode / scale label"** field next to the menu search (a USB/Bluetooth scanner types
-    straight into it; on wide screens it's already focused, on phones it just says "Scan", and it only appears once the menu has barcoded or scale-coded items): type `2000101012504` and press Enter = a
-    scale label for **Sliced Pork Belly 1.250 kg** lands in the cart with no weight typed at all, and
-    `8850999320014` = one bottle of Bulgogi Marinade. Each bag stays on its own line (never merged, even at
-    the same weight) and you can tap the weight chip to re-weigh before sending. After payment, the
-    **Ingredients/Stock** page shows ribeye down by exactly 0.485 kg (see
+    directly into it; on wide screens it is focused automatically, on phones it is labelled "Scan", and it appears only when the menu contains barcoded or scale-coded items): entering `2000101012504` and pressing Enter adds a
+    scale label for **Sliced Pork Belly 1.250 kg** to the cart without any weight entry, and
+    `8850999320014` adds one bottle of Bulgogi Marinade. Each bag remains on its own line (never merged, even at
+    the same weight), and the weight chip can be tapped to re-weigh before sending. After payment, the
+    **Ingredients/Stock** page shows the ribeye stock reduced by exactly 0.485 kg (see
     `docs/tickets/18-sell-by-weight.md`, `19-barcode-scale.md`)
-26. **Sell on credit to a trade customer → billing note → collect payment** → ring up another bill as in
-    step 25, but before confirming, tap the customer bar, search `021234567` and pick **"Soul BBQ Co.,
-    Ltd."** (50,000 limit, 30-day term; the demo in Thai or Korean shows the name the shop typed in that language) → tap **"Collect payment / close bill"** → a new **"On credit"**
+26. **Sell on credit to a trade customer → billing note → collect payment** → create another bill as in
+    step 25, but before confirming, tap the customer bar, search for `021234567`, and select **"Soul BBQ Co.,
+    Ltd."** (50,000 limit, 30-day term; the Thai and Korean demos show the name as entered in that language) → tap **"Collect payment / close bill"** → a new **"On credit"**
     method appears (only for customers with a credit limit, and only for non-waiter users), showing the
-    remaining credit and the due date → pay: the bill closes with no money in yet → open the
-    **Receivables** menu (the invoice icon) and the company is listed with what it owes → tap in →
-    **Issue billing note** gives document `BN69-000001` carrying both parties' tax IDs → **Collect
+    remaining credit and the due date → complete the payment: the bill closes without any money received → open the
+    **Receivables** menu (the invoice icon); the company is listed with its outstanding balance → open it →
+    **Issue billing note** produces document `BN69-000001` with both parties' tax IDs → **Collect
     payment** in cash → receipt `RC69-000001`, applied to the oldest bill first → close the shift (step
-    19): the cash the customer paid against their debt is counted in the drawer's expected total
-    automatically, and the Z-report lists it under its own **"Debt collected"** heading, separate from
-    sales (see `docs/tickets/20-b2b-credit.md`, `docs/DECISIONS.md` #50)
-27. **A cabled scale read live + scanning with the phone camera** → repeat step 25 and tap **"Beef
-    Ribeye"** → above the weight field there's a **"Scale (live)"** panel whose number follows the scale —
-    while it reads **"Weighing… wait until it settles"** the **"Use this weight"** button is disabled; once
-    it settles it shows **"Stable = ฿582.00"** and one tap puts it in the cart with nothing typed — Demo
-    Mode ships a **simulated scale** that cycles place → wobble → settle (0.485 / 1.250 / 0.730 kg) so you
-    can try it right away; a real shop sets `SCALE_DRIVER=tcp` or `serial` in `backend/.env` (try it with
-    no scale using `SCALE_DRIVER=simulator` — for Option B, put it in a `.env` next to `docker-compose.yml`) and every tablet/phone sees the same weight in real time —
-    then on a phone or the web with a camera, tap the **camera icon** at the end of the scan field next to
-    the menu search → frame the sauce bottle's barcode or a scale label (there's a torch button) →
-    it behaves exactly like a scanner (see `docs/tickets/22-live-scale-camera-scan.md`,
+    19): the cash paid against the debt is automatically included in the drawer's expected total, and the
+    Z-report lists it under a separate **"Debt collected"** heading, apart from sales (see
+    `docs/tickets/20-b2b-credit.md`, `docs/DECISIONS.md` #50)
+27. **Live reading from a cabled scale and scanning with the phone camera** → repeat step 25 and tap **"Beef
+    Ribeye"** → above the weight field, a **"Scale (live)"** panel follows the scale reading. While it shows
+    **"Weighing… wait until it settles"**, the **"Use this weight"** button is disabled; once the reading
+    settles, it shows **"Stable = ฿582.00"**, and a single tap adds the item to the cart without typing. Demo
+    Mode includes a **simulated scale** that cycles place → wobble → settle (0.485 / 1.250 / 0.730 kg) for
+    immediate testing; a production shop sets `SCALE_DRIVER=tcp` or `serial` in `backend/.env` (to test
+    without a scale, use `SCALE_DRIVER=simulator`; for Option B, place it in a `.env` next to `docker-compose.yml`), and every tablet/phone receives the same weight in real time.
+    Then, on a phone or on the web with a camera, tap the **camera icon** at the end of the scan field next to
+    the menu search → frame the sauce bottle's barcode or a scale label (a torch button is available) →
+    the code is handled exactly as scanner input (see `docs/tickets/22-live-scale-camera-scan.md`,
     `docs/DECISIONS.md` #54)
 28. **Late-payment interest → credit note → e-mail the PDF** → log in as `manager` → **Receivables** →
     open **"Soul BBQ Co., Ltd."** (Demo Mode seeds a credit sale of meat from 45 days ago, now 15 days
-    overdue, and the shop has late interest set to 12% a year with 7 grace days under **Settings → Credit
-    customers**) → tap **"Charge late interest"** → you see, per bill, how many days and on what principal
-    before you tap **"Issue interest notice"** → document `LF69-000001`, and that bill's balance goes up at
-    once → tap **"Issue credit note"**, pick the bill, enter 107 with the reason "fat trim over spec" → credit
-    note `CN69-000001` showing the **original value / corrected value / difference** with the VAT on the
-    difference split out, as the Revenue Department requires, and the balance drops by 107 → open any
-    billing note or credit note and tap **"Send e-mail"**: the customer's address is pre-filled (set under
-    the customer's **Edit credit** → **Billing e-mail**), add a message and send → the send history appears
-    under the document right away — Demo Mode simulates the send; the web app against a real backend
-    also offers **"Download PDF"**, an A4 Thai document with the amount in words (บาทถ้วน) and a
-    Buddhist-era date, and sends real e-mail once `SMTP_HOST` is set in `backend/.env` (against a real
-    backend: set the interest rate in Settings first, and a bill has to be past its due date plus the
-    grace days before there's any interest to charge) (see `docs/tickets/21-late-fees-credit-notes.md`,
+    overdue, and the shop's late interest is set to 12% a year with 7 grace days under **Settings → Credit
+    customers**) → tap **"Charge late interest"** → the number of days and the principal are shown per bill
+    before **"Issue interest notice"** is tapped → document `LF69-000001` is issued, and that bill's balance
+    increases immediately → tap **"Issue credit note"**, select the bill, and enter 107 with the reason "fat trim
+    over spec" → credit note `CN69-000001` shows the **original value / corrected value / difference**, with the
+    VAT on the difference stated separately as required by the Revenue Department, and the balance decreases by
+    107 → open any billing note or credit note and tap **"Send e-mail"**: the customer's address is pre-filled
+    (configured under the customer's **Edit credit** → **Billing e-mail**); add a message and send → the send
+    history appears under the document immediately. Demo Mode simulates the send; the web app connected to a
+    real backend also offers **"Download PDF"**, an A4 Thai document with the amount in words (บาทถ้วน) and a
+    Buddhist-era date, and sends real e-mail once `SMTP_HOST` is set in `backend/.env` (with a real
+    backend, set the interest rate in Settings first; interest accrues only after a bill passes its due date
+    plus the grace days) (see `docs/tickets/21-late-fees-credit-notes.md`,
     `23-document-pdf-email.md`, `docs/DECISIONS.md` #55–#57)
-29. **A request ID on the error message → found in the backend log** (against a real backend, Options A/B/D —
-    Demo Mode has no backend, so no ID) → log in as `admin` → **Staff** → add a new staff member with the
-    username `cashier` (already taken) → the rejection ends with a **"Request ID: pos-…"** line → search the
-    backend log for that ID (Option A: terminal 1 · Options B/D: `docker logs payneat-api`) and you land on
-    that request's JSON line — `severity` is `WARNING`, the path is there but not the name or password you
-    just typed. A shop that reports a problem with this ID lets whoever runs the system find that exact
-    request → open `http://localhost:3000/metrics` → 404, because the Prometheus metrics live on port 9464,
+29. **Trace a request ID from an error message to the backend log** (with a real backend, Options A/B/D —
+    Demo Mode has no backend and therefore no ID) → log in as `admin` → **Staff** → add a new staff member with
+    the username `cashier` (already in use) → the rejection message ends with a **"Request ID: pos-…"** line →
+    search the backend log for that ID (Option A: terminal 1 · Options B/D: `docker logs payneat-api`) to
+    locate the request's JSON line: `severity` is `WARNING`, and the path is recorded but the name and password
+    entered are not. When a shop reports a problem with this ID, the system operator can locate that exact
+    request → open `http://localhost:3000/metrics` → 404, because the Prometheus metrics are served on port 9464,
     which docker compose never exposes outside the machine (see `docs/tickets/24-telemetry-contract.md`,
     `docs/DECISIONS.md` #68)
 
-**Want to try the hidden business rules?**
+**Business rules you can try**
 
-- Log in as `admin` → **Staff** → your own row has no ⋮ menu, just a **"You"** badge (you can't demote,
-  deactivate or delete yourself — calling the API directly returns 400); other rows can change role or be
-  deactivated, but only after a confirmation dialog that says what will happen
-- Open an order → ⋮ → **Cancel order** → the confirm button stays disabled until you type a reason. Put items
-  in the cart and press back → you're asked before they're discarded. **Merge bills** → after picking the
-  other order you still confirm once more (a merge can't be undone)
-- On checkout, lower "Cash received" below the bill → the pay button greys out **and says how much is still
-  short** (it also explains when no shift is open). As `waiter1`, the order ⋮ menu has no "Discount" (cashier
-  and above only)
-- Try opening a second order at the same table → rejected, with a hint to add to the existing bill instead
-- Try changing an item's quantity after the kitchen taps "Start Cooking" → can't; only a manager can cancel
-  the item instead
-- Log in as `waiter1` and look for a "Manage Staff" menu → it's not there (and hitting the API directly
-  returns 403)
-- Log in as `admin` → **Menu Management** → toggle a menu item off, then go back to order taking — it shows
-  "Sold Out" and can't be tapped
-- Log in as `admin` → **Ingredients/Stock** → adjust "ปลาทับทิม" → pick "Deduct" and enter 3 (its exact
-  starting stock) → go back to order taking and "Steamed Fish with Lime" now shows "Sold Out" **on its own**,
-  with nobody toggling it manually (automatic stock deduction — see `docs/DECISIONS.md` #15) — hit "Receive"
-  to restock it and it re-enables itself the same way
-- Log in as `admin` → **Settings** → the **Connections** card → the PaynEat ERP part says **"Standalone"** — press **Connect** with a
-  credential that doesn't start with `pnepos_` → you're told at once, before the ERP is called (needs a real backend, option A/B/D;
+- Log in as `admin` → **Staff** → the signed-in user's own row has no ⋮ menu, only a **"You"** badge (users cannot
+  demote, deactivate, or delete their own account; a direct API call returns 400). Other rows allow role changes and
+  deactivation, but only after a confirmation dialog that describes the effect
+- Open an order → ⋮ → **Cancel order** → the confirm button remains disabled until a reason is entered. Add items
+  to the cart and press back → a confirmation is required before the items are discarded. **Merge bills** → after
+  the other order is selected, one further confirmation is required (a merge cannot be undone)
+- At checkout, reduce "Cash received" below the bill total → the pay button is disabled **and states the remaining
+  shortfall** (it also explains when no shift is open). For `waiter1`, the order ⋮ menu has no "Discount" option
+  (cashier and above only)
+- Open a second order at the same table → the request is rejected, with a suggestion to add items to the existing bill instead
+- Change an item's quantity after the kitchen taps "Start Cooking" → not permitted; only a manager can cancel
+  the item
+- Log in as `waiter1` → no "Manage Staff" menu is shown (and a direct API call returns 403)
+- Log in as `admin` → **Menu Management** → switch a menu item off, then return to order taking → the item shows
+  "Sold Out" and cannot be selected
+- Log in as `admin` → **Ingredients/Stock** → adjust "ปลาทับทิม" → select "Deduct" and enter 3 (its exact
+  starting stock) → return to order taking; "Steamed Fish with Lime" now shows "Sold Out" **automatically**,
+  without a manual toggle (automatic stock deduction — see `docs/DECISIONS.md` #15). Select "Receive"
+  to restock the ingredient, and the item is re-enabled in the same way
+- Log in as `admin` → **Settings** → the **Connections** card → the PaynEat ERP section shows **"Standalone"**. Select **Connect** with a
+  credential that does not start with `pnepos_` → the error is reported immediately, before the ERP is called (requires a real backend, option A/B/D;
   demo mode is always "Standalone"). With [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) running: register a POS in the
-  ERP for branch `SUKHUMVIT` and paste its credential → the ERP's items appear on **Ingredients/Stock** read-only, the add/edit/delete
-  buttons are gone, and branch `THONGLOR` is flagged as not assigned to this POS by the ERP → assign this POS another branch that
-  isn't on this device yet (say `SILOM`) and press **"Pull now"** → it shows in the "Branches the ERP assigns to this POS that are
-  not on this device" box with a **"Create here"** button → press it and confirm → the latest data is pulled first, then the branch
-  is created with the ERP's code and Thai name (and audit-logged) — if the ERP just moved an existing branch to that code, the
-  existing branch takes the code instead and the button says a branch with this code already exists, so there's no duplicate
+  ERP for branch `SUKHUMVIT` and paste its credential → the ERP's items appear read-only on **Ingredients/Stock**, the add/edit/delete
+  buttons are removed, and branch `THONGLOR` is flagged as not assigned to this POS by the ERP → assign this POS another branch that
+  does not yet exist on this device (for example `SILOM`) and select **"Pull now"** → the branch appears in the "Branches the ERP assigns to this POS that are
+  not on this device" box with a **"Create here"** button → select it and confirm → the latest data is pulled first, then the branch
+  is created with the ERP's code and Thai name (and recorded in the audit log). If the ERP has just moved an existing branch to that code, the
+  existing branch takes the code instead and the button reports that a branch with this code already exists, so no duplicate is created
   (see `docs/DECISIONS.md` #80)
-- Try requesting a tax invoice again for the same bill → rejected (only 1 active invoice per bill) —
-  log in as `manager` and tap **"Void this invoice"** on that same receipt page first, and you can
-  issue a fresh one for that bill again with a brand-new running number (see `docs/DECISIONS.md` #19)
-- Every action that's risky for front-of-house fraud (cancelling an order, voiding an item after it's
+- Request a second tax invoice for the same bill → rejected (only 1 active invoice per bill). After logging in as
+  `manager` and tapping **"Void this invoice"** on the same receipt page, a new invoice can be issued for that bill
+  with a new running number (see `docs/DECISIONS.md` #19)
+- Every action with front-of-house fraud risk (cancelling an order, voiding an item after it has been
   sent to the kitchen, editing a discount, deactivating/deleting/changing the role of a staff account,
-  editing VAT/service charge, a refund, voiding a tax invoice) is always recorded on the **Audit Log**
-  page (`admin` only) with who did it, when, and why — try any of the above, then go check that page
-  (see step 17 in the tour and `docs/DECISIONS.md` #21)
-- Log in as `admin` → switch the language to **한국어** (globe button) → **변경 이력** → every entry reads as a Korean
-  sentence, e.g. "주문 #ORD-… 취소", not a Thai one (Thai still shows the recorded sentence, which is the evidence) →
-  go to **고객/적립** and add a customer with any Korean name, e.g. "첫 손님" → it renders in full, no empty boxes
-  (see `docs/DECISIONS.md` #74)
-- Try redeeming more loyalty points than the customer has, or a points value greater than the amount
-  due this round → both are rejected outright (never silently capped), and if the order isn't linked to
-  a customer at all, the redeem control won't even show up — try paying part of a linked order's bill
-  with points and see how the "amount applied to the order" differs from the "amount actually collected"
-  (see `docs/DECISIONS.md` #22)
-- Log in as `admin` → **Settings** → clear the **"PromptPay ID"** field and save → go back to checkout
-  and pick "QR" again → you get a clear error message instead of a broken screen or an empty QR — put
-  a number back (e.g. `0812345678`) and try again to see a real QR come back (see
+  editing VAT/service charge, a refund, voiding a tax invoice) is recorded on the **Audit Log**
+  page (`admin` only) with the user, time, and reason. Perform any of these actions, then review that page
+  (see step 17 of the tour and `docs/DECISIONS.md` #21)
+- Log in as `admin` → switch the language to **한국어** (globe button) → **변경 이력** → every entry is displayed as a
+  Korean sentence, e.g. "주문 #ORD-… 취소", rather than Thai (the Thai interface continues to show the recorded sentence,
+  which serves as the evidence) → open **고객/적립** and add a customer with any Korean name, e.g. "첫 손님" → the name
+  renders completely, with no empty boxes (see `docs/DECISIONS.md` #74)
+- Redeem more loyalty points than the customer holds, or a points value greater than the amount due in the
+  current round → both are rejected outright (never silently capped), and if the order is not linked to a
+  customer, the redeem control is not shown. Pay part of a linked order's bill with points to see how the
+  "amount applied to the order" differs from the "amount actually collected" (see `docs/DECISIONS.md` #22)
+- Log in as `admin` → **Settings** → clear the **"PromptPay ID"** field and save → return to checkout
+  and select "QR" again → a clear error message is shown instead of a broken screen or an empty QR. Enter
+  a number again (e.g. `0812345678`) and retry; a valid QR is generated (see
   `docs/tickets/16-promptpay-qr.md`, `docs/DECISIONS.md` #26)
-- Log in as `admin` → **Menu Management** → change a menu item's price (e.g. 75 → 80 THB) → go back
-  to the **Audit Log** page → a new entry appears immediately reading "Change menu price ... 75 → 80"
-  — but if you only edit the name/description without touching the price, no new entry shows up
-  (deliberately logs only what actually affects the numbers, the same principle as editing an order
-  item's quantity — see `docs/DECISIONS.md` #27)
-- Copy table A1's QR link first (step 23), then log in as `admin`/`manager` and tap **"Regenerate
-  QR"** on that same sheet → open the old link you copied again → you immediately get a clear "table
-  not found" message (the old link stops working the instant you regenerate — no waiting for a token
+- Log in as `admin` → **Menu Management** → change a menu item's price (e.g. 75 → 80 THB) → open the
+  **Audit Log** page → a new entry reading "Change menu price ... 75 → 80" appears immediately. Editing only
+  the name/description, without changing the price, creates no entry (by design, only changes that affect the
+  figures are logged, following the same principle as editing an order item's quantity — see
+  `docs/DECISIONS.md` #27)
+- Copy table A1's QR link (step 23), then log in as `admin`/`manager` and tap **"Regenerate
+  QR"** on the same sheet → open the previously copied link → a clear "table not found" message is displayed
+  immediately (the old link becomes invalid as soon as the QR is regenerated, without waiting for a token
   to expire; see `docs/DECISIONS.md` #37)
-- Try typing a `/order/` link with random Latin letters/digits instead of a real token (e.g.
-  `/order/abc123`) → the same "table not found" message, with a QR icon rather than a
-  no-connection one and **no retry button**, because a dead link never starts working however many
-  times you tap — unlike a genuine network hiccup, which does offer a retry — and there's no way to
-  guess another table's token from its plain numeric table id, since the token is a separate random
-  value, not a sequential id — this behaves the same in Demo Mode and against the real backend,
-  including a real link whose tail got cut off when it was forwarded over LINE (#46)
-- Log in as `manager` → open a bill that was paid in **cash** → **refund** 20 THB → log in as
-  `cashier` → **close the shift**, counting exactly what's really in the drawer (starting float + cash
-  received − 20) → the variance is **0**, because the system subtracts cash handed back to customers
-  from the expected total on its own — a cashier who counts correctly is never recorded as short. And
-  try a cash refund with no shift open → rejected, just like taking cash with no shift (see
+- Enter a `/order/` link with random Latin letters/digits instead of a real token (e.g.
+  `/order/abc123`) → the same "table not found" message is shown, with a QR icon rather than a
+  no-connection icon and **no retry button**, because an invalid link cannot succeed on retry (a genuine
+  network interruption, by contrast, does offer a retry). Another table's token cannot be derived from its
+  numeric table id, because the token is a separate random value, not a sequential id. The behaviour is
+  identical in Demo Mode and with the real backend, including a genuine link truncated when forwarded over
+  LINE (#46)
+- Log in as `manager` → open a bill paid in **cash** → **refund** 20 THB → log in as
+  `cashier` → **close the shift**, counting exactly the cash in the drawer (starting float + cash
+  received − 20) → the variance is **0**, because the system automatically subtracts cash returned to
+  customers from the expected total; a cashier who counts correctly is never recorded as short. A cash refund
+  with no open shift is rejected, in the same way as a cash payment with no open shift (see
   `docs/DECISIONS.md` #44)
 - In step 25, change the label's last digit from `2000101012504` to `2000101012505` → **"Scale label
-  misread"** and the cart doesn't change — the system never guesses a weight from a misread code (one
-  smudged digit could turn 485 g into 4,850 g). And look for +/- on the meat line → there isn't one;
-  you can only re-weigh (see `docs/DECISIONS.md` #48–#49)
+  misread"** is shown and the cart is unchanged; the system never infers a weight from a misread code (a
+  single smudged digit could turn 485 g into 4,850 g). The meat line has no +/- controls; it can only be
+  re-weighed (see `docs/DECISIONS.md` #48–#49)
 - Log in as `manager` → **Customers/Loyalty** → open "Soul BBQ Co., Ltd." → **Edit credit** and set
-  the limit to 100 → back at checkout for a bill linked to that customer, pick **"On credit"** → the credit
-  box turns red, "exceeds the remaining credit", and the pay button is disabled (a direct API call gets a
-  409) — log in as `waiter1` and check out the same bill → there is no "On credit" option at all
-- Collect a debt payment in cash and **close the shift** first → log in as `manager`, open that receipt
-  and tap **Void** → rejected, because the cash already left with a closed shift's drawer (a receipt paid
-  by transfer can be voided, and the debt is owed again immediately)
-- Sell on credit (step 26), then open **Customers/Loyalty** → the company has no points for that bill yet,
-  because the shop hasn't been paid (checkout says so as soon as you pick "On credit") → **collect
-  payment** until that bill owes nothing and look again → its purchase history shows **"Earned … points"**
-  right away — a partial payment, or paying the principal while late interest is still owed, doesn't count,
-  and if a `manager` voids the receipt that cleared it, the points are taken back (as far as the customer
-  still has them; the balance never goes negative) (see `docs/DECISIONS.md` #59)
-- After issuing a billing note, look at **Issue billing note** again → it's disabled, because every open
-  bill is already on a note; void the old note first to bill again — and open any table's QR self-order
-  link (step 23): the weighed-meat items don't appear at all, since customers can't weigh for themselves
-- In step 27, try **"Use this weight"** while the scale still says "Weighing…" or "Scale overloaded" →
-  it's disabled — only a weight the scale itself reports as stable is accepted, a reading with nothing
-  new for over 3 seconds is dropped (the panel goes back to "Waiting for the scale…"), and a pulled cable
-  shows **"Scale not connected"** at once rather than leaving an old number to tap — typing the weight by
-  hand always still works (see `docs/DECISIONS.md` #54)
-- In step 28, tap **"Charge late interest"** again the same day → "No bills need interest today" (the next
-  run picks up from the following day, never double-charging a period) — collect that bill in full, then
-  try voiding the interest notice → rejected; void the payment receipt first — and as `admin`, try setting
-  late interest above 15% a year in Settings → it won't save (see `docs/DECISIONS.md` #55)
-- Log in as `cashier` and open the same receivables account → there's no **"Charge late interest"** /
-  **"Issue credit note"** (changing what a customer owes is manager-and-up; a direct API call gets 403),
-  but e-mailing documents still works — void a billing note and reopen it → the **"Send e-mail"** button
-  is gone, because a voided document should never reach the customer (a direct call gets 409); and clear
-  the customer's e-mail under "Edit credit" → the recipient field starts empty and Send stays disabled
-  until you type a valid address (a direct call with no recipient gets 400) (see `docs/DECISIONS.md`
-  #56–#57)
-- Against a real backend, add a new customer (name, phone, e-mail), search by that phone, then add a tax ID
-  and address under "Edit credit" → search the backend log for the name, phone or e-mail → **nothing**, not
-  even on the search request's line (paths are logged with the query string cut off); and open any table's
-  self-order QR link → the log shows `/api/v1/public/tables/:qrToken/…`, never the table's real token
-  (anyone holding it can order to that table) (see `docs/DECISIONS.md` #68)
+  the limit to 100 → at checkout for a bill linked to that customer, select **"On credit"** → the credit
+  box turns red with "exceeds the remaining credit", and the pay button is disabled (a direct API call receives
+  409). When `waiter1` checks out the same bill, no "On credit" option is offered
+- Collect a debt payment in cash and **close the shift** → log in as `manager`, open that receipt,
+  and tap **Void** → rejected, because the cash is already part of a closed shift's drawer (a receipt paid
+  by transfer can be voided, and the debt becomes outstanding again immediately)
+- Sell on credit (step 26), then open **Customers/Loyalty** → the company has not yet earned points for that
+  bill, because the shop has not been paid (checkout states this as soon as "On credit" is selected) →
+  **collect payment** until the bill is fully settled and check again → the purchase history immediately shows
+  **"Earned … points"**. A partial payment, or payment of the principal while late interest remains
+  outstanding, does not qualify, and if a `manager` voids the receipt that settled the bill, the points are
+  reversed (to the extent the customer still holds them; the balance never becomes negative) (see `docs/DECISIONS.md` #59)
+- After issuing a billing note, check **Issue billing note** again → it is disabled, because every open
+  bill is already on a note; void the existing note to bill again. Open any table's QR self-order
+  link (step 23): weighed-meat items do not appear, because customers cannot weigh items themselves
+- In step 27, select **"Use this weight"** while the scale shows "Weighing…" or "Scale overloaded" →
+  the button is disabled. Only a weight that the scale itself reports as stable is accepted; a reading with no
+  update for over 3 seconds is discarded (the panel returns to "Waiting for the scale…"); and a disconnected
+  cable shows **"Scale not connected"** immediately rather than leaving a stale value selectable. Manual
+  weight entry remains available at all times (see `docs/DECISIONS.md` #54)
+- In step 28, tap **"Charge late interest"** again on the same day → "No bills need interest today" (the next
+  run continues from the following day and never charges a period twice). Collect that bill in full, then
+  attempt to void the interest notice → rejected; the payment receipt must be voided first. As `admin`, set
+  late interest above 15% a year in Settings → the value is not saved (see `docs/DECISIONS.md` #55)
+- Log in as `cashier` and open the same receivables account → **"Charge late interest"** /
+  **"Issue credit note"** are not available (changing a customer's balance requires manager or above; a direct
+  API call receives 403), but e-mailing documents remains available. Void a billing note and reopen it → the
+  **"Send e-mail"** button is removed, because a voided document must never reach the customer (a direct call
+  receives 409). Clear the customer's e-mail under "Edit credit" → the recipient field starts empty and Send
+  remains disabled until a valid address is entered (a direct call with no recipient receives 400) (see
+  `docs/DECISIONS.md` #56–#57)
+- With a real backend, add a new customer (name, phone, e-mail), search by that phone number, then add a tax ID
+  and address under "Edit credit" → search the backend log for the name, phone, or e-mail → **no matches**,
+  including the search request's line (paths are logged with the query string removed). Open any table's
+  self-order QR link → the log shows `/api/v1/public/tables/:qrToken/…`, never the table's actual token
+  (anyone holding it can place orders for that table) (see `docs/DECISIONS.md` #68)
 
 ---
 
-### 🧪 Want to run the tests?
+### 🧪 Running the tests
 
 ```bash
 cd backend && npm test      # 439 cases — including a 17-step end-to-end walkthrough
@@ -793,20 +793,20 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
 ### 🔧 Troubleshooting
 
 <details>
-<summary><b>Click to see fixes</b></summary>
+<summary><b>Common problems and fixes</b></summary>
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `Error: ต้องตั้งค่า JWT_SECRET ใน environment` (JWT_SECRET must be set) | No `.env` file yet | `cp .env.example .env` (Windows: `copy .env.example .env`), then `npm run dev` again |
-| `Error: listen EADDRINUSE :::3000` | Something else is already using port 3000 | Change the port: `PORT=3001 npm run dev`, then run the app with `flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3001` |
-| App shows "Can't connect to server" | The backend isn't running, or it's on a different port | Open http://localhost:3000/health in a browser — if it doesn't respond, the backend isn't running |
-| Real phone can't connect | The phone doesn't know your computer's `localhost` | Pass your computer's IP: `--dart-define=API_BASE_URL=http://<your computer's IP>:3000`, and make sure it's on the same Wi-Fi |
-| `npm install` fails on `better-sqlite3` | Missing build tools to compile a native module | Windows: `npm install --global windows-build-tools` · macOS: `xcode-select --install` · Linux: `sudo apt install build-essential python3` |
-| `flutter run` complains about the Dart version | Flutter is older than 3.35 | `flutter upgrade` |
-| Docker build hangs on the Flutter step | It's downloading the ~2GB Flutter SDK for the first time | Wait for it to finish (5–10 min) — later builds use the cache |
-| Docker build fails at `flutter pub get` with `payneat_lints from path which doesn't exist` | Code from before #63 — the Dockerfile didn't copy the lint package yet | `git pull` the latest code, then `docker compose up --build` again |
-| The Docker web app loads but login doesn't work | The browser can't reach the API | Check that http://localhost:3000/health responds; if you changed the port, update `API_BASE_URL` in `docker-compose.yml` to match |
-| Want to wipe the data and start over | — | Local: `cd backend && npm run db:reset` · Docker: `docker compose down -v` |
+| `Error: ต้องตั้งค่า JWT_SECRET ใน environment` (JWT_SECRET must be set) | No `.env` file exists yet | `cp .env.example .env` (Windows: `copy .env.example .env`), then `npm run dev` again |
+| `Error: listen EADDRINUSE :::3000` | Another process is already using port 3000 | Change the port: `PORT=3001 npm run dev`, then run the app with `flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3001` |
+| App shows "Can't connect to server" | The backend is not running, or it is on a different port | Open http://localhost:3000/health in a browser; if there is no response, the backend is not running |
+| A physical phone cannot connect | `localhost` on the phone does not refer to the computer | Pass the computer's IP address: `--dart-define=API_BASE_URL=http://<your computer's IP>:3000`, and ensure both devices are on the same Wi-Fi network |
+| `npm install` fails on `better-sqlite3` | The build tools required to compile a native module are missing | Windows: `npm install --global windows-build-tools` · macOS: `xcode-select --install` · Linux: `sudo apt install build-essential python3` |
+| `flutter run` reports a Dart version error | Flutter is older than 3.35 | `flutter upgrade` |
+| The Docker build appears to stall at the Flutter step | The ~2GB Flutter SDK is being downloaded for the first time | Wait for the download to finish (5–10 min); later builds use the cache |
+| Docker build fails at `flutter pub get` with `payneat_lints from path which doesn't exist` | The code predates #63, and the Dockerfile does not yet copy the lint package | Run `git pull` to obtain the latest code, then `docker compose up --build` again |
+| The Docker web app loads but login fails | The browser cannot reach the API | Check that http://localhost:3000/health responds; if the port was changed, update `API_BASE_URL` in `docker-compose.yml` to match |
+| Resetting all data | — | Local: `cd backend && npm run db:reset` · Docker: `docker compose down -v` |
 
 </details>
 
@@ -817,301 +817,299 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
 ### 📱 Waiter (mobile / tablet)
 
 - **Table map** grouped by zone, showing status (available / occupied / reserved / billing) with the running
-  total and how long the table has been seated
-- **Order taking** — search the menu, filter by category, pick modifiers (spice level, fried egg +15), and
-  type a note to the kitchen
-- **Smart cart** — identical line items merge into one row automatically
-- **Sell by weight** — for items priced per kg, tap and type the weight the scale shows (e.g. 0.485) and
-  see the price before adding; each bag is its own line and can be re-weighed before sending; the weight
-  prints on kitchen tickets/receipts, and the price matches the backend to the satang (see
+  total and the time since the guests were seated
+- **Order taking** — search the menu, filter by category, select modifiers (spice level, fried egg +15), and
+  add a note for the kitchen
+- **Smart cart** — identical line items are merged into one row automatically
+- **Sell by weight** — for items priced per kg, tap the item and enter the weight shown on the scale (e.g. 0.485)
+  to preview the price before adding it; each bag is a separate line and can be re-weighed before sending; the
+  weight is printed on kitchen tickets/receipts, and the price matches the backend to the satang (see
   `docs/tickets/18-sell-by-weight.md`)
 - **Barcode/scale-label scanning** — a scan field next to the menu search works with any keyboard-style
   USB/Bluetooth scanner: a product barcode adds one item, an EAN-13 scale label adds the item with its
-  weight already filled in, and a misread label (bad check digit) warns instead of guessing (see
+  weight already filled in, and a misread label (invalid check digit) produces a warning rather than a guess (see
   `docs/tickets/19-barcode-scale.md`)
-- **A cabled scale, read live** — shops that connect a scale to the store server (USB/RS-232 cable or LAN)
-  get a live-weight panel in the weighing dialog with its state — weighing/stable/overloaded/not
-  connected; **"Use this weight"** works only once it's stable, and every device in the shop sees the
-  same number in real time. Shops without one keep typing the weight as before
+- **Live reading from a cabled scale** — shops that connect a scale to the store server (USB/RS-232 cable or LAN)
+  get a live-weight panel in the weighing dialog showing the scale state (weighing/stable/overloaded/not
+  connected); **"Use this weight"** is enabled only when the reading is stable, and every device in the shop sees
+  the same value in real time. Shops without a connected scale continue to enter the weight manually
   (see `docs/tickets/22-live-scale-camera-scan.md`)
 - **Scan with the phone camera** — a camera button at the end of the scan field (Android/iOS/web) reads
-  barcodes and scale labels into the same path as a scanner, with a torch; it says clearly when camera
-  permission is denied, and devices without a camera don't show the button
-- **Live bill preview** — see Service Charge and VAT calculated the instant you order, no need to wait on
+  barcodes and scale labels through the same path as a scanner, with a torch control; a clear message is shown
+  when camera permission is denied, and the button is hidden on devices without a camera
+- **Live bill preview** — Service Charge and VAT are calculated as items are added, without waiting for
   the server
-- **Adding a second round** — add items to an already-open order, and mark kitchen-finished items as
-  served — if the connection drops right when you confirm, it still works: the items are queued on the
-  device and sent automatically once the connection is back (see the 🔐 System section)
-- **Move table** — if a customer wants to move seats, move the whole order to a new table without
-  cancelling and re-ordering
-- **Merge bills** — instantly combine two tables sitting together into a single bill (item list and kitchen
-  status stay intact)
-- **Link a customer to the order**, optionally, when opening a new order — search by phone number or add a
-  new customer in the same window; leave it unlinked and the order still works as usual (see the 💰 Cashier
-  section for redeeming loyalty points)
+- **Adding a second round** — add items to an open order and mark items finished by the kitchen as served.
+  If the connection drops at the moment of confirmation, the items are queued on the device and sent
+  automatically when the connection is restored (see the 🔐 System section)
+- **Move table** — move an entire order to another table when guests change seats, without cancelling and
+  re-entering it
+- **Merge bills** — combine the orders of two tables into a single bill (the item list and kitchen status are
+  preserved)
+- **Link a customer to the order** (optional) when opening a new order — search by phone number or add a
+  new customer in the same window; unlinked orders work as usual (see the 💰 Cashier section for redeeming
+  loyalty points)
 - **New takeaway/delivery button** — a floating button on the table map opens an order with no table
-  attached at all; takeaway orders automatically get a daily-resetting queue number (delivery orders skip
-  it — a rider references the order by its bill number instead, since nobody's standing around waiting to
-  be called), shown both in the send-to-kitchen confirmation and on the order detail page
-- **View self-order QR** — tap the **⋯** button on a table's card (or long-press it) to see a real, scannable QR code for that table
-  plus a copy-link button; `admin`/`manager` get an extra **"Regenerate QR"** button for when a printed
-  QR gets lost or photographed by someone else (invalidates the old link immediately — see
+  attached; takeaway orders automatically receive a queue number that resets daily (delivery orders do not,
+  because riders reference the order by its bill number and no customer is waiting to be called), shown in
+  the send-to-kitchen confirmation and on the order detail page
+- **View self-order QR** — tap the **⋯** button on a table's card (or long-press it) to display a scannable QR code for that table
+  and a copy-link button; `admin`/`manager` also have a **"Regenerate QR"** button for when a printed
+  QR is lost or photographed by an unauthorized person (the old link is invalidated immediately — see
   `docs/tickets/17-qr-self-order.md`)
 
 ### 🙋 Customers (scan the table QR — no login)
 
-- **Order from their own phone** — scan the QR code at the table and the menu loads instantly, no need
-  to flag down staff or sign up/log in at all
-- **See their table's current order** — if staff already opened an order (or someone else at the same
-  table ordered first), its items and running total show up right away
-- **Pick modifiers/leave a kitchen note, just like staff can** — add to the cart and tap "Send to
-  Kitchen" — the item shows up on the table map/kitchen display in real time exactly as if a staff
+- **Order from their own phone** — scanning the QR code at the table opens the menu immediately, with no need
+  to call staff or to sign up/log in
+- **See their table's current order** — if staff have already opened an order (or another guest at the same
+  table ordered first), its items and running total are shown immediately
+- **Select modifiers and add a kitchen note, as staff can** — add items to the cart and tap "Send to
+  Kitchen"; the item appears on the table map/kitchen display in real time exactly as if a staff
   member had entered it, with the same automatic stock deduction and promotion calculation (no
-  duplicated business logic — it's the same service/endpoints staff use)
-- **Sold-by-weight items are hidden, with a line saying so** — "Meat sold by weight — order it from staff", so
-  customers don't assume it's sold out (#64) — (fresh meat by the kg) since staff have to weigh them — a direct
-  API call is rejected too
-- **Payment still goes through the cashier** — this feature is order-taking only, not self-checkout
+  duplicated business logic; the same service/endpoints as staff orders are used)
+- **Sold-by-weight items (fresh meat by the kg) are hidden, with an explanatory line** — "Meat sold by weight —
+  order it from staff", so customers do not assume the items are sold out (#64); staff must weigh these items,
+  and a direct API call is also rejected
+- **Payment is handled by the cashier** — this feature covers order taking only, not self-checkout
   (see `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37)
-- **A broken link says plainly that the link doesn't work** — whether the QR has been regenerated, the
-  table deactivated, or the link got cut off while being forwarded (e.g. over LINE) — instead of a
-  "no internet" screen whose retry button never succeeds (#46)
+- **An invalid link is reported clearly as invalid** — whether the QR has been regenerated, the
+  table deactivated, or the link truncated while being forwarded (e.g. over LINE) — instead of a
+  "no internet" screen whose retry button can never succeed (#46)
 
 ### 🔥 Kitchen (KDS display)
 
-- Tickets pop up automatically in real time — no refresh needed
+- Tickets appear automatically in real time, without a refresh
 - Split into 3 status columns: pending → cooking → ready
 - **Flags tickets waiting over 15 minutes** with a red border and flame icon
-- **Mis-taps can be undone** — after a status change an **"Undo"** bar stays at the bottom for 8 seconds and steps
-  back one stage (cooking → pending, ready → cooking) without calling a manager; served items can't be undone
-  (see `docs/DECISIONS.md` #64)
-- One-tap status changes, designed to be easy to hit with messy hands in a kitchen
-- Toggle a menu item sold-out instantly, without waiting on a manager
-- **Distinct icon/label per order type** on every ticket — table 🍽️ / takeaway 🥡 / delivery 🛵 — obvious
+- **Accidental taps can be undone** — after a status change, an **"Undo"** bar remains at the bottom for 8 seconds
+  and reverts the item by one stage (cooking → pending, ready → cooking) without manager involvement; served items
+  cannot be reverted (see `docs/DECISIONS.md` #64)
+- One-tap status changes, designed to be easy to operate in kitchen conditions
+- Mark a menu item as sold out immediately, without manager involvement
+- **Distinct icon/label per order type** on every ticket — table 🍽️ / takeaway 🥡 / delivery 🛵 — identifiable
   at a glance without opening the ticket's details
 
 ### 💰 Cashier
 
-- **Shift open/close** — enter a starting cash float when opening a shift; count the real cash when closing
-  and the system automatically compares it against the expected total (cash drawer reconciliation) — a
-  shift must be open before payments can be accepted. The expected total **subtracts cash refunded to
-  customers during the shift**, so a cashier who counts correctly is never recorded as short (see
-  `docs/DECISIONS.md` #44)
-- **Z-report (shift close report)** — view a breakdown of sales/tax/discounts (manual vs. promotion,
-  separately)/payment methods for any shift, past or just-closed, along with its cash reconciliation
-  (starting/expected/counted/variance) — export it as a CSV for accounting right away (see
+- **Shift open/close** — a starting cash float is entered when a shift opens; at close, the counted cash is
+  compared automatically with the expected total (cash drawer reconciliation). A shift must be open before
+  payments can be accepted. The expected total **excludes cash refunded to customers during the shift**, so a
+  cashier who counts correctly is never recorded as short (see `docs/DECISIONS.md` #44)
+- **Z-report (shift close report)** — a breakdown of sales/tax/discounts (manual and promotion,
+  separately)/payment methods for any past or just-closed shift, together with its cash reconciliation
+  (starting/expected/counted/variance), exportable as CSV for accounting (see
   `docs/tickets/12-report-export.md`)
-- Accepts 4 payment methods: cash, PromptPay/QR, credit card, bank transfer — plus **"On credit"**, which
-  appears only when the order is linked to a customer with a credit limit (and the user isn't a waiter),
-  showing the remaining credit and due date; over the limit, the pay button is disabled; points can't be
-  combined with it, and a credit bill earns its points **when the debt is paid in full**, not when it's
-  charged — on the net amount after credit notes, excluding interest, and taken back if the receipt that
-  cleared it is voided (see `docs/tickets/20-b2b-credit.md`, `docs/DECISIONS.md` #59)
-- **Receivables** (admin/manager/cashier) — credit customers listed longest-overdue first → a per-customer
-  statement: what's owed split by age (not yet due/1–30/31–60/61–90/over 90 days), every credit bill,
-  **Issue billing note** to bundle open bills (`BN69-000001`, with both parties' tax IDs), **Collect
-  payment** applied oldest bill first or against the billing note the customer brings, giving receipt
-  `RC69-000001` — cash collected against debt goes into the shift's drawer and counts toward the expected
-  total at close, and the Z-report shows it under its own "Debt collected" heading (see
+- Supports 4 payment methods: cash, PromptPay/QR, credit card, and bank transfer — plus **"On credit"**, which
+  appears only when the order is linked to a customer with a credit limit (and the user is not a waiter) and
+  shows the remaining credit and due date. Over the limit, the pay button is disabled. Points cannot be combined
+  with credit, and a credit bill earns its points **when the debt is paid in full**, not when it is charged — on
+  the net amount after credit notes, excluding interest; the points are reversed if the receipt that settled the
+  bill is voided (see `docs/tickets/20-b2b-credit.md`, `docs/DECISIONS.md` #59)
+- **Receivables** (admin/manager/cashier) — credit customers are listed with the longest-overdue first → a
+  per-customer statement shows the outstanding balance by age (not yet due/1–30/31–60/61–90/over 90 days) and
+  every credit bill; **Issue billing note** bundles open bills (`BN69-000001`, with both parties' tax IDs);
+  **Collect payment** is applied to the oldest bill first or against the billing note presented by the customer,
+  producing receipt `RC69-000001`. Cash collected against debt goes into the shift's drawer and counts toward the
+  expected total at close, and the Z-report shows it under a separate "Debt collected" heading (see
   `docs/DECISIONS.md` #50)
-- **Late-payment interest** (manager and up) — "Charge late interest" first shows, per bill, how many days
-  and on what principal, using the shop's annual rate and grace days (simple interest that picks up where
-  the last run stopped, never overlapping), then issues an interest notice `LF69-000001` added to each
-  bill's balance; it can be voided (= waiving the interest) only while that interest is unpaid (see
+- **Late-payment interest** (manager and above) — "Charge late interest" first shows the number of days and the
+  principal for each bill, based on the shop's annual rate and grace days (simple interest that continues from
+  where the previous run stopped, without overlap), then issues an interest notice `LF69-000001` that is added to
+  each bill's balance; the notice can be voided (which waives the interest) only while the interest is unpaid (see
   `docs/tickets/21-late-fees-credit-notes.md`, `docs/DECISIONS.md` #55)
-- **Separate credit notes** (manager and up) — credit a credit-sale bill (damaged/returned goods, wrong
-  price) and get credit note `CN69-000001` with the original value/corrected value/difference, the VAT on
-  the difference, the original tax invoice number and the reason — also issued automatically inside the
-  same transaction whenever a credit-sale bill is refunded; the balance drops immediately (see
-  `docs/DECISIONS.md` #56)
+- **Separate credit notes** (manager and above) — crediting a credit-sale bill (damaged/returned goods,
+  incorrect price) produces credit note `CN69-000001` with the original value/corrected value/difference, the
+  VAT on the difference, the original tax invoice number, and the reason. A credit note is also issued
+  automatically within the same transaction whenever a credit-sale bill is refunded; the balance is reduced
+  immediately (see `docs/DECISIONS.md` #56)
 - **PDF + e-mail for receivables documents** — billing notes/payment receipts/credit notes/interest notices
-  download as Thai A4 PDFs (amount in words, Buddhist-era dates) on the web, and can be e-mailed with the
+  can be downloaded as Thai A4 PDFs (amount in words, Buddhist-era dates) on the web and e-mailed with the
   PDF attached from any platform; the recipient is pre-filled from the customer's account, the send
-  history (to whom/when/by whom) shows under the document, and voided documents can't be sent (see
+  history (recipient/time/sender) is shown under the document, and voided documents cannot be sent (see
   `docs/tickets/23-document-pdf-email.md`, `docs/DECISIONS.md` #57)
-- **Real PromptPay QR** — picking "QR" shows a real, scannable QR code built to the EMV QR standard,
-  bound to the amount automatically (set the store's PromptPay ID in Settings first) — no payment
-  gateway/callback yet, so the cashier still checks the slip/banking app before confirming, same as
+- **Real PromptPay QR** — selecting "QR" displays a real, scannable QR code built to the EMV QR standard and
+  bound to the amount automatically (the store's PromptPay ID must first be set in Settings). There is no
+  payment gateway/callback yet, so the cashier verifies the slip/banking app before confirming, as with
   bank transfer/card (see `docs/DECISIONS.md` #26)
-- **Split payment** — e.g. 100 THB by QR, the rest in cash — the system tracks the remaining balance
+- **Split payment** — e.g. 100 THB by QR and the remainder in cash; the system tracks the remaining balance
   automatically
-- **Split the bill per person** — pick which items each person is paying for; the system automatically
-  calculates each person's share of food cost/discount/Service Charge/VAT proportionally, paid in rounds
-  until every item is settled (already-paid items can't be selected again)
-- **Refunds** after a payment has gone through (full or partial), always with a required reason (audit
-  trail) — refunded amounts are automatically subtracted from net sales in reports (manager role or above).
-  A **cash** refund needs an open shift (the money leaves that shift's drawer); refunds via QR/card/
-  transfer don't
+- **Split the bill per person** — select the items each person pays for; the system calculates each person's
+  proportional share of food cost/discount/Service Charge/VAT, with payment in rounds until every item is
+  settled (items already paid cannot be selected again)
+- **Refunds** of completed payments (full or partial), with a mandatory reason (audit trail); refunded
+  amounts are automatically subtracted from net sales in reports (manager role or above).
+  A **cash** refund requires an open shift (the money leaves that shift's drawer); refunds via QR/card/
+  transfer do not
 - Change calculation with shortcut buttons (exact / round up to the nearest hundred / 100 / 500 / 1000)
-- **Receipts reconcile the way a Thai receipt should** — each payment line shows the cash the
-  customer handed over, not the amount applied to the bill, so tendered − change equals the bill
-  total exactly, both on screen and on the printed receipt (see `docs/DECISIONS.md` #16)
-- Discounts in both flat-amount and percentage, with 5/10/15/20% shortcut buttons
-- **Prints a real receipt** on a thermal printer over ESC/POS via LAN/Wi-Fi (configure IP/port/paper size
-  from Settings), with full Thai-character support — no printer configured? The on-screen receipt still
-  works as normal (Bluetooth/USB and printing directly from a web browser aren't supported yet — see
+- **Receipts reconcile as a Thai receipt requires** — each payment line shows the cash tendered by the
+  customer, not the amount applied to the bill, so tendered − change equals the bill total exactly, both on
+  screen and on the printed receipt (see `docs/DECISIONS.md` #16)
+- Discounts as a flat amount or a percentage, with 5/10/15/20% shortcut buttons
+- **Prints receipts** on a thermal printer over ESC/POS via LAN/Wi-Fi (IP/port/paper size configured
+  in Settings), with full Thai-character support. Without a configured printer, the on-screen receipt works
+  as normal (Bluetooth/USB and printing directly from a web browser are not yet supported — see
   `docs/DECISIONS.md` #11)
-- **Issue a tax invoice** from the receipt page of any fully-paid bill — choose abbreviated (issued
-  instantly) or full (enter the customer's name + address), with a continuous, non-duplicate running
-  number in the legally required format — can't issue a second one for the same bill until the earlier
-  one is voided first (voiding requires manager role or above — see `docs/DECISIONS.md` #19) — the
-  "value of goods/services" line is the taxable value including service charge, so it plus VAT adds up
-  to the total to the last satang (#43)
-- **Redeem loyalty points for a discount** at checkout, if the order is linked to a customer — their
-  points balance shows right away on the checkout page; redeem up to what they have and never more than
-  the amount due this round (going over either limit is rejected outright, never silently capped — see
+- **Issue a tax invoice** from the receipt page of any fully paid bill — abbreviated (issued immediately) or
+  full (with the customer's name and address), with a continuous, non-duplicated running number in the legally
+  required format. A second invoice for the same bill cannot be issued until the earlier one is voided (voiding
+  requires manager role or above — see `docs/DECISIONS.md` #19). The "value of goods/services" line is the
+  taxable value including service charge, so that value plus VAT equals the total to the last satang (#43)
+- **Redeem loyalty points for a discount** at checkout when the order is linked to a customer — the points
+  balance is shown on the checkout page; redemption is limited to the customer's balance and to the amount due
+  in the current round (exceeding either limit is rejected outright, never silently capped — see
   `docs/DECISIONS.md` #22)
 
 ### 🖥️ Admin (web)
 
-- **Dashboard** — today's sales, an hourly chart, payment-method breakdown, and a live store status counter
-  (answers "how's the store doing right now" — historical data and best sellers live on the **Reports** page)
-- **Historical reports** — pick any date range to see daily totals, best sellers (items sold by weight
+- **Dashboard** — today's sales, an hourly chart, payment-method breakdown, and a live store-status counter
+  (the store's current state; historical data and best sellers are on the **Reports** page)
+- **Historical reports** — select any date range to view daily totals, best sellers (items sold by weight
   also show the total kg, on screen and in the CSV), and category breakdowns,
   with an **Export CSV** button for each report type (sales summary/top items/sales by day) for the
-  currently selected date range (web only — see `docs/tickets/12-report-export.md`). Files carry a
-  UTF-8 BOM, so Thai text opens in Excel without garbling, in Demo Mode and against the real backend
-  alike (#45)
-- **Menu management** — add/edit/delete items, and build your own modifier groups — mark an item as
-  **sold by weight** (price per kg) and give it a **barcode/scale PLU**; a code already used by another
-  item in the same branch is rejected
-- **Staff management** — add accounts, change roles, deactivate accounts — role changes and deactivation ask
-  for confirmation first, and you can't demote or deactivate your own account (so one mis-tap can't lock you
-  out — see `docs/DECISIONS.md` #62)
+  selected date range (web only — see `docs/tickets/12-report-export.md`). Files include a
+  UTF-8 BOM, so Thai text opens correctly in Excel, both in Demo Mode and with the real backend (#45)
+- **Menu management** — add/edit/delete items and define custom modifier groups; mark an item as
+  **sold by weight** (price per kg) and assign a **barcode/scale PLU** (a code already used by another
+  item in the same branch is rejected)
+- **Staff management** — add accounts, change roles, and deactivate accounts; role changes and deactivation
+  require confirmation, and users cannot demote or deactivate their own account (so a single mistaken tap
+  cannot cause a lockout — see `docs/DECISIONS.md` #62)
 - **Store settings** — store name, VAT, Service Charge, VAT-inclusive pricing mode, tax ID/address/
-  branch (for issuing tax invoices — optional if the store isn't VAT-registered), the loyalty
-  points exchange rate (baht spent per point earned / point value when redeemed), and the **PromptPay
-  ID** (phone number/national ID/tax ID — required before the "QR" payment method can show a real QR,
+  branch (for issuing tax invoices — optional if the store is not VAT-registered), the loyalty
+  points exchange rate (baht spent per point earned / point value when redeemed), the **PromptPay
+  ID** (phone number/national ID/tax ID — required before the "QR" payment method can display a real QR,
   see `docs/DECISIONS.md` #26), the **scale label format** (prefix + number of PLU digits, to match
   the store's own scale — see `docs/DECISIONS.md` #49), and a **Credit customers** section (late-payment
-  interest 0–15% a year + grace days after the due date — changes are audit-logged, and it shows whether
-  the server has e-mail configured; see `docs/DECISIONS.md` #55, #57)
+  interest 0–15% a year + grace days after the due date — changes are recorded in the audit log, and the
+  section shows whether e-mail is configured on the server; see `docs/DECISIONS.md` #55, #57)
 - **Receipt printer settings** — this device's IP/port/paper size, with a test-print button
 - **PaynEat ERP connection** (admin, Settings) for chains whose ingredients and branches are managed in
-  [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) — a single shop does nothing: it shows "Standalone" and works exactly as before
-  - Enter the ERP's address and this POS's credential (`pnepos_…`) → the POS checks the branch codes (a branch with a malformed
-    code is named, with a button to fix it) and the contract version, then pulls ingredients and branches by version at once,
-    and after that every 5 minutes or when you press "Pull now"
-  - A pull cut off midway resumes where it stopped
-  - The credential is never shown again, and never reaches a log or an export
-  - Connected mode: the ingredients page is read-only with a "Managed in PaynEat ERP" badge (the API answers 409), ERP units show
-    in the app's language, and menu items are not closed automatically from this device's stock, because stock on hand belongs to the ERP
-  - Give existing ingredients their "item code in the ERP" beforehand and their recipes stay linked when you connect
-  - A branch the ERP assigns to this POS that isn't on this device yet has a **"Create here"** button (admin) — it always pulls
-    first, so there's no duplicate when the ERP just changed an existing branch's code, and creates the branch with the ERP's
-    code and Thai name, its ingredients, and an audit log entry
-  - A pull that fails for a reason retrying won't fix (an answer that breaks the contract, a newer contract, an unusable credential)
-    stops scheduled pulls and says so on screen; fix it and press "Pull now" and scheduled pulls resume. Pull log lines use the
-    event names of the ecosystem's telemetry contract
-  - You can leave connected mode, and the pulled data stays (see `docs/tickets/25-erp-connected-mode.md`, `docs/DECISIONS.md` #80)
+  [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) — a single shop requires no action: it shows "Standalone" and operates exactly as before
+  - Enter the ERP's address and this POS's credential (`pnepos_…`) → the POS validates the branch codes (any branch with a malformed
+    code is identified, with a button to correct it) and the contract version, then immediately pulls ingredients and branches by
+    version, and thereafter every 5 minutes or when "Pull now" is selected
+  - An interrupted pull resumes from where it stopped
+  - The credential is never displayed again and never appears in a log or an export
+  - In connected mode, the ingredients page is read-only with a "Managed in PaynEat ERP" badge (the API returns 409), ERP units are
+    shown in the app's language, and menu items are not closed automatically based on this device's stock, because stock on hand is managed by the ERP
+  - Existing ingredients assigned their "item code in the ERP" beforehand keep their recipe links when the connection is made
+  - A branch that the ERP assigns to this POS but that does not yet exist on this device has a **"Create here"** button (admin). It always
+    pulls first, so no duplicate is created when the ERP has just changed an existing branch's code, and it creates the branch with the
+    ERP's code and Thai name, its ingredients, and an audit log entry
+  - A pull that fails for a reason that retrying cannot resolve (a response that violates the contract, a newer contract, an unusable
+    credential) stops scheduled pulls and is reported on screen; once the cause is corrected, selecting "Pull now" resumes scheduled
+    pulls. Pull log lines use the event names of the ecosystem's telemetry contract
+  - Connected mode can be exited, and the pulled data is retained (see `docs/tickets/25-erp-connected-mode.md`, `docs/DECISIONS.md` #80)
 - **Conditional promotions/discounts** — create/edit/disable 3 promotion types (percent off, amount off,
   buy-one-get-one), with conditions for day/time window, eligible categories/menu items, minimum spend, and
-  campaign start/end dates — auto-applies when eligible or lets customers redeem a discount code (one promotion
-  per bill, max), shown clearly and separately from manual discounts on the bill, on-screen receipt, and printed
-  receipt
-- **Ingredients/stock** — link a menu item to the ingredients it uses and the quantity per order directly from
+  campaign start/end dates; promotions apply automatically when eligible or through a customer-entered discount
+  code (maximum one promotion per bill) and are shown separately from manual discounts on the bill, on-screen
+  receipt, and printed receipt
+- **Ingredients/stock** — link a menu item to its ingredients and the quantity per order directly from
   the menu edit form; stock is deducted automatically when an order is sent to the kitchen — or on full
-  payment for a counter bill that never went to the kitchen (#51), in kg for items sold by weight (and restored
-  automatically when an item is cancelled/removed); a menu item is auto-marked sold out when any linked
-  ingredient runs out, and auto-re-enabled once restocked, with a low-stock alert screen (see
+  payment for a counter bill that is never sent to the kitchen (#51) — in kg for items sold by weight (and
+  restored automatically when an item is cancelled/removed); a menu item is marked sold out automatically when
+  any linked ingredient runs out and re-enabled once restocked, with a low-stock alert screen (see
   `docs/DECISIONS.md` #15)
-- **Audit Log** (`admin` only) — records every action that's risky for front-of-house fraud, append-only
-  (no UI anywhere can edit or delete an entry): cancelling an order, voiding an order item after it's
+- **Audit Log** (`admin` only) — records every action with front-of-house fraud risk, append-only
+  (no screen can edit or delete an entry): cancelling an order, voiding an order item after it has
   been sent to the kitchen, editing a discount, deactivating/deleting/changing the role of/resetting the
   password for a staff account, editing VAT/service charge, a refund, and voiding a tax invoice — each
-  with who did it, when, and the reason given; filterable by action type (see `docs/DECISIONS.md` #21).
+  with the user, time, and reason given; filterable by action type (see `docs/DECISIONS.md` #21).
   It also records **who placed or edited each order**, so managers and finance can review the full
   history: opening a new order (recording which waiter placed it), adding items, editing an item's
   quantity, removing an item, moving a table, and merging bills (see `docs/DECISIONS.md` #25), as well
-  as **financial/accounting** audit: editing a menu price (only when the price actually changes),
+  as **financial/accounting** events: editing a menu price (only when the price actually changes),
   creating/editing/deleting a promotion, and manually adjusting ingredient stock — with a **date-range
   filter** and a **CSV export** button for the finance team (web only, see `docs/DECISIONS.md` #27),
   and opening/closing a shift (with the cash variance), accepting a payment, and entering/removing a
   discount code (see `docs/DECISIONS.md` #28)
-- **The audit log reads in the viewer's language** — every log also stores the values its sentence is built from
-  (names, document numbers, amounts, status codes) in `metadata.summaryArgs`, so the Korean/English app builds the
-  sentence in its own language; Thai and the CSV export keep the recorded Thai sentence as the evidence, and older
-  logs without these values show the recorded sentence (see `docs/DECISIONS.md` #74)
-- **Customers/Loyalty** (`admin` and `manager`) — search the full customer list, tap into any customer to
-  see their purchase history and current points balance (see `docs/DECISIONS.md` #22), plus a **Credit
-  account** card: set the credit limit/term/tax ID/billing address/**billing e-mail** (manager and up,
-  audit-logged), see what's owed and the remaining credit, and jump to the receivables statement
-- **AI assistant for store data** (`admin` and `manager`) — ask a question in Thai or English about
+- **The audit log is displayed in the viewer's language** — each log entry also stores the values from which its
+  sentence is built (names, document numbers, amounts, status codes) in `metadata.summaryArgs`, so the Korean/English
+  app composes the sentence in its own language; the Thai interface and the CSV export retain the recorded Thai
+  sentence as the evidence, and older entries without these values show the recorded sentence (see `docs/DECISIONS.md` #74)
+- **Customers/Loyalty** (`admin` and `manager`) — search the full customer list and open any customer to
+  view the purchase history and current points balance (see `docs/DECISIONS.md` #22), plus a **Credit
+  account** card for setting the credit limit/term/tax ID/billing address/**billing e-mail** (manager and above,
+  recorded in the audit log), viewing the outstanding balance and remaining credit, and opening the receivables statement
+- **AI assistant for store data** (`admin` and `manager`) — questions in Thai or English about
   sales, best sellers, orders, customers, or (admin only) the audit log; the assistant answers only
-  through tool-calling against the system's own existing endpoints (never touches the database directly,
-  never makes up a number), and every answer carries a **"Sources"** chip naming exactly which tool
-  produced it, so it's always auditable, plus a chart when the question is about plottable numbers — a
-  daily per-user question quota (20 by default) keeps LLM spend under control; requires setting your own
-  `ANTHROPIC_API_KEY` (off by default, with a clear message instead of a crash when it isn't set — see
+  through tool-calling against the system's existing endpoints (it never accesses the database directly
+  and never invents a number), and every answer carries a **"Sources"** chip naming the tool that
+  produced it, so each answer is auditable, plus a chart when the question concerns plottable figures. A
+  daily per-user question quota (20 by default) limits LLM spend. An `ANTHROPIC_API_KEY` must be supplied
+  (disabled by default, with a clear message rather than an error when it is not set — see
   `docs/tickets/15-ai-ask-your-data.md`, `docs/DECISIONS.md` #33)
 
 ### 🔐 System
 
-- JWT auth with 5 role-based permission levels, enforced on both the API and the app's menu visibility
+- JWT authentication with 5 role-based permission levels, enforced both in the API and in the app's menu visibility
 - Responsive UI: mobile (bottom nav) / tablet (nav rail) / web (expanded rail)
-- A realtime connection indicator so staff instantly know if the connection drops
-- **Pending-sync badge** — if the connection drops while adding items to an order, an AppBar badge shows how
-  many items are queued; they're sent automatically once the connection is back, with no extra tap required
-  (see the detailed scope in `docs/DECISIONS.md` #13)
-- **High-contrast mode**, toggled from the **Profile** page so every role can reach it — for screens
-  in direct sunlight, kitchen screens fogged by steam, and fingerprint-covered tablets. Every text
-  token moves from AA (4.5:1) to AAA (7:1) and card borders from 1.24:1 to 4.10:1. The hues and
-  their meanings never change; only the depth does. Remembered per device, not per account
+- A realtime connection indicator that alerts staff immediately when the connection drops
+- **Pending-sync badge** — if the connection drops while items are being added to an order, an AppBar badge shows
+  how many items are queued; they are sent automatically when the connection is restored, with no further action
+  required (detailed scope in `docs/DECISIONS.md` #13)
+- **High-contrast mode**, enabled from the **Profile** page so that every role can access it — intended for screens
+  in direct sunlight, kitchen screens exposed to steam, and tablets with smudged screens. Every text
+  token moves from AA (4.5:1) to AAA (7:1) and card borders from 1.24:1 to 4.10:1. Hues and
+  their meanings are unchanged; only the depth changes. The setting is stored per device, not per account
   (see `docs/DECISIONS.md` #18)
-- **Passed a full OWASP Top 10 security review** — all 7 findings fixed, fail-closed throughout:
-  no fallback JWT secret in the code, a deactivated/role-changed account loses access immediately
-  instead of waiting for its token to expire, a manager can't self-promote or touch an admin
-  account, and a real deployment (`NODE_ENV=production`) refuses to seed accounts with the known
-  demo passwords for you (see `docs/DECISIONS.md` #20 and `SECURITY.md`)
-- **Three languages throughout: ไทย / English / 한국어** — switch from the **Profile** or
-  **Settings** page, or the globe button on the login page and the customer QR menu (the first launch follows
-  the device language). Date pickers, the standard system buttons and **error messages from the backend** follow
-  the chosen language too (the app sends `Accept-Language` on every request, #64); remembered per device. **The demo data is translated too** — menu items,
-  categories, table zones and add-on options — so you never see one language's UI wrapped around
-  another language's data. A real restaurant's own entries always display exactly as typed, and
-  names already printed on kitchen tickets and past receipts do not move, since those were
-  captured when the order was placed. All 1,233 keys are translated for every language, and the
-  Korean font ships inside the app as a subset of only the characters actually used (4 weights,
+- **Passed a full OWASP Top 10 security review** — all 7 findings fixed, with fail-closed behaviour throughout:
+  no fallback JWT secret in the code; a deactivated or role-changed account loses access immediately
+  rather than when its token expires; a manager cannot self-promote or modify an admin
+  account; and a production deployment (`NODE_ENV=production`) refuses to seed accounts with the known
+  demo passwords (see `docs/DECISIONS.md` #20 and `SECURITY.md`)
+- **Three languages throughout: ไทย / English / 한국어** — selectable from the **Profile** or
+  **Settings** page, or with the globe button on the login page and the customer QR menu (the first launch follows
+  the device language). Date pickers, the standard system buttons, and **error messages from the backend** also follow
+  the selected language (the app sends `Accept-Language` on every request, #64); the choice is stored per device. **The demo data is also translated** —
+  menu items, categories, table zones, and add-on options — so the interface of one language is never combined with
+  data in another. A real restaurant's own entries are always displayed exactly as entered, and
+  names already printed on kitchen tickets and past receipts do not change, because they were
+  recorded when the order was placed. All 1,233 keys are translated for every language, and the
+  Korean font is bundled with the app as a subset containing only the characters actually used (4 weights,
   ~350 KB), so it never depends on the device's own fonts. A test parses the font file's cmap table
-  to stop any translation from using a character outside that subset, and the AI assistant answers
-  in the same language as the question for all three (see `docs/DECISIONS.md` #39)
-- **Multi-branch support** — tables/menu items/orders/ingredients and every report are correctly
-  scoped per branch. An account with access to more than one branch lands on a **branch picker**
-  right after login, then can switch branch anytime from the **Profile** page — `admin` can switch
-  to an **"all branches"** mode to see combined reports across every branch. Promotions, customers/
+  to prevent any translation from using a character outside that subset, and the AI assistant answers
+  in the language of the question for all three (see `docs/DECISIONS.md` #39)
+- **Multi-branch support** — tables/menu items/orders/ingredients and every report are scoped per
+  branch. An account with access to more than one branch is shown a **branch picker**
+  immediately after login and can switch branches at any time from the **Profile** page; `admin` can switch
+  to an **"all branches"** mode to view combined reports across all branches. Promotions, customers/
   loyalty, store settings, and shifts remain chain-wide by design (real backend only, option A/B/D —
   Demo Mode has a single branch; see `docs/tickets/11-multi-branch.md`, `docs/DECISIONS.md` #36)
 - **A scale bridge on the store server** — set `SCALE_DRIVER=tcp|serial|simulator` in `backend/.env`; it
-  reads A&D/CAS, Mettler Toledo MT-SICS and plain number+unit (kg/g/lb/oz) formats, reconnects on its
-  own when the cable drops, supports poll-style scales, and broadcasts the weight to every device over
+  reads A&D/CAS, Mettler Toledo MT-SICS and plain number+unit (kg/g/lb/oz) formats, reconnects automatically
+  when the cable is disconnected, supports poll-style scales, and broadcasts the weight to every device over
   socket.io `scale:reading` (only on change + a 1-second heartbeat); readings older than 3 seconds are
-  never forwarded. The `serialport` package is optional — with no port/package the server says why and
-  keeps running (see `docs/DECISIONS.md` #54)
-- **Thai PDF documents + e-mail over SMTP** — PDFs are built on the server with pdfkit and the Noto Sans
-  Thai font bundled with the backend, wrapping Thai lines at word boundaries, with BAHTTEXT-style amounts
-  in words and Buddhist-era dates in Bangkok time; e-mail goes through nodemailer (set
-  `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS`/`MAIL_FROM` — unset = e-mail off, the PDF button still works), and
-  every send is recorded in the history + audit log (see `docs/DECISIONS.md` #57)
+  never forwarded. The `serialport` package is optional; without a port or the package, the server reports
+  the reason and continues running (see `docs/DECISIONS.md` #54)
+- **Thai PDF documents + e-mail over SMTP** — PDFs are generated on the server with pdfkit and the Noto Sans
+  Thai font bundled with the backend, with Thai line wrapping at word boundaries, BAHTTEXT-style amounts
+  in words, and Buddhist-era dates in Bangkok time; e-mail is sent through nodemailer (configure
+  `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS`/`MAIL_FROM`; if unset, e-mail is disabled and the PDF button still works), and
+  every send is recorded in the send history and the audit log (see `docs/DECISIONS.md` #57)
 - **Logs and metrics per the PaynEat ecosystem telemetry contract** — the backend writes JSON logs, one object
   per line (`severity` as a string; `labels` with `app`/`event`/`correlation_id` and the branch's
-  `location_code`), no vendor names by default, `LOG_FORMAT=gcp` on Google Cloud · every request carries an
-  `x-request-id` there and back (the app creates one per request and shows the "Request ID" at the end of
-  error messages, so a shop can report it and it leads straight to the log) · Prometheus `/metrics` by route
+  `location_code`), with no vendor names by default and `LOG_FORMAT=gcp` on Google Cloud · every request carries an
+  `x-request-id` in both directions (the app generates one per request and shows the "Request ID" at the end of
+  error messages, so a shop can report it and it leads directly to the log entry) · Prometheus `/metrics` by route
   template on port 9464, separate from the API and never exposed by docker compose · names, phone numbers,
-  e-mails, tax IDs, addresses, passwords, tokens, QR tokens, request bodies and query strings never reach the
-  log (tested) (see `docs/tickets/24-telemetry-contract.md`, `docs/DECISIONS.md` #68)
-- **A Google Play channel** — tag `vX.Y.Z` and CI builds an `.aab` signed with the upload key from GitHub Secrets (no
-  key in the repo), with the `versionCode` worked out from the tag and a check that it was not signed with a debug key,
-  then attaches it to the GitHub Release · a PR touching Android files builds the same way with a throwaway key to show
-  signing still works · the app icon is the PaynEat logo (an adaptive icon on Android 8+, a themed icon on Android 13+)
-  · a [privacy policy page](https://suruchboss.github.io/PaynEat/privacy.en.html) in three languages that says plainly
-  the barcode scanner (Google ML Kit) sends diagnostic data to Google · Data safety answers and store text and images
-  in two languages under `docs/store/` (see `docs/tickets/29-android-google-play.md`, `docs/DECISIONS.md` #75)
-- **Upgrades keep the shop's data** — the database schema is a set of numbered migrations (`backend/src/db/migrations/`);
-  the database records which ones have run (`schema_migrations`), and each runs once in its own transaction, so one that
-  fails midway rolls back whole and leaves no half-built schema. A database created before this change upgrades with its
-  data intact · if someone edits a migration that has already run, or rolls the app back to a version older than the
-  database, the server refuses to start and says why (see `docs/DECISIONS.md` #79; how to add a migration is in `CONTRIBUTING.md`)
+  e-mails, tax IDs, addresses, passwords, tokens, QR tokens, request bodies, and query strings never appear in the
+  log (verified by tests) (see `docs/tickets/24-telemetry-contract.md`, `docs/DECISIONS.md` #68)
+- **A Google Play channel** — when a `vX.Y.Z` tag is pushed, CI builds an `.aab` signed with the upload key from GitHub
+  Secrets (no key in the repository), with the `versionCode` derived from the tag and a check that it was not signed with
+  a debug key, then attaches it to the GitHub Release · a PR touching Android files is built the same way with a temporary
+  key to verify that signing still works · the app icon is the PaynEat logo (an adaptive icon on Android 8+, a themed icon
+  on Android 13+) · a [privacy policy page](https://suruchboss.github.io/PaynEat/privacy.en.html) in three languages that
+  states clearly that the barcode scanner (Google ML Kit) sends diagnostic data to Google · Data safety answers and store
+  text and images in two languages under `docs/store/` (see `docs/tickets/29-android-google-play.md`, `docs/DECISIONS.md` #75)
+- **Upgrades preserve the shop's data** — the database schema is a set of numbered migrations (`backend/src/db/migrations/`);
+  the database records which ones have run (`schema_migrations`), and each runs once in its own transaction, so a migration
+  that fails midway is rolled back completely and leaves no partially built schema. A database created before this change
+  is upgraded with its data intact · if a migration that has already run is edited, or the app is rolled back to a version
+  older than the database, the server refuses to start and reports the reason (see `docs/DECISIONS.md` #79; instructions for
+  adding a migration are in `CONTRIBUTING.md`)
 
 ---
 
@@ -1179,7 +1177,7 @@ flowchart LR
 
 ### Clean Architecture on the Flutter side
 
-Dependencies always point inward, toward **domain** — inner layers never know about outer ones.
+Dependencies always point inward, toward **domain**; inner layers have no knowledge of outer layers.
 
 ```mermaid
 flowchart TB
@@ -1211,14 +1209,14 @@ flowchart TB
     style domain fill:#FFF1EA,stroke:#FF6B2C
 ```
 
-**What this layering actually buys us (not just theory):**
+**Practical benefits of this layering:**
 
-1. **Demo Mode** — swap in mock data sources by editing a single file; the screens don't even know it
-   happened
-2. **Controllers are testable without a server** — inject a fake repository directly (see
+1. **Demo Mode** — mock data sources are substituted by editing a single file, with no change visible to the
+   screens
+2. **Controllers are testable without a server** — a fake repository is injected directly (see
    `test/presentation/cart_controller_test.dart`)
-3. **Business rules live in one place** — `BillCalculator` is used both for the cart preview and Demo Mode
-4. **The backend is swappable** — moving to GraphQL or Firebase only touches the data layer
+3. **Business rules are defined in one place** — `BillCalculator` serves both the cart preview and Demo Mode
+4. **The backend is replaceable** — migrating to GraphQL or Firebase affects only the data layer
 
 ### Layered backend
 
@@ -1230,7 +1228,7 @@ validate    map req/res   business      pure SQL
                            socket events
 ```
 
-`service` doesn't know about `req`/`res`, and `repository` doesn't know about business rules — each layer
+`service` has no knowledge of `req`/`res`, and `repository` has no knowledge of business rules, so each layer
 can be tested in isolation.
 
 ---
@@ -1289,7 +1287,7 @@ PaynEat/
 
 ## 💵 Bill calculation
 
-Money is the one place mistakes aren't acceptable, so two things get special treatment:
+Monetary calculations allow no margin for error, so two measures are applied:
 
 ### 1. Amounts stored as whole numbers (satang)
 
@@ -1311,7 +1309,7 @@ Food subtotal
   = Total due
 ```
 
-A real example from the tests — Pad Krapao (75 THB) + fried egg (15 THB) × 2 plates:
+An example taken from the tests — Pad Krapao (75 THB) + fried egg (15 THB) × 2 plates:
 
 | Line item | Amount |
 |---|---:|
@@ -1320,21 +1318,21 @@ A real example from the tests — Pad Krapao (75 THB) + fried egg (15 THB) × 2 
 | VAT 7% (of 198) | 13.86 |
 | **Grand total** | **211.86** |
 
-This logic is written in two places but always produces the exact same result, with tests covering both:
+This logic is implemented in two places that always produce identical results, and both are covered by tests:
 
 - `backend/src/modules/orders/order.calculator.js` — the authoritative total used for payment
-- `app/lib/features/order/domain/services/bill_calculator.dart` — an instant in-app preview that doesn't
-  need to wait on the network
+- `app/lib/features/order/domain/services/bill_calculator.dart` — an immediate in-app preview that does not
+  depend on the network
 
-A "prices already include VAT" mode is also supported (VAT is backed out of the price for display instead
+A "prices already include VAT" mode is also supported (VAT is extracted from the price for display instead
 of being added on top).
 
 ---
 
 ## ⚡ Realtime
 
-Socket.IO reuses the same JWT as the REST API and places each user into a room based on their role, so the
-kitchen never receives events that don't concern it.
+Socket.IO uses the same JWT as the REST API and assigns each user to a room based on role, so the
+kitchen never receives events that do not concern it.
 
 | Event | Who receives it | When it fires |
 |---|---|---|
@@ -1345,8 +1343,8 @@ kitchen never receives events that don't concern it.
 | `table:updated` | Everyone | A table's status changes |
 | `scale:reading` | Service + management rooms | The weight on the cabled scale changes (+ a 1-second heartbeat) |
 
-On the app side, `SocketClient` always returns an unsubscribe function, which controllers keep around and
-call in `onClose()` to prevent stray listeners and memory leaks.
+On the app side, `SocketClient` always returns an unsubscribe function, which controllers retain and
+call in `onClose()` to prevent orphaned listeners and memory leaks.
 
 ```dart
 _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
@@ -1356,10 +1354,10 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 
 ## 📡 API
 
-Open **http://localhost:3000/docs** for interactive, try-it-yourself documentation (Swagger UI)
+Interactive documentation (Swagger UI) is available at **http://localhost:3000/docs**
 
 <details>
-<summary><b>Full endpoint summary (click to expand)</b></summary>
+<summary><b>Full endpoint summary</b></summary>
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
@@ -1409,7 +1407,7 @@ Open **http://localhost:3000/docs** for interactive, try-it-yourself documentati
 
 </details>
 
-Every endpoint shares the same response shape:
+All endpoints share the same response format:
 
 ```jsonc
 // Success
@@ -1438,299 +1436,299 @@ cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (439 + 515 + 49). The `android-version.mjs` script tests check that a `vX.Y.Z` tag always
-gives a higher `versionCode` and that a malformed or out-of-range tag stops with a reason; the `android-release.yml` workflow runs them
+The badge counts the backend and app tests (439 + 515 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
-**E2E — the real app talking to the real backend (49 cases)** — `app/test_e2e/` boots the real backend
-(`node src/server.js`) on a random port with a brand-new temporary database per file, then drives the
-app's real data/domain code (`ApiClient` → data source → repository, the same stack the app assembles at
-startup) against it the way a restaurant would, with each role holding its own "device". It's the only
-suite where the app **reads JSON the backend actually sent** (every other Flutter test runs on Demo Mode,
-and the backend tests are pure JavaScript), and it has its own job in CI:
+**E2E — the real app against the real backend (49 cases)** — `app/test_e2e/` starts the real backend
+(`node src/server.js`) on a random port with a new temporary database per file, then exercises the
+app's production data/domain code (`ApiClient` → data source → repository, the same stack the app assembles at
+startup) against it following a restaurant's workflow, with each role using its own "device". It is the only
+suite in which the app **parses JSON actually sent by the backend** (all other Flutter tests run on Demo Mode,
+and the backend tests are pure JavaScript), and it runs as a separate CI job:
 
-> `restaurant_day_e2e_test.dart` (15 steps) — every role logs in → set a PromptPay ID → open an order whose
+> `restaurant_day_e2e_test.dart` (15 steps) — every role logs in → a PromptPay ID is set → an order is opened whose
 > total matches, to the satang, the cart total the app showed the waiter → a draft neither reaches the
 > kitchen nor deducts stock until "Send to Kitchen" → the kitchen cooks it through to served → a leftover
 > shift must be closed, and no payment is accepted until a new one opens → the backend's PromptPay QR
 > matches the Dart algorithm character for character, CRC included → cash payment with correct change,
-> table freed → full tax invoice → refund (cashier can't, manager can) → shift closes with zero variance →
+> table freed → full tax invoice → refund (cashier cannot, manager can) → shift closes with zero variance →
 > Z-report + CSV → reports count exactly one more bill → the audit log holds every money event
 >
 > `self_order_and_access_e2e_test.dart` (16 cases) — a customer scans the QR and orders all the way to the
-> kitchen screen, every kind of broken link, regenerating the QR kills the old link instantly, no personal
-> data leaks onto the public page, multi-branch staff/branch switching, a 403 at every money-related
-> permission, a bad token, and a deactivated staff member's still-logged-in device stops working
+> kitchen screen, every type of invalid link, regenerating the QR invalidates the old link immediately, no personal
+> data is exposed on the public page, multi-branch staff/branch switching, a 403 at every money-related
+> permission, a bad token, and a deactivated staff member's signed-in device losing access
 >
 > `meat_shop_b2b_e2e_test.dart` (12 steps) — butcher counter + trade customer: scan a scale label whose
 > check digit the test computes itself from the store's real settings → the weighed line's price in the
-> cart matches the backend to the satang → a weighed item with no weight gets a 400 → a credit sale over
-> the limit gets a 409 / a waiter gets a 403 → a credit sale is due in 30 days and deducts the meat stock
-> in kg even though it never went to the kitchen → a billing note bundles two bills (issuing it again is
-> a 409) → a cash payment against the note is applied oldest bill first → the shift closes with zero
-> variance + the Z-report splits credit sales from debt collected (the first bill, now fully paid, earns its
+> cart matches the backend to the satang → a weighed item with no weight is rejected with 400 → a credit sale over
+> the limit is rejected with 409 / a waiter receives 403 → a credit sale is due in 30 days and deducts the meat stock
+> in kg even though it never went to the kitchen → a billing note bundles two bills (issuing it again returns
+> 409) → a cash payment against the note is applied oldest bill first → the shift closes with zero
+> variance + the Z-report separates credit sales from debt collected (the first bill, now fully paid, earns its
 > points at that moment — a credit sale earns nothing up front) → reports show total kg sold
 >
 > `scale_documents_e2e_test.dart` (6 steps) — the test opens its own TCP server as the "scale" and the
 > real backend connects to it (`SCALE_DRIVER=tcp`): the weight travels scale → parser → socket.io → app;
-> a wobbling number can't be used, a settled one can → a credit sale at that weight prices to the satang
-> like the backend → a bill 20 days overdue with 5 grace days gets exactly 15 days of interest by the
-> formula (a cashier gets 403) → a 107-baht credit note splits out VAT and the balance drops exactly →
-> every document type downloads as a real `%PDF-` file → a billing note goes out by e-mail
+> an unstable reading cannot be used, a settled one can → a credit sale at that weight is priced to the satang
+> as on the backend → a bill 20 days overdue with 5 grace days is charged exactly 15 days of interest by the
+> formula (a cashier receives 403) → a 107-baht credit note separates out VAT and the balance decreases exactly →
+> every document type downloads as a real `%PDF-` file → a billing note is sent by e-mail
 > (`MAIL_TRANSPORT=json` builds the full message + PDF attachment without sending it) and a customer with
-> no e-mail on file gets a 400
+> no e-mail on file receives 400
 
-Its first run found **5 real bugs that all 659 existing tests passed**, all now fixed with regression
-tests on both the backend and Demo Mode: a tax invoice whose three printed lines didn't add up (#43), a
-cash refund making the cashier look short at shift close (#44), CSV files downloaded against the real
-backend losing their BOM so Thai text garbled in Excel (#45), and a customer tapping "Send to Kitchen"
-without the kitchen ever seeing it, plus a truncated QR link showing "no internet" (#46) — the suite's
-design is in `docs/DECISIONS.md` #47
+This suite uncovered **5 defects that the 659 existing tests had not detected**; all were fixed with regression
+tests on both the backend and Demo Mode: a tax invoice whose three printed lines did not sum correctly (#43), a
+cash refund that made the cashier appear short at shift close (#44), CSV files downloaded from the real
+backend without their BOM, causing Thai text to display incorrectly in Excel (#45), and a customer's "Send to Kitchen"
+that never reached the kitchen, plus a truncated QR link that showed "no internet" (#46). The suite's
+design is documented in `docs/DECISIONS.md` #47
 
-**Docker images — real build + smoke test** — [`demo-images.yml`](.github/workflows/demo-images.yml) builds the API and web
-images from the real Dockerfiles every time `main` changes (and on every PR touching a Dockerfile/compose), then runs
-`deploy/demo/docker-compose.demo.yml` and checks that the API answers `/health`, a login works, the simulated scale is on
-and the web app answers 200 — only then does it upload them as the `demo` release for Option D (no job built the images
-before, which is how the web Dockerfile stayed broken unnoticed — see `docs/DECISIONS.md` #63, #65)
+**Docker images — full build and smoke test** — [`demo-images.yml`](.github/workflows/demo-images.yml) builds the API and web
+images from the production Dockerfiles whenever `main` changes (and on every PR that modifies a Dockerfile/compose file), then runs
+`deploy/demo/docker-compose.demo.yml` and checks that the API responds on `/health`, a login succeeds, the simulated scale is active,
+and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
+Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
 **Backend (439 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
-The centerpiece is `tests/order-flow.test.js`, which walks the entire floor-to-cash path in 17 steps:
+The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
-> Pick a table → open an order with modifiers → verify the total is correct → the table becomes occupied →
-> opening a second order at the same table is rejected → send to kitchen → the kitchen moves through
-> statuses (and can't skip a step) → the order auto-updates once everything is served → apply a discount →
-> split payment twice → verify the change → paying again is rejected → the table frees up automatically →
-> the receipt is complete → the sale shows up in reports
+> Select a table → open an order with modifiers → verify the total → the table becomes occupied →
+> opening a second order at the same table is rejected → send to kitchen → the kitchen advances through
+> statuses (and cannot skip a step) → the order updates automatically once everything is served → apply a discount →
+> split payment twice → verify the change → paying again is rejected → the table is freed automatically →
+> the receipt is complete → the sale appears in reports
 
-There are also dedicated test files for all 9 modules: `menu.test.js` (validation, RBAC, can't delete a menu
-item that's already been ordered), `table.test.js` (duplicate names, status changes, can't delete a table
-with an open order), `payment.test.js` (splitting, overpaying/double-paying, RBAC), `categories.test.js`,
-`settings.test.js`, `users.test.js` (deleting staff is admin-only), `reports.test.js` — while writing the
-menu search tests, a real bug turned up in `menu.repository.js` (it used `IFNULL(m.name_en, "")`, and SQLite
-treats double quotes as a column identifier rather than a string literal, so the search broke the moment a
-menu item had no `nameEn` — fixed by switching to single quotes).
+Dedicated test files also cover all 9 modules: `menu.test.js` (validation, RBAC, a menu item that has already
+been ordered cannot be deleted), `table.test.js` (duplicate names, status changes, a table with an open order cannot
+be deleted), `payment.test.js` (splitting, overpayment/double payment, RBAC), `categories.test.js`,
+`settings.test.js`, `users.test.js` (deleting staff is admin-only), and `reports.test.js`. The menu search tests
+uncovered a defect in `menu.repository.js`, since fixed: it used `IFNULL(m.name_en, "")`, and SQLite
+treats double quotes as a column identifier rather than a string literal, so the search failed whenever a
+menu item had no `nameEn`; the query now uses single quotes.
 
-`order-move-merge-split.test.js` (7 new cases) covers move-table/merge-bill/split-by-item: a successful move
-+ rejection when the destination table is occupied, a successful merge (correct combined total, the source
-order cancelled and its table freed) + rejection of merging an order with itself, proportional split-bill
-previews, paying item-by-item until the bill closes, and rejecting an item that's already been paid for.
+`order-move-merge-split.test.js` (7 cases) covers move-table/merge-bill/split-by-item: a successful move
+and rejection when the destination table is occupied, a successful merge (correct combined total, the source
+order cancelled and its table freed) and rejection of merging an order with itself, proportional split-bill
+previews, paying item by item until the bill closes, and rejection of an item that has already been paid for.
 
 `promotion-engine.test.js` (16 cases) tests the pure promotion-matching logic (percent/amount/bogo, day/time/
 minimum-spend/menu-category conditions, `findBestAutoPromotion`, `describeIneligibility`), and
-`promotion-flow.test.js` (13 cases) walks the full HTTP path: create an auto promotion → it auto-applies to an
-existing order → removing it brings it back because it's still eligible → disabling it clears it → redeem a
-valid/invalid code → a pinned code isn't replaced by an auto promotion even if the auto one would discount more
-→ deleting a promotion already used on an order doesn't affect that order (its name/code were already
+`promotion-flow.test.js` (13 cases) covers the full HTTP path: create an auto promotion → it is applied automatically to an
+existing order → removing it restores it because the order is still eligible → disabling it clears it → redeem a
+valid/invalid code → a pinned code is not replaced by an auto promotion even if the auto promotion would discount more
+→ deleting a promotion already used on an order does not affect that order (its name/code were already
 snapshotted).
 
-`ingredients.test.js` (9 cases) tests ingredient CRUD, RBAC (waiters can't create/edit), validation, adjusting
-stock and seeing `isLowStock` flip correctly, the `lowStockOnly` filter, and refusing to delete an ingredient
-still linked to a menu item. `inventory-flow.test.js` (13 steps) walks the full path: order items → no
-deduction yet → send to kitchen deducts stock (repeat calls don't double-deduct) → adding items to an
-already-sent order deducts immediately → stock hits zero and the menu item auto-disables → ordering the
-disabled item elsewhere gets a 409 → cancelling the item restores stock and re-enables the menu automatically
-→ a manual stock adjustment syncs availability the same way → changing quantity/removing an item/cancelling
+`ingredients.test.js` (9 cases) tests ingredient CRUD, RBAC (waiters cannot create/edit), validation, adjusting
+stock with `isLowStock` changing correctly, the `lowStockOnly` filter, and refusal to delete an ingredient
+still linked to a menu item. `inventory-flow.test.js` (13 steps) covers the full path: order items → no
+deduction yet → send to kitchen deducts stock (repeat calls do not deduct twice) → adding items to an
+already-sent order deducts immediately → stock reaches zero and the menu item is disabled automatically → ordering the
+disabled item elsewhere returns 409 → cancelling the item restores stock and re-enables the menu item automatically
+→ a manual stock adjustment updates availability in the same way → changing quantity/removing an item/cancelling
 the whole order all restore stock correctly.
 
 `tax-invoices.test.js` (9 cases) tests issuing abbreviated/full tax invoices, the running-number format
-(`INV<Buddhist year>-<6-digit sequence>`) staying sequential across multiple orders, rejecting a second
-invoice for the same bill / a bill that hasn't been paid yet / a store that hasn't set its tax ID, RBAC
-(kitchen staff can't issue one), and the void-then-reissue flow producing a fresh running number.
+(`INV<Buddhist year>-<6-digit sequence>`) remaining sequential across multiple orders, rejection of a second
+invoice for the same bill / a bill that has not been paid / a store without a tax ID, RBAC
+(kitchen staff cannot issue one), and the void-then-reissue flow producing a new running number.
 
-After a full OWASP Top 10 security review, added tests covering all 7 vulnerabilities found and fixed:
-`users.test.js` gained 7 cases — a manager can't create/self-promote/edit/reset-password an admin account
-(privilege escalation), admin can still do all of that normally, and an old token stops carrying its
-previous privileges the moment an account is deactivated or its role changes (no waiting for the token to
-expire), and an admin can no longer demote or deactivate their own account (#62). `security-headers.test.js` (2 new cases) confirms the CSP header is present on every endpoint
-except `/docs` (Swagger UI needs inline script/style). `seed-production-safety.test.js` (2 new cases)
-confirms `NODE_ENV=production` refuses to seed accounts with the known demo passwords (`admin123` etc.) —
-each account's password must be set explicitly via `SEED_*_PASSWORD` first (see `docs/DECISIONS.md` #20).
+Following a full OWASP Top 10 security review, tests cover all 7 vulnerabilities that were identified and fixed:
+`users.test.js` includes 7 cases — a manager cannot create/self-promote/edit/reset the password of an admin account
+(privilege escalation), an admin can still perform all of these actions, an old token loses its
+previous privileges as soon as an account is deactivated or its role changes (without waiting for the token to
+expire), and an admin cannot demote or deactivate their own account (#62). `security-headers.test.js` (2 cases) confirms the CSP header is present on every endpoint
+except `/docs` (Swagger UI requires inline script/style). `seed-production-safety.test.js` (2 cases)
+confirms that `NODE_ENV=production` refuses to seed accounts with the known demo passwords (`admin123` etc.);
+each account's password must first be set explicitly via `SEED_*_PASSWORD` (see `docs/DECISIONS.md` #20).
 
 `audit-logs.test.js` (16 cases) tests that every risky action is logged correctly: cancelling an
-order (with reason/actor), voiding an order item only after it's been sent to the kitchen (cancelling
-while still pending must not log), editing a discount, deactivating/resetting-password/changing-role/
-deleting a staff account (renaming alone must not log), editing VAT logs but editing the store name
-alone doesn't, a refund, voiding a tax invoice, and RBAC (admin-only) (see `docs/DECISIONS.md` #21) —
-plus 6 more cases (see `docs/tickets/13-order-audit-trail.md`, `docs/DECISIONS.md` #25) for
-"who placed/edited this order" audit trail that managers and finance can review (not just
-fraud-risk events like the group above): opening a new order (records which waiter placed it),
-adding items to an order, editing an item's quantity (editing only the note doesn't log), removing
+order (with reason/actor), voiding an order item only after it has been sent to the kitchen (cancelling
+while still pending must not be logged), editing a discount, deactivating/resetting the password of/changing the role of/
+deleting a staff account (renaming alone must not be logged), editing VAT (logged, whereas editing only the store name
+is not), a refund, voiding a tax invoice, and RBAC (admin-only) (see `docs/DECISIONS.md` #21),
+plus 6 further cases (see `docs/tickets/13-order-audit-trail.md`, `docs/DECISIONS.md` #25) for the
+"who placed/edited this order" audit trail available to managers and finance (beyond the
+fraud-risk events above): opening a new order (recording which waiter placed it),
+adding items to an order, editing an item's quantity (editing only the note is not logged), removing
 an item, moving a table, and merging bills.
 
-`customers.test.js` (11 new cases) covers the full customer/loyalty flow: creating a customer / rejecting
-a duplicate phone number (409), searching by partial name/phone, RBAC (kitchen staff can't call it),
-linking `customerId` at order creation + rejecting a `customerId` that doesn't exist, the
+`customers.test.js` (11 cases) covers the full customer/loyalty flow: creating a customer / rejecting
+a duplicate phone number (409), searching by partial name/phone, RBAC (kitchen staff cannot call it),
+linking `customerId` at order creation and rejecting a `customerId` that does not exist, the
 `GET /orders?customerId=` filter, earning points automatically at the default rate (25 THB/point) only
-when the order becomes fully paid, an order with no linked customer earning nothing, a split payment
+when the order becomes fully paid, no points for an order with no linked customer, a split payment
 across multiple rounds earning points exactly once (on the round that completes the bill), redeeming
-points for a discount leaving the `amount` applied to the order unchanged (only `chargedAmount` drops),
-and rejecting a redemption in both failure cases (no customer linked / value exceeding the amount due
-this round) (see `docs/DECISIONS.md` #22).
+points for a discount leaving the `amount` applied to the order unchanged (only `chargedAmount` decreases),
+and rejection of a redemption in both failure cases (no customer linked / value exceeding the amount due
+in the current round) (see `docs/DECISIONS.md` #22).
 
-`takeaway-delivery.test.js` (12 new cases) tests the full takeaway/delivery flow: a queue number is
-assigned only for `type=takeaway` orders (`dine_in`/`delivery` always get `null`), the queue number runs
-on its own daily counter fully independent from the order's bill number (3 consecutive takeaway orders
-get 1, 2, 3), the KDS query (`findItemsByStatuses`) returns the correct `orderType` for all 3 order types
-so they can be displayed distinctly, and checkout/payment for a takeaway order works normally with no
-step anywhere requiring a table (see `docs/DECISIONS.md` #23).
+`takeaway-delivery.test.js` (12 cases) tests the full takeaway/delivery flow: a queue number is
+assigned only for `type=takeaway` orders (`dine_in`/`delivery` always receive `null`), the queue number uses
+its own daily counter, fully independent of the order's bill number (3 consecutive takeaway orders
+receive 1, 2, 3), the KDS query (`findItemsByStatuses`) returns the correct `orderType` for all 3 order types
+so that they can be displayed distinctly, and checkout/payment for a takeaway order works normally with no
+step requiring a table (see `docs/DECISIONS.md` #23).
 
-`promptpay.test.js` (8 new cases) tests the pure function that builds the PromptPay QR payload to the
+`promptpay.test.js` (8 cases) tests the pure function that builds the PromptPay QR payload to the
 EMV QR standard: CRC-16/CCITT-FALSE matches the standard test vector, static QR (no amount) vs. dynamic
-QR (with an amount), a 13-digit national ID/tax ID uses a different tag than a phone number, non-digit
-characters get stripped from `promptPayId`, the TLV structure is self-consistent across every tag, and
-it throws when `promptPayId` is empty — plus 5 more cases across `settings.test.js`/`payment.test.js`
-for the new `GET /payments/promptpay-qr` endpoint and the new `promptPayId` settings field (see
+QR (with an amount), a 13-digit national ID/tax ID uses a different tag from a phone number, non-digit
+characters are stripped from `promptPayId`, the TLV structure is self-consistent across every tag, and
+the function throws when `promptPayId` is empty — plus 5 cases across `settings.test.js`/`payment.test.js`
+for the `GET /payments/promptpay-qr` endpoint and the `promptPayId` settings field (see
 `docs/tickets/16-promptpay-qr.md`, `docs/DECISIONS.md` #26).
 
-`audit-logs.test.js` gains 3 more cases (see `docs/tickets/14-financial-audit-trail.md`,
+`audit-logs.test.js` also includes 3 cases (see `docs/tickets/14-financial-audit-trail.md`,
 `docs/DECISIONS.md` #27) for **financial/accounting** audit: editing a menu price
-(`menu.price_change` — renaming alone doesn't log, and resubmitting the same price doesn't log
+(`menu.price_change` — renaming alone is not logged, and resubmitting the same price is not logged
 again), creating/editing/deleting a promotion (`promotion.create`/`update`/`delete`), and manually
-adjusting ingredient stock (`ingredient.stock_adjust`) — plus 3 more cases for
-`GET /audit-logs/export`: RBAC (admin only), correct CSV header/content (UTF-8 BOM so Excel doesn't
-mangle Thai text), and filtering by action the same way the list endpoint does.
+adjusting ingredient stock (`ingredient.stock_adjust`) — plus 3 cases for
+`GET /audit-logs/export`: RBAC (admin only), correct CSV header/content (UTF-8 BOM so that Excel displays
+Thai text correctly), and filtering by action in the same way as the list endpoint.
 
-`audit-logs.test.js` gains another 3 cases (see `docs/DECISIONS.md` #28) closing the remaining audit
-log gaps: opening/closing a shift (`shift.open`/`shift.close` — checking the cash-variance metadata
+A further 3 cases in `audit-logs.test.js` (see `docs/DECISIONS.md` #28) cover the remaining audited
+events: opening/closing a shift (`shift.open`/`shift.close` — checking the cash-variance metadata
 on close), accepting a payment (`payment.pay`), and entering/removing a discount code
 (`order.promotion_redeem`/`order.promotion_remove`).
 
 `audit-summary-args.test.js` (3 cases, `docs/DECISIONS.md` #74) reads every file under `src/modules` and checks
-that each `auditLogService.log({…})` passes `summaryArgs` (removing it from one spot turns it red), then checks
-the real values for opening an order / moving a table (both table names) and for a settings change (`changes`
-field by field) — the Thai sentence in `summary` must stay identical, character for character.
+that each `auditLogService.log({…})` passes `summaryArgs` (removing it from any call makes the test fail), then checks
+the actual values for opening an order / moving a table (both table names) and for a settings change (`changes`
+field by field); the Thai sentence in `summary` must remain identical, character for character.
 
-`ai-assistant.test.js` (9 cases) tests the AI assistant against a fake Anthropic client (never hits the
-real API in tests — the client is swapped out with `setAnthropicClientForTests`): RBAC (waiters/kitchen/
-cashiers can't reach it), an empty question gets a 422, an unconfigured `ANTHROPIC_API_KEY` returns a 503
-with a dedicated error code, calling a real tool then answering with a chart and named sources, only
-`admin` is offered the `list_audit_log_entries` tool (managers never see it exists, at the level of what's
-offered to the model — not just filtered out of the result afterwards), a tool call with an out-of-schema
-parameter gets rejected and handed back to the model to retry instead of failing the whole request, a
-model that never calls `submit_answer` on its own gets forced to via `tool_choice` on the final round
-(so the loop always terminates), and a refusal (`stop_reason: refusal`) comes back as a polite message
-instead of crashing. A separate `ai-assistant-rate-limit.test.js` (1 case) tests the daily quota with
-`AI_ASSISTANT_DAILY_LIMIT=1` (set in its own process so it doesn't affect other test files running the
+`ai-assistant.test.js` (9 cases) tests the AI assistant against a fake Anthropic client (the real API is never
+called in tests; the client is replaced with `setAnthropicClientForTests`): RBAC (waiters/kitchen/
+cashiers cannot access it), an empty question is rejected with 422, an unconfigured `ANTHROPIC_API_KEY` returns 503
+with a dedicated error code, calling a real tool and then answering with a chart and named sources, only
+`admin` is offered the `list_audit_log_entries` tool (for managers the tool is not offered to the model at all,
+rather than being filtered out of the result afterwards), a tool call with an out-of-schema
+parameter is rejected and returned to the model for a retry instead of failing the whole request, a
+model that never calls `submit_answer` is forced to do so via `tool_choice` in the final round
+(so the loop always terminates), and a refusal (`stop_reason: refusal`) is returned as a polite message
+rather than an error. A separate `ai-assistant-rate-limit.test.js` (1 case) tests the daily quota with
+`AI_ASSISTANT_DAILY_LIMIT=1` (set in its own process so that it does not affect other test files running the
 default limit of 20) (see `docs/tickets/15-ai-ask-your-data.md`, `docs/DECISIONS.md` #33).
 
-`report-export.test.js` (8 new cases) tests exporting reports as CSV (sales summary/top items/sales by
+`report-export.test.js` (8 cases) tests exporting reports as CSV (sales summary/top items/sales by
 day — correct header/content + UTF-8 BOM) and the Z-report both per shift (with cash reconciliation,
-computed from `payments.shift_id` rather than order creation date, to correctly handle orders opened
-across a shift boundary) and per day (all shifts combined, no cash reconciliation since multiple
-shifts/cashiers could be mixed together), a 404 when the shift doesn't exist, exporting a Z-report as
-CSV, and RBAC (a waiter can't call it) (see `docs/tickets/12-report-export.md`).
+computed from `payments.shift_id` rather than the order creation date, to handle orders opened
+across a shift boundary correctly) and per day (all shifts combined, without cash reconciliation, since multiple
+shifts/cashiers may be combined), a 404 when the shift does not exist, exporting a Z-report as
+CSV, and RBAC (a waiter cannot call it) (see `docs/tickets/12-report-export.md`).
 
-`branches.test.js` (16 new cases) fully tests multi-branch: login returns a `pendingToken` + the list
-of branches when the account has access to ≥2 branches (and isn't admin); login resolves immediately
-when there's a single branch or the user is admin (always auto-selecting the first branch); `POST
-/auth/select-branch` both exchanges a pendingToken for a real token and switches branch afterwards
-(but a pendingToken can't be used to call any other endpoint before a branch is chosen); only admin
-can pick "all branches" mode (`branchId: null`); `authenticate` re-checks branch access from the DB on
+`branches.test.js` (16 cases) covers multi-branch support: login returns a `pendingToken` + the list
+of branches when the account has access to ≥2 branches (and is not admin); login completes immediately
+when there is a single branch or the user is admin (always selecting the first branch automatically); `POST
+/auth/select-branch` both exchanges a pendingToken for a full token and switches branch afterwards
+(but a pendingToken cannot be used to call any other endpoint before a branch is selected); only admin
+can select "all branches" mode (`branchId: null`); `authenticate` re-checks branch access from the DB on
 every request (a disabled branch invalidates an old token immediately, even for admin); table/menu/
-order/ingredient lists are correctly filtered by `branch_id` (all-branches mode sees both branches
-combined); creating a new staff member auto-assigns them to the branch the creator is currently
-working in; and RBAC on `GET /branches`/`GET /branches/mine`/`PATCH /branches/:id` is correct (see
+order/ingredient lists are filtered correctly by `branch_id` (all-branches mode sees both branches
+combined); a newly created staff member is assigned automatically to the branch in which the creator is currently
+working; and RBAC on `GET /branches`/`GET /branches/mine`/`PATCH /branches/:id` is correct (see
 `docs/tickets/11-multi-branch.md`, `docs/DECISIONS.md` #36).
 
-`public-order.test.js` (13 new cases) tests the public, login-free QR self-order endpoints: every
+`public-order.test.js` (13 cases) tests the public, login-free QR self-order endpoints: every
 table has a unique `qrToken` from `GET /tables`, a bad token or a deactivated table returns 404,
-viewing the menu/current order for a table works correctly, adding the first item auto-opens a new
-order (later adds go into the same order), ordering a sold-out item returns 409, sending more than 20
+viewing the menu/current order for a table works correctly, adding the first item opens a new
+order automatically (later additions go into the same order), ordering a sold-out item returns 409, sending more than 20
 items in one call returns 422, `PATCH /tables/:id/qr-token/regenerate` invalidates the old token
-immediately with RBAC (admin/manager only — waiters can't call it), and `POST .../items` is rate
-limited to 30 requests/5 minutes per table, returning 429 past that (see
+immediately with RBAC (admin/manager only; waiters cannot call it), and `POST .../items` is rate
+limited to 30 requests/5 minutes per table, returning 429 beyond that (see
 `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37).
 
 `sell-by-weight.test.js` (10 cases) covers selling by weight: price = per-kg price × grams rounded to
 the satang (including per-kg modifiers), weight required/forbidden by item type, one bag per line with no
 quantity edits, stock deducted in kg, stock deducted on full payment for a bill that never went to the
-kitchen (#51), a weighed item stays on sale while stock > 0, report/CSV total weight, and QR self-order
-neither shows nor accepts weighed items — `barcode-scale.test.js` (6 cases): a duplicate barcode/PLU in
-the same branch gets a 409 (another branch may reuse it), PLUs drop leading zeros and only apply to
-weighed items, exact-match barcode search, clearing codes, and a label format without enough weight
-digits is rejected (including when only one field is sent, checked against the saved value) —
+kitchen (#51), a weighed item remaining on sale while stock > 0, report/CSV total weight, and QR self-order
+neither showing nor accepting weighed items — `barcode-scale.test.js` (6 cases): a duplicate barcode/PLU in
+the same branch is rejected with 409 (another branch may reuse it), PLUs drop leading zeros and apply only to
+weighed items, exact-match barcode search, clearing codes, and rejection of a label format without enough weight
+digits (including when only one field is sent, checked against the saved value) —
 `receivables.test.js` (10 cases): credit sales (limit/no customer/waiter/points), payments applied
-oldest first and never above what's owed, cash counted into the shift, no voiding a cash receipt after
-its shift closed, billing notes (no duplicates/void and reissue/paid status), refunding a credit bill
-capped at what's still owed, debt aging, and RBAC — `migrate-credit.test.js` (1 case) builds a real
-pre-ticket-20 database and migrates it, proving the money data, the refunds pointing at it, and the
-indexes all survive (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (7 cases) covers versioned
-migrations (T01 #80): each runs once however often the server boots; one that fails halfway rolls back whole
-(tables and columns it made are gone, and it is not recorded as applied); one that runs without foreign keys must
-pass `foreign_key_check` before it commits; an edited applied migration, or an app older than its database, stops
-the server from starting; the migration files match `checksums.json` (a Windows CRLF checkout gives the same
-checksum); and a database created before T01, with seed data, a sale and a refund, upgrades with every table's row
+oldest first and never above the amount owed, cash counted into the shift, no voiding of a cash receipt after
+its shift has closed, billing notes (no duplicates/void and reissue/paid status), refunds of a credit bill
+capped at the amount still owed, debt aging, and RBAC — `migrate-credit.test.js` (1 case) builds a
+pre-ticket-20 database and migrates it, verifying that the monetary data, the refunds referencing it, and the
+indexes are all preserved (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (7 cases) covers versioned
+migrations (T01): each runs once regardless of how often the server starts; one that fails midway is rolled back completely
+(the tables and columns it created are removed, and it is not recorded as applied); one that runs without foreign keys must
+pass `foreign_key_check` before committing; an edited applied migration, or an app older than its database, prevents
+the server from starting; the migration files match `checksums.json` (a Windows CRLF checkout produces the same
+checksum); and a database created before T01, containing seed data, a sale, and a refund, is upgraded with every table's row
 count unchanged (see `docs/DECISIONS.md` #79)
 
-`erp-connection.test.js` (20 cases) walks PaynEat ERP connected mode (ticket 25) against a fake ERP (`tests/helpers/erpStub.js`)
-from standalone to leaving connected mode:
+`erp-connection.test.js` (20 cases) exercises PaynEat ERP connected mode (ticket 25) against a stub ERP (`tests/helpers/erpStub.js`),
+from standalone operation through leaving connected mode:
 - by default the ERP is never called;
-- branches with a malformed or missing code are named with the problem (in English for an English app);
-- a wrong credential, a major-2 contract and an unreachable ERP are refused without entering the mode;
-- the credential never appears in answers, logs, the audit log, the CSV export or settings;
-- an ingredient given an item code beforehand is overwritten in place, so its recipes stay linked;
-- editing ingredients or branches gets 409;
-- menu items closed by stock reopen and sell even with local stock at 0;
-- pulls go page by page from the last version, and pulling again duplicates nothing;
+- branches with a malformed or missing code are identified with the problem (in English for an English app);
+- a wrong credential, a major-2 contract, and an unreachable ERP are refused without entering the mode;
+- the credential never appears in responses, logs, the audit log, the CSV export, or settings;
+- an ingredient assigned an item code beforehand is overwritten in place, so its recipes stay linked;
+- editing ingredients or branches returns 409;
+- menu items closed because of stock reopen and sell even with local stock at 0;
+- pulls proceed page by page from the last version, and pulling again creates no duplicates;
 - a 503 midway resumes exactly after the pages already applied;
 - a superseded branch moves to its new code with its sales history;
-- the "Create here" button: a non-admin gets 403; it creates the branch with the ERP's latest Thai name (pulled first) plus its
-  ingredients and an audit entry; pressing it again or for a code the ERP doesn't assign gets 409; and an ERP that just changed an
-  existing branch's code moves that branch first, so there's no duplicate;
-- an answer that breaks the contract is an ERROR `unexpected_response` and stops scheduled pulls until a manual pull succeeds;
-- a revoked credential stops all calls until a new one is saved, then pulling resumes from the same version;
+- the "Create here" button: a non-admin receives 403; it creates the branch with the ERP's latest Thai name (pulled first) plus its
+  ingredients and an audit entry; pressing it again, or for a code the ERP does not assign, returns 409; and when the ERP has just changed an
+  existing branch's code, that branch is moved first, so no duplicate is created;
+- a response that violates the contract is reported as ERROR `unexpected_response` and stops scheduled pulls until a manual pull succeeds;
+- a revoked credential stops all calls until a new one is saved, after which pulling resumes from the same version;
 - every pull log line carries `pos_instance` and uses the events `master_data.pull.completed`/`master_data.pull.failed` with a `reason`;
-- after leaving connected mode the data stays and is editable again
+- after leaving connected mode, the data is retained and becomes editable again
 
 `erp-contract.test.js` (24 cases) pins POS contract v1 at 1.0.0 (files match the checksums copied from the ERP), checks the
-contract's examples against its schemas, and that the POS client reads every example, ignores unknown fields and entity types,
-refuses another major before looking at the shape, and turns 401/429/503/5xx/404/302 and network loss into what the contract
-says, then walks every case to the `reason` and severity telemetry v1.2 names (`credential_revoked`, `credential_unknown`,
-`erp_unreachable`, `rate_limited`, `unexpected_response`, `contract_unsupported` and a reason the ERP sends itself; ERROR when a
-person has to act) (see `docs/DECISIONS.md` #80)
+contract's examples against its schemas, and verifies that the POS client reads every example, ignores unknown fields and entity types,
+refuses another major version before inspecting the shape, and maps 401/429/503/5xx/404/302 and network loss to the behaviour the contract
+specifies, then maps every case to the `reason` and severity defined by telemetry v1.2 (`credential_revoked`, `credential_unknown`,
+`erp_unreachable`, `rate_limited`, `unexpected_response`, `contract_unsupported` and a reason sent by the ERP itself; ERROR when
+human action is required) (see `docs/DECISIONS.md` #80)
 
-`late-fees-credit-notes.test.js` (7 cases) the 15% rate cap / cashiers can't set it / rate changes are
-audited, no rate = no interest, only bills past their grace period are charged through today and a second
-run the same day charges nothing, the next run continues from where the last stopped on the principal
-still owed, payments cover interest too and a paid interest notice can't be voided until its receipt is,
-crediting a bill issues a credit note automatically (original/corrected value, difference, VAT, the
-original tax invoice number), and credit notes are for credit-sale bills only and can't exceed what's
-owed without leaving a dangling document — `document-pdf-email.test.js` (7 cases) BAHTTEXT + Buddhist-era
-dates in Bangkok time, a PDF for every document type, a long billing note flowing onto a new page / voided
-documents still downloadable, no SMTP = 503, e-mailing the customer with the PDF attached + history +
+`late-fees-credit-notes.test.js` (7 cases) covers the 15% rate cap / cashiers cannot set the rate / rate changes are
+audited, no rate = no interest, interest charged only on bills past their grace period through today with a second
+run on the same day charging nothing, the next run continuing from where the last one stopped on the principal
+still owed, payments also covering interest and a paid interest notice not being voidable until its receipt is,
+crediting a bill issuing a credit note automatically (original/corrected value, difference, VAT, the
+original tax invoice number), and credit notes being limited to credit-sale bills and never exceeding the amount
+owed or leaving an orphaned document — `document-pdf-email.test.js` (7 cases) covers BAHTTEXT + Buddhist-era
+dates in Bangkok time, a PDF for every document type, a long billing note continuing onto a new page / voided
+documents remaining downloadable, no SMTP = 503, e-mailing the customer with the PDF attached + history +
 audit log, no recipient 400 / voided document 409 / SMTP failure 502 with no history row, and saving the
-customer's e-mail — `scale.test.js` (5 cases) parsing A&D/CAS/MT-SICS/number+unit with
+customer's e-mail — `scale.test.js` (5 cases) covers parsing A&D/CAS/MT-SICS/number+unit with
 stable/unstable/overload, TCP joining lines split mid-way / sending the poll command / reconnecting after
-a dropped cable, readings older than 3 seconds not forwarded, `GET /scale` off by default / the simulator
-sending weights / the kitchen denied, and serial with no port configured explaining why without crashing
+a disconnected cable, readings older than 3 seconds not being forwarded, `GET /scale` disabled by default / the simulator
+sending weights / the kitchen being denied, and serial with no port configured reporting the reason without crashing
 (see `docs/DECISIONS.md` #54–#57)
 
-`credit-points.test.js` (8 cases) loyalty points on credit sales: a cash bill still earns at checkout, a
+`credit-points.test.js` (8 cases) covers loyalty points on credit sales: a cash bill still earns at checkout, a
 credit sale / partial payment earns nothing and full payment earns by the usual formula + audit, one
-receipt covering several bills rewards only the bills it clears, voiding a receipt takes the points back
-and paying again doesn't double them, a customer who already spent the points loses only what's left (never
+receipt covering several bills rewards only the bills it settles, voiding a receipt reverses the points
+and paying again does not double them, a customer who has already spent the points loses only the remainder (never
 negative, never doubled), credit notes reduce the points to the net amount / a fully credited bill earns
 nothing, unpaid interest keeps a bill open while waiving it earns the points without counting interest,
 and a split bill whose credit part was paid off first earns when the bill closes (see
-`docs/DECISIONS.md` #59) — `cors.test.js` (2 cases) `CORS_ORIGIN=*`, as `.env.example`/docker-compose set it,
-must answer `Access-Control-Allow-Origin: *` so a web app on a different port from the API can log in (it used
-to become `['*']`, which matches nothing — see `docs/DECISIONS.md` #61) — `error-i18n.test.js` (5 cases) scans every source file and fails on a Thai error
-message with no English/Korean entry in the catalogue, checks placeholders match across languages, and that real HTTP
-responses follow `Accept-Language` (none or unsupported = Thai as before) — `kitchen-undo.test.js`: the kitchen can step a
-status back one stage but never out of served (see `docs/DECISIONS.md` #64)
+`docs/DECISIONS.md` #59) — `cors.test.js` (2 cases) verifies that `CORS_ORIGIN=*`, as set by `.env.example`/docker-compose,
+produces `Access-Control-Allow-Origin: *` so that a web app on a different port from the API can log in (the value previously
+became `['*']`, which matches no origin — see `docs/DECISIONS.md` #61) — `error-i18n.test.js` (5 cases) scans every source file and fails on a Thai error
+message with no English/Korean entry in the catalogue, checks that placeholders match across languages, and that real HTTP
+responses follow `Accept-Language` (a missing or unsupported value falls back to Thai) — `kitchen-undo.test.js` verifies that the kitchen can revert a
+status by one stage but never out of served (see `docs/DECISIONS.md` #64)
 
-`telemetry-log-record.test.js` (13 cases) the telemetry contract's rules as pure functions, with the same
-examples as the PaynEat ERP tests (severity by status, latency as `"0.231s"`, query strings cut, QR tokens
+`telemetry-log-record.test.js` (13 cases) tests the telemetry contract's rules as pure functions, with the same
+examples as the PaynEat ERP tests (severity by status, latency as `"0.231s"`, query strings removed, QR tokens
 replaced by `:qrToken`, which `x-request-id` values are accepted, `traceparent`, labels/trace in both the
-default and `LOG_FORMAT=gcp` formats), and `telemetry.test.js` (11 cases) drives the real app and checks the
+default and `LOG_FORMAT=gcp` formats), and `telemetry.test.js` (11 cases) runs the real app and checks the
 log lines it actually writes: both formats, the `x-request-id` round trip (header/log/error body), severity
 401/404 = INFO · 422 = WARNING · 500 = one ERROR line with `error` (stack only at `LOG_LEVEL=DEBUG`), the
 branch's `location_code`, `/metrics` by route template on its own port and absent from the API port, login /
-creating and editing a customer / searching by phone leaving no name, phone, e-mail, tax ID, address, password
-or token in the log, broken JSON containing a password now 400 (was 500) without the body leaking, and no
+creating and editing a customer / searching by phone leaving no name, phone, e-mail, tax ID, address, password,
+or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (515 cases)** — split into 3 levels:
+**Flutter (515 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1753,7 +1751,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `menu_management_controller_test.dart` | Menu filtering on the management screen, counting sold-out items |
 | Controller | `kitchen_controller_test.dart` | Grouping the kitchen queue by status, counting late items, moving status forward |
 | Controller | `checkout_controller_test.dart` | Change/remaining-balance calculation, the `canPay` condition, rounding up to the nearest hundred, the "On credit" method appearing only for customers with a limit + non-waiter users, no paying over the limit, and choosing credit clearing any points (ticket 20) |
-| Controller | `checkout_controller_test.dart` | (added) a greyed-out pay button always explains why below it (no shift / invalid amount / cash short) and says nothing once payment is possible (#62) |
+| Controller | `checkout_controller_test.dart` | (continued) a disabled pay button always states the reason below it (no shift / invalid amount / cash short) and shows nothing once payment is possible (#62) |
 | Controller | `receipt_controller_test.dart` | Loading a receipt by orderId, the `Payment.tendered` rule (a receipt shows the cash the customer handed over, not the amount applied to the bill: tendered − change = amount applied), silently loading the tax invoice when none has been issued yet (404 isn't an error), and tax-invoice void permission (manager role or above) |
 | Controller | `settings_controller_test.dart` | Loading store settings into the correct form fields |
 | Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, saying when scheduled pulls have stopped, the create-branch button (success names the branch actually created / a 409 shows the reason and reloads / not in demo mode), demo mode always standalone, parsing the backend's status, and ERP unit names (unknown codes shown as they are) |
@@ -1771,302 +1769,301 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Widget | `widgets_test.dart` | Button taps and widget state, including `KitchenTicketCard` rendering the correct icon/label for all 3 order types (table/takeaway/delivery) (ticket 10) |
 | Widget | `hourly_chart_range_test.dart` | The chart's time range must come from real data, not a hardcoded value |
 | Widget | `weight_entry_dialog_test.dart` | Turning the typed weight (kg, a comma works as the decimal point) into whole grams, rounding, and rejecting anything outside 1–99,999 g (ticket 18) |
-| Core | `destructive_labels_test.dart` | The accounts-receivable "void document" button must never share a label with the ordinary Cancel/Close buttons, in every language — the Korean edition had "취소" for both, sitting next to "닫기" (see `docs/DECISIONS.md` #60) |
-| Widget | `uat_affordances_test.dart` | Found while preparing an unguided UAT: the globe button names the current language in that language and lists all 3, `StatGrid` with long captions doesn't overflow at 320/360/600 px and cards in a row share one height (was 36 overflows), table cards show a visible ⋯ button instead of relying on long-press (#62) |
-| Controller | `kitchen_controller_test.dart` | (added) Undo after a status change sends the previous status back to the server, served items get no Undo bar, and the bar clears itself when time runs out (#64) |
-| Core | `api_client_test.dart` | (added) every request carries `Accept-Language` for the language shown at that moment — switching mid-shift changes the next request (#64) |
-| Core | `korean_font_coverage_test.dart` | (added) also counts Korean Material strings (date/time pickers, buttons) and the Korean backend error messages in `backend/src/i18n/errorMessages.js` — caught 18 missing glyphs before they could show up as boxes (#64) |
-| Core | `korean_font_coverage_test.dart` | (added, #74) every Korean font weight must hold ≥ 2,350 syllables (KS X 1001) plus all the jamo seen while typing — putting the old font back turns it red (it had only 474), and it also counts the Korean name/address of the credit customer |
-| Domain | `demo_store_test.dart` | (added, #74) after every case, checks **every** audit log that case created (28 actions): rebuilt in Thai from `summaryArgs` it must match the recorded sentence character for character, and rebuilt in English/Korean it must leave no Thai beyond values the user typed — this caught Demo Mode printing "500.0 บาท" where the backend prints "500" |
+| Core | `destructive_labels_test.dart` | The accounts-receivable "void document" button must never share a label with the ordinary Cancel/Close buttons, in every language (the Korean edition previously used "취소" for both, next to "닫기") (see `docs/DECISIONS.md` #60) |
+| Widget | `uat_affordances_test.dart` | Readiness checks for unguided UAT: the globe button names the current language in that language and lists all 3, `StatGrid` with long captions does not overflow at 320/360/600 px and cards in a row share one height (previously 36 overflows), and table cards show a visible ⋯ button instead of relying on long-press (#62) |
+| Controller | `kitchen_controller_test.dart` | (continued) Undo after a status change sends the previous status back to the server, served items have no Undo bar, and the bar is dismissed automatically when the time expires (#64) |
+| Core | `api_client_test.dart` | Every request carries `Accept-Language` for the language displayed at that moment; switching language mid-shift changes the next request (#64) |
+| Core | `korean_font_coverage_test.dart` | Also covers Korean Material strings (date/time pickers, buttons) and the Korean backend error messages in `backend/src/i18n/errorMessages.js`; this check identified 18 missing glyphs before they could render as empty boxes (#64) |
+| Core | `korean_font_coverage_test.dart` | (continued, #74) every Korean font weight must contain ≥ 2,350 syllables (KS X 1001) plus all jamo produced while typing; restoring the previous font makes the test fail (it contained only 474), and the test also covers the Korean name/address of the credit customer |
+| Domain | `demo_store_test.dart` | (continued, #74) after every case, checks **every** audit log created by that case (28 actions): rebuilt in Thai from `summaryArgs`, it must match the recorded sentence character for character, and rebuilt in English/Korean, it must contain no Thai beyond values entered by the user — this check detected Demo Mode printing "500.0 บาท" where the backend prints "500" |
 | Presentation | `audit_summary_text_test.dart` | audit sentences for the backend-only actions (payment, shift open/close, move table, merge bills, apply/remove a code, create a branch from the ERP) in every language, a recipient e-mail containing `@` is not substituted twice, old logs and unknown actions fall back to the recorded sentence, and Thai always shows the recorded sentence |
-| Core | `locale_service_test.dart` | (added) the first launch uses the device language (Korean/English) and an unsupported one falls back to Thai (#62) |
-| Widget | `cart_panel_locale_test.dart` | The cart must show item names in the chosen language (English/Korean), matching the card just tapped — it had used the always-Thai `menuItem.name` since the first commit; also checks a weighed line doesn't overflow when glyphs are wide (see `docs/DECISIONS.md` #58) |
+| Core | `locale_service_test.dart` | The first launch uses the device language (Korean/English), and an unsupported language falls back to Thai (#62) |
+| Widget | `cart_panel_locale_test.dart` | The cart must show item names in the selected language (English/Korean), matching the card just tapped, rather than the Thai-only `menuItem.name`; also checks that a weighed line does not overflow with wide glyphs (see `docs/DECISIONS.md` #58) |
 | Core | `formatters_due_date_test.dart` | Due dates render in the current language ("11 Oct 2026" / "2026년 10월 11일") instead of a raw `2026-10-11`, without shifting a day with the device timezone |
-| Widget | `customer_picker_dialog_test.dart` | The customer picker used while taking an order — after one network blip, a successful re-search must bring the list back (it used to stay stuck on the error screen forever), the error state offers a retry button, and the debounce collapses 6 keystrokes into a single search request |
-| Core | `app_clock_test.dart` | `AppClock` freezes and restores the clock correctly — stops a frozen time leaking across tests |
+| Widget | `customer_picker_dialog_test.dart` | The customer picker used while taking an order — after a transient network error, a successful new search must restore the list (rather than leaving the error screen displayed), the error state offers a retry button, and the debounce collapses 6 keystrokes into a single search request |
+| Core | `app_clock_test.dart` | `AppClock` freezes and restores the clock correctly, preventing a frozen time from leaking across tests |
 | Core | `app_colors_contrast_test.dart` | Computes real WCAG contrast ratios against **every surface actually used**, not just white — standard mode must pass AA (4.5:1), high-contrast mode AAA (7:1), and any colour used as a button/chip fill must carry a white label |
 | Core | `contrast_service_test.dart` | The real toggle path — switching the palette, persisting it, restoring it on next launch, and proving the theme rebuilds its colours instead of caching them once |
 | Core | `promptpay_test.dart` | Mirrors the backend's PromptPay QR algorithm (EMV QR + CRC-16/CCITT-FALSE) in Dart for Demo Mode — includes a golden-value test that checks the payload matches the backend's output character-for-character (ticket 16) |
 | Core | `csv_test.dart` | Mirrors the backend's CSV builder in Dart — header, escaping comma/quote/newline, null values become an empty string, and the output is prefixed with a UTF-8 BOM (ticket 14) |
-| Core | `bold_markdown_test.dart` | Parses `**bold**` markdown from the AI assistant's answers into `TextSpan`s, correctly splitting bold vs. plain segments — including multiple bold runs in one string and an unpaired `**` (bug fix: the plain `Text` widget used to show raw `**` asterisks instead of rendering bold) |
+| Core | `bold_markdown_test.dart` | Parses `**bold**` markdown from the AI assistant's answers into `TextSpan`s, correctly splitting bold vs. plain segments — including multiple bold runs in one string and an unpaired `**` (guards against the plain `Text` widget displaying raw `**` asterisks instead of bold text) |
 
-> Methods that touch navigation (`Get.toNamed`, `Get.snackbar`, `Get.dialog`) aren't covered at this unit
-> level — they need a real, pumped `GetMaterialApp`, so only the navigation-independent logic/state is
-> tested (see `docs/CODING_STANDARDS.md` section 6.2) — while writing these tests, a real bug turned up in
-> `OrderDetailController`: GetX silently skips assigning an `Rxn<Order>` when the newly returned order has
-> the same id as before (because `Order.==` only compares id), leaving the screen showing stale data after
-> an edit or status change — now fixed (see `docs/CODING_STANDARDS.md` section 3.5).
+> Methods that involve navigation (`Get.toNamed`, `Get.snackbar`, `Get.dialog`) are not covered at this unit
+> level because they require a real, pumped `GetMaterialApp`; only navigation-independent logic and state are
+> tested (see `docs/CODING_STANDARDS.md` section 6.2). These tests uncovered a defect in
+> `OrderDetailController`, since fixed: GetX silently skipped assigning an `Rxn<Order>` when the newly returned
+> order had the same id as before (because `Order.==` compares only the id), leaving the screen with stale
+> data after an edit or status change (see `docs/CODING_STANDARDS.md` section 3.5).
 
 GitHub Actions CI runs `dart format` → `flutter analyze` → `dart run custom_lint` → `flutter test` →
 `flutter build web` on the Flutter side, and `prettier --check` → `eslint` → `npm test` on the backend,
 on every push, plus a separate **E2E** job that installs Node and Flutter side by side and runs
 `flutter test test_e2e` against a real backend process (see the E2E paragraph above).
 
-A separate **Clean Architecture (layer rules)** job runs `tool/check-architecture.sh` — the five
-dependency-direction checks from [`CODING_STANDARDS.md` §4.3](docs/CODING_STANDARDS.md). Those rules
-had been written down as "run these before you commit", which means they only held as long as someone
-remembered. **The first CI run found a real violation**: `promotion_engine.dart`, in the domain layer,
-was calling GetX's `.tr` to translate user-facing strings — which §4.1 forbids outright. The domain now
-returns a **translation key** and the calling layer translates it, which is what the line immediately
-above it was already doing.
+A separate **Clean Architecture (layer rules)** job runs `tool/check-architecture.sh`, which performs the five
+dependency-direction checks from [`CODING_STANDARDS.md` §4.3](docs/CODING_STANDARDS.md), so that these rules are
+enforced automatically rather than depending on a manual pre-commit step. The check identified one violation,
+since corrected: `promotion_engine.dart`, in the domain layer, called GetX's `.tr` to translate user-facing
+strings, which §4.1 prohibits. The domain now returns a **translation key** and the calling layer performs the
+translation, consistent with the adjacent code.
 
 ---
 
-## 🔭 What's next
+## 🔭 Roadmap
 
-What's not done yet, and why — so it's clear these are known gaps, not oversights.
+Completed work, planned work, and known limitations, with the reasoning for each.
 
-- [x] **Move table / merge bills / split bill per person** — done: `PATCH /orders/:id/move-table`,
+- [x] **Move table / merge bills / split bill per person** — `PATCH /orders/:id/move-table`,
   `POST /orders/:id/merge`, and splitting the bill by item (`POST /payments` with `itemIds` +
   `POST /payments/order/:id/split-preview`), with full UI for all 3 features (see the ✨ Features section)
-- [x] **Shift open/close / cash drawer reconciliation** — done: enter a starting cash float when opening a
-  shift, count the real cash when closing and automatically compare it to the expected total; a shift must
-  be open before payments can be accepted (see the ✨ Features section)
-- [x] **Refunds after payment** — done: `POST /payments/:id/refund`, full or partial, with a required
+- [x] **Shift open/close / cash drawer reconciliation** — a starting cash float is entered when a shift opens,
+  and the counted cash is compared automatically with the expected total at close; a shift must be open
+  before payments can be accepted (see the ✨ Features section)
+- [x] **Refunds after payment** — `POST /payments/:id/refund`, full or partial, with a mandatory
   reason, automatically subtracted from net sales in reports (see the ✨ Features section)
-- [x] **Printing real receipts on a thermal printer** — done, deliberately scoped to LAN/Wi-Fi first
-  (Bluetooth/USB aren't supported yet since this development environment has no real hardware to test
+- [x] **Printing receipts on a thermal printer** — intentionally limited to LAN/Wi-Fi in the first phase
+  (Bluetooth/USB are not yet supported because this development environment has no hardware to test
   against — full reasoning in [`docs/DECISIONS.md`](docs/DECISIONS.md) #11)
-- [x] **Offline mode** — done, deliberately scoped to "adding items to an already-open order" first (the
-  lowest-conflict-risk action); items are queued on-device and synced automatically once the connection is
-  back — opening a new order, taking payment, opening/closing a shift, etc. still always require being
-  online, by design (full scope in [`docs/DECISIONS.md`](docs/DECISIONS.md) #13)
-- [x] **Conditional promotions/discounts** (happy hour, discount codes, buy-one-get-one) — done: admin/manager
+- [x] **Offline mode** — intentionally limited to "adding items to an already-open order" in the first phase
+  (the action with the lowest conflict risk); items are queued on the device and synchronized automatically when
+  the connection is restored. Opening a new order, taking payment, opening/closing a shift, etc. always require a
+  connection, by design (full scope in [`docs/DECISIONS.md`](docs/DECISIONS.md) #13)
+- [x] **Conditional promotions/discounts** (happy hour, discount codes, buy-one-get-one) — admin/manager
   can create/edit/disable 3 promotion types with conditions for day/time, eligible categories/menu items,
-  minimum spend, and campaign dates; auto-applies when eligible or accepts a customer-entered discount code
-  (one promotion per bill, additive with a manual discount but capped at the subtotal), shown clearly across
-  the bill/receipt/printed receipt (see the ✨ Features section)
-- [x] **Ingredient stock tracking** — done: link a menu item to the ingredients it uses and the quantity per
-  order from the menu edit form; stock auto-deducts when sent to kitchen (auto-restored on cancel/removal); a
-  menu item auto-disables/re-enables based on ingredient stock, with a low-stock alert screen (see the ✨
-  Features section and `docs/DECISIONS.md` #15)
-- [x] **High-contrast mode** — done: toggled from the **Profile** page (reachable by every role,
-  not just admins) and remembered per device. Every text token moves from AA (4.5:1) to AAA (7:1)
+  minimum spend, and campaign dates; promotions apply automatically when eligible or through a customer-entered
+  discount code (one promotion per bill, additive with a manual discount but capped at the subtotal) and are shown
+  clearly on the bill/receipt/printed receipt (see the ✨ Features section)
+- [x] **Ingredient stock tracking** — menu items are linked to their ingredients and the quantity per
+  order from the menu edit form; stock is deducted automatically when an order is sent to the kitchen (and restored
+  on cancellation/removal); menu items are disabled/re-enabled automatically based on ingredient stock, with a
+  low-stock alert screen (see the ✨ Features section and `docs/DECISIONS.md` #15)
+- [x] **High-contrast mode** — enabled from the **Profile** page (accessible to every role,
+  not only admins) and stored per device. Every text token moves from AA (4.5:1) to AAA (7:1)
   and card borders from 1.24:1 to 4.10:1 (see `docs/DECISIONS.md` #18)
-- [x] **Korean language support** — done: 1,233 translation keys across every feature (verified to
-  match the Thai key set exactly), NotoSansKR embedded as a subset (all 2,350 KS X 1001 syllables, so Korean can really be typed, #74), a separately designed Korean
-  landing page with 5 real Korean-locale app screenshots, a three-way language switcher on all
-  three landing pages (now visible on mobile too, where the whole group used to be hidden), and
-  the AI assistant unlocked to answer in Korean. This was not on the roadmap — it came from a
-  Korean business owner in Bangkok who found the project on GitHub and got in touch
-  (see `docs/DECISIONS.md` #39) — **no Korean menu names in the database**, deliberately: those
-  are each restaurant's own data, not system text
-- [x] **Flutter integration tests against a real backend** — done as the E2E suite `app/test_e2e/`
-  (49 cases): boots the real backend on a fresh temporary database per file and drives the app's real
-  data/domain code through a full restaurant business day + a customer scanning the QR + branches/
-  permissions. It works at the data/domain layer rather than `integration_test`, which needs a real
-  device, and runs as its own CI job — its first run found 5 real bugs that all 659 existing tests
-  passed, all fixed (see the 🧪 Testing section and `docs/DECISIONS.md` #43–#47)
-- [x] **Tax invoice** — done: store tax ID/address/branch can be set from Settings; abbreviated/full tax
-  invoices can be issued from the receipt page of any fully-paid bill, with a continuous, non-duplicate
-  running number (`INV<Buddhist year>-<sequence>`, resetting every year); voiding a wrongly-issued invoice
-  and reissuing it is supported (see the ✨ Features section and `docs/DECISIONS.md` #19) — **e-Tax
-  invoice** (filing directly with the Revenue Department electronically) is **not done yet**, deliberately
+- [x] **Korean language support** — 1,233 translation keys across every feature (verified to
+  match the Thai key set exactly), NotoSansKR embedded as a subset (all 2,350 KS X 1001 syllables, so Korean text can be entered, #74), a separately designed Korean
+  landing page with 5 Korean-locale app screenshots, a three-way language switcher on all
+  three landing pages (also visible on mobile), and the AI assistant enabled to answer in Korean.
+  Added to support Korean restaurants in Thailand (see `docs/DECISIONS.md` #39). **Korean menu names are
+  intentionally not stored in the database**, because menu names are each restaurant's own data, not system text
+- [x] **Flutter integration tests against a real backend** — implemented as the E2E suite `app/test_e2e/`
+  (49 cases): it starts the real backend on a new temporary database per file and exercises the app's
+  data/domain code through a full restaurant business day, a customer scanning the QR, and
+  branches/permissions. It operates at the data/domain layer rather than through `integration_test`, which
+  requires a physical device, and runs as a separate CI job. The suite uncovered 5 defects not detected by the
+  659 existing tests; all have been fixed (see the 🧪 Testing section and `docs/DECISIONS.md` #43–#47)
+- [x] **Tax invoice** — the store's tax ID/address/branch are configured in Settings; abbreviated/full tax
+  invoices can be issued from the receipt page of any fully paid bill, with a continuous, non-duplicated
+  running number (`INV<Buddhist year>-<sequence>`, reset annually); a wrongly issued invoice can be voided
+  and reissued (see the ✨ Features section and `docs/DECISIONS.md` #19). **e-Tax
+  invoice** (electronic filing directly with the Revenue Department) is **not yet implemented** and is
   deferred to a later phase
-- [x] **Audit log** — done: records every action risky for front-of-house fraud, append-only (cancelling
-  an order, voiding an item after it's sent to the kitchen, editing a discount, deactivating/deleting/
+- [x] **Audit log** — records every action with front-of-house fraud risk, append-only (cancelling
+  an order, voiding an item after it has been sent to the kitchen, editing a discount, deactivating/deleting/
   changing the role of/resetting the password for a staff account, editing VAT/service charge, a refund,
-  voiding a tax invoice) with who did it, when, and why; the log page is admin-only and filterable by
+  voiding a tax invoice) with the user, time, and reason; the log page is admin-only and filterable by
   action type (see the ✨ Features section and `docs/DECISIONS.md` #21)
-- [x] **Customer & Loyalty** — done: search a customer by phone or add a new one, then link them to an
-  order optionally when opening it; points are earned automatically off the purchase amount exactly once
-  when an order becomes fully paid (never double-counted across split-payment rounds); points can be
+- [x] **Customer & Loyalty** — a customer can be found by phone or added, then optionally linked to an
+  order when it is opened; points are earned automatically from the purchase amount exactly once
+  when an order is fully paid (never double-counted across split-payment rounds); points can be
   redeemed for a discount at checkout (rejected outright, never silently capped, if the amount exceeds
-  what the customer has or what's due this round); the exchange rate is configurable from Settings
-  (admin/manager); admin/manager can see any customer's purchase history and points balance from the
-  **Customers/Loyalty** tab (see the ✨ Features section and `docs/DECISIONS.md` #22) — **no redeem UI
-  on the split-bill-per-person page yet**, since that wasn't part of this ticket's acceptance criteria
-- [x] **Full takeaway/delivery flow** — done: takeaway and delivery orders can be opened from the "New
-  takeaway/delivery" button on the table map with no table attached at all; takeaway orders (`type=takeaway`
-  only) automatically get a daily-resetting queue number (delivery riders reference the order by its bill
-  number instead — its counter is entirely independent from the bill-number sequence); the KDS shows a
-  distinct icon/label for all 3 order types on every ticket; re-verified that cashier checkout/payment for
-  takeaway orders never requires picking a table (see the ✨ Features section and `docs/DECISIONS.md` #23)
-  — **not connecting to any external delivery platform** (Grab, LINE MAN, etc.) yet, deliberately, exactly
-  as the ticket itself recommended: that scope is large and depends on each platform's own external API,
-  and should become its own follow-up ticket once it's known which platform to integrate with first
-- [x] **Real PromptPay QR** — done: `qr` used to be just a label the cashier confirmed manually; now it
-  generates a real QR code to the EMV QR standard for the customer to scan, bound to the amount
-  automatically (set the store's PromptPay ID in Settings first) — the algorithm has full test coverage
-  on both the backend (JS) and Demo Mode (Dart), with a golden value proving both sides produce the exact
-  same payload (see the ✨ Features section, `docs/tickets/16-promptpay-qr.md`, `docs/DECISIONS.md` #26)
-  — **no payment gateway/callback for automatic payment verification yet**, deliberately scoped out; the
-  cashier still checks the slip/banking app before confirming, same as bank transfer/card
-- [x] **Financial/accounting audit** — done: building on #21/#25, adds 5 new action types — editing a
-  menu price (only when the price actually changes), creating/editing/deleting a promotion, manually
-  adjusting ingredient stock — plus a **CSV export** button (`GET /audit-logs/export`) and a **date-range
-  picker** on the Audit Log page, both of which had been outstanding since #21 (see the ✨ Features
-  section, `docs/tickets/14-financial-audit-trail.md`, `docs/DECISIONS.md` #27) — **CSV export is
-  web-only**, since this page lives in the admin zone, which was designed as web-only back in ticket 08
-- [x] **Report export + Z-report (shift/day close)** — done: an **Export CSV** button per report type
-  on the Reports page (sales summary/top items/sales by day, for the currently selected date range),
-  and a **Z-report** viewable both per shift (with cash reconciliation, computed from
-  `payments.shift_id` rather than order creation date, to correctly handle orders opened across a
-  shift boundary) and per day (all shifts combined, no cash reconciliation) — both exportable as CSV
-  too (see the ✨ Features section, `docs/tickets/12-report-export.md`) — **CSV export only**, no
-  Excel/PDF yet, since CSV already opens cleanly in Excel (with a UTF-8 BOM so Thai characters don't
-  garble) and the ticket's acceptance criteria accept it as an equivalent format (see
+  the customer's balance or the amount due in the current round); the exchange rate is configurable in Settings
+  (admin/manager); admin/manager can view any customer's purchase history and points balance on the
+  **Customers/Loyalty** tab (see the ✨ Features section and `docs/DECISIONS.md` #22). **Redemption is not yet
+  available on the split-bill-per-person page**, as it was outside this ticket's acceptance criteria
+- [x] **Full takeaway/delivery flow** — takeaway and delivery orders are opened from the "New
+  takeaway/delivery" button on the table map with no table attached; takeaway orders (`type=takeaway`
+  only) automatically receive a queue number that resets daily (delivery riders reference the order by its bill
+  number; the queue counter is entirely independent of the bill-number sequence); the KDS shows a
+  distinct icon/label for all 3 order types on every ticket; cashier checkout/payment for
+  takeaway orders never requires selecting a table (see the ✨ Features section and `docs/DECISIONS.md` #23).
+  **Integration with external delivery platforms** (Grab, LINE MAN, etc.) is intentionally not included, as
+  recommended by the ticket: the scope is large and depends on each platform's external API,
+  and it should be handled in a separate follow-up ticket once the first platform to integrate is decided
+- [x] **Real PromptPay QR** — the `qr` method generates a real QR code to the EMV QR standard for the customer
+  to scan, bound to the amount automatically (the store's PromptPay ID must first be set in Settings); the
+  algorithm is fully tested on both the backend (JS) and Demo Mode (Dart), with a golden value proving that both
+  produce an identical payload (see the ✨ Features section, `docs/tickets/16-promptpay-qr.md`, `docs/DECISIONS.md` #26).
+  **A payment gateway/callback for automatic payment verification is not yet implemented** and is intentionally
+  out of scope; the cashier verifies the slip/banking app before confirming, as with bank transfer/card
+- [x] **Financial/accounting audit** — extends #21/#25 with 5 additional action types (editing a
+  menu price, only when the price actually changes; creating/editing/deleting a promotion; manually
+  adjusting ingredient stock), plus a **CSV export** button (`GET /audit-logs/export`) and a **date-range
+  picker** on the Audit Log page (see the ✨ Features
+  section, `docs/tickets/14-financial-audit-trail.md`, `docs/DECISIONS.md` #27). **CSV export is
+  web-only**, because this page belongs to the admin zone, which is designed as web-only (ticket 08)
+- [x] **Report export + Z-report (shift/day close)** — an **Export CSV** button per report type
+  on the Reports page (sales summary/top items/sales by day, for the selected date range),
+  and a **Z-report** available per shift (with cash reconciliation, computed from
+  `payments.shift_id` rather than the order creation date, to handle orders opened across a
+  shift boundary correctly) and per day (all shifts combined, without cash reconciliation), both exportable
+  as CSV (see the ✨ Features section, `docs/tickets/12-report-export.md`). **Export is CSV only**, with no
+  Excel/PDF yet, because CSV opens cleanly in Excel (with a UTF-8 BOM so that Thai characters display
+  correctly) and the ticket's acceptance criteria accept it as an equivalent format (see
   `docs/DECISIONS.md` #35)
-- [x] **Multi-branch/multi-store support** — done: added `branches`/`user_branches`, scoped
-  `branch_id` to the 4 entities that are genuinely branch-level data (tables/menu items/orders/
-  ingredients) including every report, accounts with access to multiple branches pick one at login
-  and can switch branch later from the Profile page, and admin can switch to an "all branches" mode
-  to see combined reports (see the ✨ Features section, `docs/tickets/11-multi-branch.md`,
-  `docs/DECISIONS.md` #36) — **no "manage branches" screen yet** in Flutter (the backend already has
-  the endpoints, but the acceptance criteria didn't require it), **no full cross-branch guard** for
-  update/delete/get-by-id (scoped to list/create only), and **Demo Mode deliberately still has a
-  single branch** (`branch_id` was not added to the demo store)
-- [x] **QR self-order** — done: every table has a unique `qrToken`; customers scan the QR code and
-  order straight from their own phone through a public, login-free endpoint that reuses 100% of the
-  existing business logic (stock deduction/promotions/realtime); staff (`admin`/`manager`) can view/
-  copy the link/regenerate the QR from the table map (see the ✨ Features section,
-  `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37) — **no self-checkout** and **no
-  printing a physical QR standee from within the app**, deliberately kept out of scope (see "Deliberately
-  not doing" below)
-- [x] **Sell by weight (price per kg)** — done: items can be sold by weight, stored in grams (an integer,
-  like money in satang), priced by one formula that matches to the satang across the cart/backend/Demo
-  Mode, with stock deducted in kg — and on full payment if the bill never went to the kitchen (see
-  `docs/tickets/18-sell-by-weight.md`, `docs/DECISIONS.md` #48, #51)
-- [x] **Barcodes/scale labels** — done: scan product barcodes and EAN-13 scale labels that carry the
-  weight (the label format is configurable to match the store's scale), decoded on the device with no
-  server round-trip, never guessing a weight from a misread label (see `docs/tickets/19-barcode-scale.md`,
-  `docs/DECISIONS.md` #49)
-- [x] **Credit sales/billing for trade customers (B2B)** — done: per-customer credit limit/term, credit
-  sales, billing notes, payment receipts applied oldest bill first, debt aging, cash collections counted
-  into the drawer at shift close, and existing databases migrate with no money data lost (see
+- [x] **Multi-branch/multi-store support** — `branches`/`user_branches` were added, and
+  `branch_id` scopes the 4 entities that are genuinely branch-level data (tables/menu items/orders/
+  ingredients), including every report; accounts with access to multiple branches select one at login
+  and can switch branches later from the Profile page, and admin can switch to an "all branches" mode
+  to view combined reports (see the ✨ Features section, `docs/tickets/11-multi-branch.md`,
+  `docs/DECISIONS.md` #36). **There is no "manage branches" screen yet** in Flutter (the backend already
+  provides the endpoints, but the acceptance criteria did not require it), and **Demo Mode intentionally has a
+  single branch** (`branch_id` was not added to the demo store). Remaining branch-isolation work is tracked in the
+  QA tickets (T19–T24, T32; details are not published, per `docs/DECISIONS.md` #81)
+- [x] **QR self-order** — every table has a unique `qrToken`; customers scan the QR code and
+  order directly from their own phone through a public, login-free endpoint that reuses 100% of the
+  existing business logic (stock deduction/promotions/realtime); staff (`admin`/`manager`) can view the QR,
+  copy the link, and regenerate the QR from the table map (see the ✨ Features section,
+  `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37). **Self-checkout** and **printing a
+  physical QR standee from within the app** are intentionally out of scope (see "Intentionally out of
+  scope" below)
+- [x] **Sell by weight (price per kg)** — items can be sold by weight, stored in grams (an integer,
+  as money is stored in satang), priced by a single formula that matches to the satang across the
+  cart/backend/Demo Mode, with stock deducted in kg, including on full payment when the bill was never sent
+  to the kitchen (see `docs/tickets/18-sell-by-weight.md`, `docs/DECISIONS.md` #48, #51)
+- [x] **Barcodes/scale labels** — product barcodes and EAN-13 scale labels that carry the
+  weight can be scanned (the label format is configurable to match the store's scale), decoded on the device
+  without a server round-trip, and a weight is never inferred from a misread label (see
+  `docs/tickets/19-barcode-scale.md`, `docs/DECISIONS.md` #49)
+- [x] **Credit sales/billing for trade customers (B2B)** — per-customer credit limit/term, credit
+  sales, billing notes, payment receipts applied to the oldest bill first, debt aging, cash collections counted
+  in the drawer at shift close, and migration of existing databases with no loss of monetary data (see
   `docs/tickets/20-b2b-credit.md`, `docs/DECISIONS.md` #50)
-- [x] **Late-payment interest/fees + separate credit notes** — done: the shop sets a late-interest rate
-  (0–15% a year) + grace days; simple interest per bill continues from the previous run without
-  overlapping, producing an interest notice `LF…` added to the balance and voidable only while unpaid;
+- [x] **Late-payment interest/fees + separate credit notes** — the shop sets a late-interest rate
+  (0–15% a year) and grace days; simple interest per bill continues from the previous run without
+  overlap, producing an interest notice `LF…` that is added to the balance and can be voided only while unpaid;
   crediting a credit-sale bill always produces a credit note `CN…` with the original/corrected value,
   the difference, and the VAT on the difference (see `docs/tickets/21-late-fees-credit-notes.md`,
   `docs/DECISIONS.md` #55–#56)
-- [x] **Live weight from a cabled scale + scanning with the phone camera** — done: the scale connects to
-  the store server (TCP/serial) instead of each tablet, A&D/CAS/MT-SICS/number+unit formats are parsed,
-  the weight is broadcast in real time and usable only when stable, and a camera button on order taking
-  reads barcodes/scale labels into the scanner's path (see `docs/tickets/22-live-scale-camera-scan.md`,
-  `docs/DECISIONS.md` #54)
-- [x] **E-mailing billing notes as PDF** — done: all 4 receivables documents render as Thai A4 PDFs
-  (amount in words, Buddhist-era dates), download on the web, and go out by e-mail with the PDF attached
-  through the shop's own SMTP, with a send history (see `docs/tickets/23-document-pdf-email.md`,
+- [x] **Live weight from a cabled scale + scanning with the phone camera** — the scale connects to
+  the store server (TCP/serial) rather than to each tablet; A&D/CAS/MT-SICS/number+unit formats are parsed;
+  the weight is broadcast in real time and can be used only when stable; and a camera button on the
+  order-taking screen reads barcodes/scale labels through the scanner's path (see
+  `docs/tickets/22-live-scale-camera-scan.md`, `docs/DECISIONS.md` #54)
+- [x] **E-mailing billing notes as PDF** — all 4 receivables documents are rendered as Thai A4 PDFs
+  (amount in words, Buddhist-era dates), can be downloaded on the web, and are sent by e-mail with the PDF
+  attached through the shop's own SMTP server, with a send history (see `docs/tickets/23-document-pdf-email.md`,
   `docs/DECISIONS.md` #57)
-- [x] **UI review of weight sales/scanning/credit in every language × every screen size** — done: 93 screens,
-  nothing overflows; fixed the cart and option sheet showing Thai on English/Korean screens, raw due dates, the
-  scan box on phones, 8 missing Korean glyphs and the broken screenshot tool, and added a meat-counter section
-  with a genuinely scannable label to all three landing pages (see `docs/DECISIONS.md` #58)
-- [x] **Decide when a credit sale should earn loyalty points** — done: the store owner chose **on full
-  payment** — charging to the account, partial payments or unpaid interest earn nothing; once paid off it
-  earns on the net amount after credit notes (excluding interest); voiding the receipt that cleared it takes
-  the points back as far as the customer still has them; cash bills still earn at checkout (see
-  `docs/DECISIONS.md` #58, #59)
+- [x] **UI review of weight sales/scanning/credit in every language × every screen size** — 93 screens with
+  no overflow; corrected the cart and option sheet showing Thai on English/Korean screens, unformatted due
+  dates, the scan box on phones, 8 missing Korean glyphs, and the screenshot tool; added a meat-counter section
+  with a scannable label to all three landing pages (see `docs/DECISIONS.md` #58)
+- [x] **Decide when a credit sale should earn loyalty points** — the store owner's decision is **on full
+  payment**: charging to the account, partial payments, or unpaid interest earn nothing; once the debt is
+  settled, points are earned on the net amount after credit notes (excluding interest); voiding the receipt
+  that settled the bill reverses the points to the extent the customer still holds them; cash bills continue to
+  earn at checkout (see `docs/DECISIONS.md` #58, #59)
 
-- [x] **UX review before an unguided UAT (the customer taps around alone)** — done: every tab of every role plus
-  the screens you reach by tapping, × 3 languages × 4 screen sizes (666 screens,
-  `tool/screenshots/uat_walkthrough_test.dart`). Overflows went from 64 to 0; added a language switch before
-  login and on the QR menu, one-tap demo sign-in, confirmations before anything irreversible (merge bills,
-  role changes, discarding a cart), a reason whenever a button is disabled, and tooltips on every icon button
-  (see `docs/DECISIONS.md` #62)
-- [x] **Close the items left open by the UAT review** — done: backend error messages follow the app language (a
-  catalogue plus a test that scans the source so nothing slips through), Material strings/date pickers follow the
-  language, demo staff names are translated, the kitchen has Undo, the QR menu says weighed meat is ordered from
-  staff, and screenshots draw real shadows instead of black outlines (see `docs/DECISIONS.md` #64). Kept on purpose:
-  Thai branch name/address (tax-invoice rule) and per-device data in demo mode — audit-log summaries now read in the
-  viewer's language (the CSV stays Thai, see `docs/DECISIONS.md` #74)
+- [x] **UX review before an unguided UAT (customers use the system without guidance)** — every tab of every role plus
+  the screens reached from them, × 3 languages × 4 screen sizes (666 screens,
+  `tool/screenshots/uat_walkthrough_test.dart`). Overflows were reduced from 64 to 0; added a language switch
+  before login and on the QR menu, one-tap demo sign-in, confirmations before any irreversible action (merge
+  bills, role changes, discarding a cart), a stated reason whenever a button is disabled, and tooltips on every
+  icon button (see `docs/DECISIONS.md` #62)
+- [x] **Resolve the remaining UAT review items** — backend error messages follow the app language (a
+  catalogue plus a test that scans the source so that no message is missed), Material strings/date pickers
+  follow the language, demo staff names are translated, the kitchen has Undo, the QR menu states that weighed
+  meat is ordered from staff, and screenshots render real shadows instead of black outlines (see
+  `docs/DECISIONS.md` #64). Intentionally retained: the Thai branch name/address (tax-invoice rule) and
+  per-device data in demo mode. Audit-log summaries are displayed in the viewer's language (the CSV remains in
+  Thai, see `docs/DECISIONS.md` #74)
 
 - [ ] **Connect to [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) (optional mode)** — the supply-side
-  ERP for a chain that runs its own plant. When connected, the ERP owns ingredients, branches, menus,
-  prices and recipes and the POS sends sales to it through an outbox, exactly once even across outages —
-  **without the ERP, everything works exactly as today** (see tickets 25–28 and `docs/DECISIONS.md` #66) — done so far:
-  **ticket 25**, connecting with a credential, pulling ingredients and branches by version, read-only management screens, no
-  automatic sold-out from local stock, a button to create a branch the ERP assigns, and log lines under telemetry v1.2
-  (`docs/DECISIONS.md` #80); 26 (sales), 27 (menus/prices/recipes) and 28 (from config) remain, and wait for QA round 1 (#77)
-- [x] **A Google Play channel (ticket 29a)** — done: CI builds an `.aab` signed with the upload key from GitHub Secrets
-  when a tag is pushed (`versionCode` from the tag, attached to the GitHub Release), in demo mode for closed testing;
-  the PaynEat app icon replaces the Flutter logo; a privacy policy page in three languages; Data safety answers and
-  Thai/English store text and images under `docs/store/` (see `docs/DECISIONS.md` #75). The Play applicationId is
-  `suruch.boss.payneat` (#78). What is left happens in the
-  owner's account: open a Play Console account, add the upload key to Secrets, and find 12 testers for 14 days in a row
+  ERP for a chain that operates its own production plant. When connected, the ERP owns ingredients, branches,
+  menus, prices, and recipes, and the POS sends sales to it through an outbox, exactly once even across outages;
+  **without the ERP, the system works exactly as it does today** (see tickets 25–28 and `docs/DECISIONS.md` #66).
+  Completed: **ticket 25** — connection with a credential, pulling ingredients and branches by version, read-only
+  management screens, no automatic sold-out from local stock, a button to create a branch assigned by the ERP, and
+  log lines under telemetry v1.2 (`docs/DECISIONS.md` #80). Remaining: 26 (sales), 27 (menus/prices/recipes), and
+  28 (from config), pending the first quality-assurance round (#77)
+- [x] **A Google Play channel (ticket 29a)** — CI builds an `.aab` signed with the upload key from GitHub Secrets
+  when a tag is pushed (`versionCode` derived from the tag, attached to the GitHub Release), in demo mode for
+  closed testing; the PaynEat app icon replaces the Flutter logo; a privacy policy page in three languages; Data
+  safety answers and Thai/English store text and images under `docs/store/` (see `docs/DECISIONS.md` #75). The
+  Play applicationId is `suruch.boss.payneat` (#78). The remaining steps take place in the owner's account:
+  opening a Play Console account, adding the upload key to Secrets, and recruiting 12 testers for 14 consecutive days
 - [ ] **One Google Play app for every restaurant (ticket 29b)** — enter the shop server's address or scan a QR code on
-  first start, or tap into demo mode with no server at all. Free, like everything else. Comes after ticket 25. The App
-  Store follows when a restaurant asks for it; the server itself still installs in the shop (see ticket 29 and
+  first start, or open demo mode with no server. Free, like the rest of the system. Scheduled after ticket 25. The App
+  Store will follow when a restaurant requests it; the server itself is still installed in the shop (see ticket 29 and
   `docs/DECISIONS.md` #69)
-- [ ] **A faster web app for anyone not using Korean** — the full Korean font (3.2MB) loads only when needed, and Korean
-  data still never shows as empty boxes, even in a shop with no internet (see ticket 30)
-- [ ] **Fix the September 2026 QA findings (#79)** — close the ways money goes missing (voiding paid bills, split
-  payments that skip promotions, shift close counting points as cash), put reports on the shop's own day, and scope
-  every endpoint to its branch, in three rounds through tickets T01–T32 (#80–#110, #117). The PO has answered the 12
-  open choices, e.g. a partial refund on a bill paid partly in points is returned in proportion, and short stock
-  blocks sending to the kitchen unless a manager confirms (see `docs/DECISIONS.md` #77) — done so far: T01
-  versioned migrations (#80, `docs/DECISIONS.md` #79)
-- [ ] **Link previews and web-app icons that match the real thing** — no stale figures in the share image, and the
+- [ ] **A faster web app for users not using Korean** — the full Korean font (3.2MB) is loaded only when needed, and
+  Korean data never displays as empty boxes, even in a shop without internet access (see ticket 30)
+- [ ] **Resolve the September 2026 QA findings (#79)** — close the paths through which money can go missing (voiding
+  paid bills, split payments that skip promotions, shift close counting points as cash), align reports with the shop's
+  own business day, and address the security findings on defaults, permissions and branch isolation (T19–T24, T32; details
+  are not published, per `docs/DECISIONS.md` #81), in three rounds through tickets T01–T32 (#80–#110, #117).
+  The 12 open decisions have been made; for example, a partial refund on a bill paid partly in points is returned in
+  proportion, and insufficient stock blocks sending to the kitchen unless a manager confirms (see
+  `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79)
+- [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
-- [x] **Logs and metrics per the ecosystem telemetry contract** — done: JSON logs per contract v1.1 (no vendor
-  names by default, `LOG_FORMAT=gcp` for Google Cloud), a full `x-request-id` round trip with the app showing
-  the request ID on errors, `/metrics` by route template on port 9464, never exposed outside the machine, and no
-  customer data, passwords or QR tokens in logs (see ticket 24 and `docs/DECISIONS.md` #68) — outbox metrics
-  come with ticket 26
-- [x] **Tell the system as a "problem menu" in the README and landing page** — done: nine problems of big restaurants
-  (order overload, short staff, slow payment, cash leakage, stock-outs, butcher counter/wholesale, no overview, guests not
-  returning, a tough floor), each told with several features, real screens and demo steps; a new landing page themed as a
-  big restaurant's food-ordering site in all three languages; 39 new screenshots from `app/tool/screenshots/story_test.dart`
-  (WebP files, no base64); and all three READMEs build this section from the same source as the landing page
-  (`docs/generator/landing/`, `docs/DECISIONS.md` #70)
-- [x] **An install guide as a web page, no GitHub needed** — done: `docs/landing/install*.html` in three languages offers four
-  ways by who is installing (try in the browser / Windows in one line / Docker so every device in the restaurant connects /
-  run from source); each gives the time, what you need, steps with copy buttons and what success looks like, followed by the
-  demo accounts, a go-live checklist and troubleshooting keyed to the installer's real messages. Every "Install guide" link on
-  the landing page points here (`docs/DECISIONS.md` #72)
+- [x] **Logs and metrics per the ecosystem telemetry contract** — JSON logs per contract v1.1 (no vendor
+  names by default, `LOG_FORMAT=gcp` for Google Cloud), a full `x-request-id` round trip with the request ID
+  shown in app error messages, `/metrics` by route template on port 9464, never exposed outside the machine, and
+  no customer data, passwords, or QR tokens in logs (see ticket 24 and `docs/DECISIONS.md` #68). Outbox metrics
+  will be delivered with ticket 26
+- [x] **Present the system as a "problem menu" in the README and landing page** — nine problems faced by large
+  restaurants (order overload, short staff, slow payment, cash leakage, stock-outs, butcher counter/wholesale, no
+  overview, guests not returning, a tough floor), each presented with several features, application screens, and
+  demo steps; a new landing page styled as a large restaurant's food-ordering site in all three languages; 39 new
+  screenshots from `app/tool/screenshots/story_test.dart` (WebP files, no base64); and all three READMEs generate
+  this section from the same source as the landing page (`docs/generator/landing/`, `docs/DECISIONS.md` #70)
+- [x] **An install guide as a web page, without GitHub** — `docs/landing/install*.html` in three languages offers four
+  installation methods by audience (try in the browser / Windows in one line / Docker so that every device in the
+  restaurant connects / run from source); each lists the time required, the prerequisites, steps with copy buttons, and
+  the expected result, followed by the demo accounts, a go-live checklist, and troubleshooting keyed to the installer's
+  actual messages. Every "Install guide" link on the landing page points here (`docs/DECISIONS.md` #72)
 
-**Deliberately not doing** (not a backlog item — full reasoning in
+**Intentionally out of scope** (not backlog items — full reasoning in
 [`docs/DECISIONS.md`](docs/DECISIONS.md)):
 
-- **Retail (bookshops, supermarkets)** — not until a restaurant uses the POS for real. If it comes, it will be a
-  "shop type" in this repository sharing the core for money, tax and shifts, not a separate project
+- **Retail (bookshops, supermarkets)** — not before a restaurant uses the POS in production. If implemented, it
+  will be a "shop type" in this repository that shares the core for money, tax, and shifts, not a separate project
   (`docs/DECISIONS.md` #71)
-- **Printing over Bluetooth/USB** — needs real hardware to test against, which this development
-  environment doesn't have (LAN/Wi-Fi is done, as noted above)
-- **Offline mode for opening new orders/taking payment** — higher conflict risk (order numbers and money
-  correctness must come straight from the server)
-- **PostgreSQL for multi-branch support** — multi-branch itself is done (see above), but it still runs
-  on a single SQLite file for now (the repository layer is already isolated, so this wouldn't be a
-  hard change if it's ever needed)
-- **PromptPay payment gateway/automatic payment-verification callback** — more than a single-branch
-  restaurant like this needs (it requires signing up as a merchant with a bank/provider); generating a
-  real, scannable QR code is enough for this scope (see `docs/tickets/16-promptpay-qr.md`)
-- **Printing a physical QR standee/table tent from within the app** — no new dependency
-  (`printing`/`pdf`) for something that isn't core to a POS; shows a large QR image + a copy-link
-  button on screen instead, and the restaurant screenshots it or uses an external design tool to make
-  a physical sign (see `docs/tickets/17-qr-self-order.md`)
-- **Self-checkout through the QR order-taking flow** — QR self-order is order-taking only; payment
-  still goes through the cashier as before, to avoid the money-safety/fraud risk that comes with
-  self-checkout, which would also need a real payment gateway (not done, per the item above)
-- **Connecting a scale straight to a tablet/phone, and sending tare/zero commands to it** — Web
-  Serial/Bluetooth don't work on every platform and every brand's commands differ; the scale connects
-  once at the store server, which broadcasts to every device instead (see `docs/DECISIONS.md` #54)
+- **Printing over Bluetooth/USB** — requires physical hardware for testing, which this development
+  environment does not have (LAN/Wi-Fi printing is implemented, as noted above)
+- **Offline mode for opening new orders/taking payment** — higher conflict risk (order numbers and monetary
+  accuracy must come directly from the server)
+- **PostgreSQL for multi-branch support** — multi-branch support is implemented (see above) but currently
+  runs on a single SQLite file (the repository layer is already isolated, so migration would be
+  straightforward if required)
+- **PromptPay payment gateway/automatic payment-verification callback** — exceeds the needs of a single-branch
+  restaurant of this kind (it requires merchant registration with a bank/provider); generating a
+  real, scannable QR code is sufficient for this scope (see `docs/tickets/16-promptpay-qr.md`)
+- **Printing a physical QR standee/table tent from within the app** — avoids a new dependency
+  (`printing`/`pdf`) for a function that is not core to a POS; the app instead shows a large QR image and a
+  copy-link button on screen, and the restaurant can take a screenshot or use an external design tool to
+  produce a physical sign (see `docs/tickets/17-qr-self-order.md`)
+- **Self-checkout through the QR order-taking flow** — QR self-order covers order taking only; payment
+  continues to go through the cashier, avoiding the financial and fraud risk associated with
+  self-checkout, which would also require a real payment gateway (out of scope, per the item above)
+- **Connecting a scale directly to a tablet/phone, and sending tare/zero commands to it** — Web
+  Serial/Bluetooth are not supported on every platform, and commands differ by brand; instead, the scale
+  connects once to the store server, which broadcasts to every device (see `docs/DECISIONS.md` #54)
 - **Flat late fees/early-payment discounts, an automatic e-mail retry queue, PDFs of front-of-house
-  receipts/tax invoices** — late interest is simple (non-compounding) interest a manager issues by hand,
-  so every baht added to a debt has someone accountable for it; a failed send tells the user at once to
-  retry; and front-of-house receipts still use the thermal printer / print from screen (see
+  receipts/tax invoices** — late interest is simple (non-compounding) interest issued manually by a manager,
+  so every baht added to a debt has an accountable person; a failed send notifies the user immediately so
+  that it can be retried; and front-of-house receipts continue to use the thermal printer / print from screen (see
   `docs/DECISIONS.md` #55, #57)
 
 ---
 
 ## 📚 Further reading
 
-- [`docs/PORTFOLIO-SUMMARY.en.md`](docs/PORTFOLIO-SUMMARY.en.md) — a one-page summary for a portfolio or
-  job application (headline numbers and highlights, much shorter than this README)
+- [`docs/PORTFOLIO-SUMMARY.en.md`](docs/PORTFOLIO-SUMMARY.en.md) — a one-page summary for portfolio or
+  job-application use (key figures and highlights, considerably shorter than this README)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — a 30-page document covering every screen with explanations (Thai)
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — English edition, rewritten for business audiences (30 pages)
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 70 design decisions with their accepted trade-offs (e.g. why
-  amounts are stored in satang, why the billing logic is deliberately written twice, why SQLite)
-- [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards from a code-quality audit
-  covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure — use
-  this as the guide for further development
-- [`docs/PaynEat-POS-Audit-Report-TH.pdf`](docs/PaynEat-POS-Audit-Report-TH.pdf) — an easy-to-read 8-page
-  code quality audit report (PDF, Thai) summarizing results across all 5 dimensions with real bugs found
-  and fixed
-- [`backend/docs/openapi.yaml`](backend/docs/openapi.yaml) — the full API spec
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — want to help build this further? Start here (setup, coding
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 70 design decisions and their accepted trade-offs (e.g. why
+  amounts are stored in satang, why the billing logic is intentionally implemented twice, why SQLite is used)
+- [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards derived from a code-quality audit
+  covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure; the
+  reference for further development
+- [`docs/PaynEat-POS-Audit-Report-TH.pdf`](docs/PaynEat-POS-Audit-Report-TH.pdf) — an 8-page
+  code-quality audit report (PDF, Thai) summarizing results across all 5 dimensions, including the defects
+  found and fixed
+- [`backend/docs/openapi.yaml`](backend/docs/openapi.yaml) — the full API specification
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — the starting point for contributors (setup, coding
   standards, PR workflow)
 - [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — the code of conduct for everyone contributing to this project
 - [`SECURITY.md`](SECURITY.md) — how to report a security vulnerability, and what to check before deploying
@@ -2076,20 +2073,20 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
 
 ## 📄 License
 
-[Apache License 2.0](LICENSE) — use it, modify it, or build on top of it freely. The only condition is that if
-you redistribute or build on it, you keep the [`NOTICE`](NOTICE) file, as required by the License (Section 4(d)).
+[Apache License 2.0](LICENSE) — the software may be used, modified, and extended freely. When it is redistributed or
+used as the basis of other work, the [`NOTICE`](NOTICE) file must be retained, as required by the License (Section 4(d)).
 
 Copyright © 2026 Suruch Chakrapeesirisuk. Every source file starts with its copyright line and an SPDX identifier
-(`SPDX-License-Identifier: Apache-2.0`), which CI checks on every push. Outside contributions are signed off,
+(`SPDX-License-Identifier: Apache-2.0`), which CI checks on every push. External contributions are signed off,
 commit by commit, under the Developer Certificate of Origin (DCO) — see [`CONTRIBUTING.md`](CONTRIBUTING.md#developer-certificate-of-origin-dco).
 
-**The POS is entirely free and will have no paid edition** — no locked features, no limits on devices, branches or
-users. If you want help, paid installation, hardware setup, support and training are available as options (you get
-everything without them). The ecosystem's paid edition is [PaynEat ERP Enterprise](https://github.com/SuruchBoss/PaynEat-ERP#editions),
-for larger chains — see `docs/DECISIONS.md` #67.
+**The POS is entirely free and will have no paid edition** — no locked features and no limits on devices, branches,
+or users. Paid installation, hardware setup, support, and training are available as optional services; every feature
+is available without them. The ecosystem's paid edition is [PaynEat ERP Enterprise](https://github.com/SuruchBoss/PaynEat-ERP#editions),
+intended for larger chains — see `docs/DECISIONS.md` #67.
 
 ## 👤 Author
 
 Built and maintained by **[SuruchBoss](https://github.com/SuruchBoss)**
-([LinkedIn](https://www.linkedin.com/in/suruchboss)) — feel free to reach out to discuss the project,
-collaboration, or work opportunities.
+([LinkedIn](https://www.linkedin.com/in/suruchboss)). Enquiries about the project, collaboration, or professional
+opportunities are welcome.

@@ -88,6 +88,7 @@ export const taxInvoiceService = {
       auditLogService.log({
         actorUser: user,
         action: 'tax_invoice.void',
+        summaryArgs: { number: invoice.running_number, code: order.code },
         entityType: 'tax_invoice',
         entityId: invoice.id,
         summary: `ยกเลิกใบกำกับภาษีเลขที่ ${invoice.running_number} ของออเดอร์ #${order.code}`,

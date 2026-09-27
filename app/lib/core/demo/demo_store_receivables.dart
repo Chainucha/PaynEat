@@ -269,10 +269,17 @@ extension DemoStoreReceivables on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'customer.credit_update',
+        summaryArgs: {
+          'name': customer['name'],
+          'fromLimit': previousLimit,
+          'toLimit': limit,
+          'fromDays': previousTerm,
+          'toDays': term,
+        },
         entityType: 'customer',
         entityId: id,
         summary:
-            'ตั้งวงเงินเครดิต "${customer['name']}" $previousLimit → $limit บาท '
+            'ตั้งวงเงินเครดิต "${customer['name']}" ${_jsNumber(previousLimit)} → ${_jsNumber(limit)} บาท '
             'เครดิต $previousTerm → $term วัน',
         metadata: {
           'previousCreditLimit': previousLimit,

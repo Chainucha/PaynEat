@@ -133,6 +133,13 @@ export const lateFeeService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.late_fee',
+        summaryArgs: {
+          total: toBaht(total),
+          rate: annualRate,
+          customer: customer.name,
+          count: lines.length,
+          chargeNo: row.charge_no,
+        },
         entityType: 'ar_charge',
         entityId: row.id,
         summary:
@@ -182,6 +189,11 @@ export const lateFeeService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.late_fee_void',
+        summaryArgs: {
+          chargeNo: row.charge_no,
+          total: toBaht(row.total),
+          customer: row.customer_name,
+        },
         entityType: 'ar_charge',
         entityId: id,
         summary: `ยกเลิกใบแจ้งดอกเบี้ย ${row.charge_no} (${toBaht(row.total)} บาท) ของ "${row.customer_name}"`,

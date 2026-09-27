@@ -138,6 +138,7 @@ extension DemoStoreTaxInvoices on DemoStore {
     _logAudit(
       actorId: voidedById,
       action: 'tax_invoice.void',
+      summaryArgs: {'number': invoice['runningNumber'], 'code': order['code']},
       entityType: 'tax_invoice',
       entityId: invoice['id'] as int,
       summary:

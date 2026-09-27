@@ -108,6 +108,13 @@ export const ingredientService = {
       auditLogService.log({
         actorUser: actingUser,
         action: 'ingredient.stock_adjust',
+        summaryArgs: {
+          name: before.name,
+          delta,
+          unit: before.unit,
+          from: before.currentStock,
+          to: before.currentStock + delta,
+        },
         entityType: 'ingredient',
         entityId: id,
         summary: `ปรับสต๊อก "${before.name}" ${direction} ${Math.abs(delta)} ${before.unit} (${before.currentStock} → ${before.currentStock + delta})`,

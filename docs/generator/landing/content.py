@@ -11,7 +11,7 @@
 # - {tests} ถูกแทนด้วย TESTS ตอนสร้าง — อัปเดตพร้อม badge ใน README ทุกครั้งที่จำนวนเทสต์เปลี่ยน
 
 # backend `npm test` + app `flutter test` + app `flutter test test_e2e` (นับจริงตอนแก้ล่าสุด)
-TESTS = 385 + 486 + 49
+TESTS = 388 + 492 + 49
 
 REPO = 'https://github.com/SuruchBoss/PaynEat'
 ERP = 'https://suruchboss.github.io/PaynEat-ERP/'
@@ -654,7 +654,7 @@ EN = {
             'try': [
                 'Open the demo, choose "Cashier" → "New takeaway/delivery" → Fresh Meat & Take-home',
                 'Tap Beef Ribeye — the simulated scale sends a weight to the screen',
-                'Sign in as "Manager" → "Receivables" → the wholesale customer Soul BBQ (บริษัท โซลบาร์บีคิว จำกัด)',
+                'Sign in as "Manager" → "Receivables" → the wholesale customer Soul BBQ Co., Ltd.',
             ],
             'label': {
                 'store': "Grandma's Kitchen (Demo)",
@@ -1066,7 +1066,7 @@ KO = {
             'try': [
                 '데모를 열고 "캐셔" → "포장/배달 주문" → 정육 · 포장',
                 '소고기 꽃등심을 누르면 가상 저울이 무게를 화면에 보내요',
-                '"매니저"로 들어가 "외상 매출" → 도매 고객 บริษัท โซลบาร์บีคิว จำกัด',
+                '"매니저"로 들어가 "외상 매출" → 도매 고객 소울바비큐 주식회사',
             ],
             'label': {
                 'store': '할머니 부엌 (데모)',

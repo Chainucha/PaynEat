@@ -197,6 +197,11 @@ export const paymentService = {
       auditLogService.log({
         actorUser: user,
         action: 'payment.pay',
+        summaryArgs: {
+          code: order.code ?? order.id,
+          amount: toBaht(chargedAmount),
+          method: payload.method,
+        },
         entityType: 'payment',
         entityId: payment.id,
         summary: `รับชำระเงิน ${toBaht(chargedAmount)} บาท (${payload.method}) ออเดอร์ #${order.code ?? order.id}`,
@@ -348,6 +353,7 @@ export const paymentService = {
       auditLogService.log({
         actorUser: user,
         action: 'payment.refund',
+        summaryArgs: { code: order?.code ?? payment.order_id, amount: toBaht(amountSatang) },
         entityType: 'refund',
         entityId: created.id,
         summary: `คืนเงิน ${toBaht(amountSatang)} บาท ให้ออเดอร์ #${order?.code ?? payment.order_id}`,

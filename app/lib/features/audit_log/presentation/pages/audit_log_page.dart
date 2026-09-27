@@ -12,6 +12,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../domain/entities/audit_log.dart';
 import '../../domain/entities/audit_log_action.dart';
+import '../audit_summary_text.dart';
 import '../controllers/audit_log_controller.dart';
 
 /// หน้าประวัติ audit log — admin เท่านั้น (ดู docs/tickets/08-audit-log.md)
@@ -315,7 +316,7 @@ class _AuditLogRow extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            log.summary,
+            AuditSummaryText.of(log),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
           if (log.reason != null && log.reason!.isNotEmpty) ...[
@@ -327,7 +328,12 @@ class _AuditLogRow extends StatelessWidget {
           ],
           const SizedBox(height: 6),
           Text(
-            'audit_log_actor_prefix'.trParams({'name': log.actorName}),
+            'audit_log_actor_prefix'.trParams({
+              // log ที่ไม่มีคนทำ (งานของระบบ) บันทึกชื่อไว้เป็นคำไทย "ระบบ"
+              'name': log.actorUserId == null && log.actorName == 'ระบบ'
+                  ? 'audit_log_actor_system'.tr
+                  : log.actorName,
+            }),
             style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,

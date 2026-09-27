@@ -41,6 +41,12 @@ export const creditNoteService = {
     auditLogService.log({
       actorUser: user,
       action: 'receivable.credit_note',
+      summaryArgs: {
+        noteNo: row.note_no,
+        amount: toBaht(refund.amount),
+        code: order.code,
+        customer: row.customer_name,
+      },
       entityType: 'credit_note',
       entityId: row.id,
       summary: `ออกใบลดหนี้ ${row.note_no} ${toBaht(refund.amount)} บาท ให้บิล #${order.code} ของ "${row.customer_name}"`,

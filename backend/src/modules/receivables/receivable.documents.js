@@ -263,6 +263,12 @@ export const documentService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.document_email',
+        summaryArgs: {
+          document: kind,
+          number: spec.number,
+          customer: doc.customer?.name,
+          to: recipient,
+        },
         entityType: kind,
         entityId: id,
         summary: `ส่ง${definition.title} ${spec.number} ของ "${doc.customer?.name}" ทางอีเมลถึง ${recipient}`,

@@ -96,14 +96,22 @@ export const settingsService = {
       }
 
       const rateChanges = [];
+      // ค่าเดียวกันแบบไม่ผูกภาษา ให้แอปประกอบประโยคเป็นภาษาที่ผู้ดูเลือก (DECISIONS #74)
+      const changes = [];
       if (payload.vatRate !== undefined && payload.vatRate !== before.vatRate) {
         rateChanges.push(`VAT ${before.vatRate}% → ${payload.vatRate}%`);
+        changes.push({ field: 'vat', from: before.vatRate, to: payload.vatRate });
       }
       if (
         payload.serviceChargeRate !== undefined &&
         payload.serviceChargeRate !== before.serviceChargeRate
       ) {
         rateChanges.push(`ค่าบริการ ${before.serviceChargeRate}% → ${payload.serviceChargeRate}%`);
+        changes.push({
+          field: 'service',
+          from: before.serviceChargeRate,
+          to: payload.serviceChargeRate,
+        });
       }
       if (
         payload.lateFeeAnnualRatePercent !== undefined &&
@@ -112,11 +120,17 @@ export const settingsService = {
         rateChanges.push(
           `ดอกเบี้ยผิดนัด ${before.lateFeeAnnualRatePercent}% → ${payload.lateFeeAnnualRatePercent}% ต่อปี`,
         );
+        changes.push({
+          field: 'late_fee',
+          from: before.lateFeeAnnualRatePercent,
+          to: payload.lateFeeAnnualRatePercent,
+        });
       }
       if (rateChanges.length && actingUser) {
         auditLogService.log({
           actorUser: actingUser,
           action: 'settings.update',
+          summaryArgs: { changes },
           entityType: 'settings',
           entityId: null,
           summary: `แก้ไขการตั้งค่า: ${rateChanges.join(', ')}`,

@@ -126,6 +126,7 @@ extension DemoStoreOrders on DemoStore {
     _logAudit(
       actorId: waiterId,
       action: 'order.create',
+      summaryArgs: {'code': order['code'], 'count': items.length},
       entityType: 'order',
       entityId: order['id'] as int,
       summary: 'เปิดออเดอร์ใหม่ #${order['code']} (${items.length} รายการ)',
@@ -185,11 +186,12 @@ extension DemoStoreOrders on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'order.discount',
+      summaryArgs: {'code': order['code'], 'type': type, 'value': value},
       entityType: 'order',
       entityId: order['id'] as int,
       summary: type == DiscountType.none
           ? 'ยกเลิกส่วนลดออเดอร์ #${order['code']}'
-          : 'ให้ส่วนลดออเดอร์ #${order['code']} เป็น $value'
+          : 'ให้ส่วนลดออเดอร์ #${order['code']} เป็น ${_jsNumber(value)}'
                 '${type == DiscountType.percent ? '%' : ' บาท'}',
       metadata: {
         'orderCode': order['code'],
@@ -242,6 +244,11 @@ extension DemoStoreOrders on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'order.move_table',
+      summaryArgs: {
+        'code': order['code'],
+        'fromTable': oldTableName,
+        'toTable': table['name'],
+      },
       entityType: 'order',
       entityId: orderId,
       summary:
@@ -296,6 +303,7 @@ extension DemoStoreOrders on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'order.merge',
+      summaryArgs: {'source': source['code'], 'target': target['code']},
       entityType: 'order',
       entityId: target['id'] as int,
       summary: 'รวมบิล #${source['code']} เข้ากับ #${target['code']}',
@@ -339,6 +347,7 @@ extension DemoStoreOrders on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'order.cancel',
+      summaryArgs: {'code': order['code']},
       entityType: 'order',
       entityId: order['id'] as int,
       summary: 'ยกเลิกออเดอร์ #${order['code']}',

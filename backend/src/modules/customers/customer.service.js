@@ -49,6 +49,13 @@ export const customerService = {
         auditLogService.log({
           actorUser: user,
           action: 'customer.credit_update',
+          summaryArgs: {
+            name: before.name,
+            fromLimit: toBaht(before.credit_limit),
+            toLimit: toBaht(limit),
+            fromDays: before.credit_term_days,
+            toDays: creditTermDays,
+          },
           entityType: 'customer',
           entityId: id,
           summary:

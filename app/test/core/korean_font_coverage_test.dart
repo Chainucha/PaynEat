@@ -13,7 +13,7 @@ import 'package:payneat_pos/core/localization/app_translations.dart';
 import 'package:payneat_pos/core/localization/locale_service.dart';
 import 'package:payneat_pos/core/utils/formatters.dart';
 
-/// ฟอนต์เกาหลีที่ฝังไว้เป็น subset เฉพาะตัวอักษรที่คำแปลใช้จริง (ดู pubspec.yaml)
+/// ฟอนต์เกาหลีที่ฝังไว้เป็น subset (KS X 1001 + ทุกตัวที่คำแปลใช้ ดู tool/fonts/subset_korean.py)
 /// ถ้ามีคนเพิ่มคำแปลเกาหลีที่ใช้ตัวอักษรนอก subset ตัวนั้นจะกลายเป็นกล่องสี่เหลี่ยม
 /// บนหน้าจอจริงโดยไม่มีอะไรเตือน — เทสต์นี้อ่าน cmap ของไฟล์ฟอนต์จริงมาเทียบ
 void main() {
@@ -81,6 +81,12 @@ void main() {
     for (final menu in DemoSeed.menuItems()) {
       used.addAll(DemoNames.of(menu, lang: 'ko', key: 'description').runes);
     }
+    // ชื่อ/ที่อยู่ลูกค้าเครดิตมีภาษาเกาหลีตั้งแต่ DECISIONS #74
+    for (final customer in DemoSeed.customers()) {
+      used
+        ..addAll(DemoNames.of(customer, lang: 'ko').runes)
+        ..addAll(DemoNames.of(customer, lang: 'ko', key: 'address').runes);
+    }
 
     // ข้อความมาตรฐานของ Material (ปฏิทิน/นาฬิกา/ปุ่มยกเลิก-ตกลง/คัดลอก-วาง) มาจาก
     // flutter_localizations ตั้งแต่ DECISIONS #64 — วาดด้วยฟอนต์เดียวกัน จึงต้องอยู่ใน subset ด้วย
@@ -114,6 +120,36 @@ void main() {
           '${missing.map((r) => String.fromCharCode(r)).join()} — '
           'ต้อง subset ฟอนต์ใหม่ (ดู docs/DECISIONS.md)',
     );
+  });
+
+  // ผู้ใช้แอปภาษาเกาหลีพิมพ์ข้อมูลเป็นภาษาเกาหลีด้วย (ชื่อลูกค้า ชื่อโปร หมายเหตุ) แม้เป็นพนักงาน
+  // คนไทย — subset เดิมมีแค่อักษรที่คำแปลใช้ พิมพ์ "첫 방문" แล้ว 첫 กลายเป็นกล่อง (DECISIONS #74)
+  // จึงเก็บพยางค์ KS X 1001 ครบ 2,350 ตัวในทุกน้ำหนัก เทสต์นี้กันไม่ให้ใครตัดกลับไปเหลือแค่คำแปล
+  test('ฟอนต์เกาหลีทุกน้ำหนักพิมพ์ภาษาเกาหลีทั่วไปได้ ไม่ใช่แค่คำแปล', () {
+    for (final weight in [400, 500, 700, 800]) {
+      final cmap = _cmapOf('assets/fonts/NotoSansKR-$weight.ttf');
+      final syllables = cmap.where((r) => r >= 0xAC00 && r <= 0xD7A3);
+      expect(
+        syllables.length,
+        greaterThanOrEqualTo(2350),
+        reason: 'NotoSansKR-$weight มีพยางค์ฮันกึลแค่ ${syllables.length} ตัว',
+      );
+      // จาโมแบบ compatibility คือสิ่งที่เห็นระหว่างพิมพ์ผ่าน IME ก่อนประกอบเป็นพยางค์
+      final jamo = [for (var r = 0x3131; r <= 0x318E; r++) r];
+      expect(
+        jamo.where((r) => !cmap.contains(r)),
+        isEmpty,
+        reason: 'NotoSansKR-$weight ขาดจาโม',
+      );
+      // ตัวที่เคยหลุดจริงในภาพหน้าจอและข้อมูลสาธิต
+      for (final rune in '첫꿔땅윤강'.runes) {
+        expect(
+          cmap.contains(rune),
+          isTrue,
+          reason: 'NotoSansKR-$weight ขาด ${String.fromCharCode(rune)}',
+        );
+      }
+    }
   });
 }
 

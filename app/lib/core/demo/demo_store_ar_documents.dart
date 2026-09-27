@@ -130,10 +130,16 @@ extension DemoStoreArDocuments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.receipt',
+      summaryArgs: {
+        'amount': amount,
+        'method': method,
+        'customer': customer['name'],
+        'receiptNo': receipt['receiptNo'],
+      },
       entityType: 'ar_receipt',
       entityId: receipt['id'] as int,
       summary:
-          'รับชำระหนี้ $amount บาท ($method) จาก "${customer['name']}" '
+          'รับชำระหนี้ ${_jsNumber(amount)} บาท ($method) จาก "${customer['name']}" '
           'ใบเสร็จ ${receipt['receiptNo']}',
       metadata: {
         'customerId': customerId,
@@ -197,11 +203,16 @@ extension DemoStoreArDocuments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.receipt_void',
+      summaryArgs: {
+        'receiptNo': receipt['receiptNo'],
+        'amount': receipt['amount'],
+        'customer': receipt['customerName'],
+      },
       entityType: 'ar_receipt',
       entityId: id,
       summary:
           'ยกเลิกใบเสร็จรับชำระหนี้ ${receipt['receiptNo']} '
-          '(${receipt['amount']} บาท) ของ "${receipt['customerName']}"',
+          '(${_jsNumber(receipt['amount'])} บาท) ของ "${receipt['customerName']}"',
       reason: reason,
       metadata: {
         'receiptNo': receipt['receiptNo'],
@@ -331,11 +342,17 @@ extension DemoStoreArDocuments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.billing_note',
+      summaryArgs: {
+        'noteNo': note['noteNo'],
+        'customer': customer['name'],
+        'count': selected.length,
+        'total': total,
+      },
       entityType: 'billing_note',
       entityId: note['id'] as int,
       summary:
           'ออกใบวางบิล ${note['noteNo']} ให้ "${customer['name']}" '
-          '${selected.length} บิล รวม $total บาท',
+          '${selected.length} บิล รวม ${_jsNumber(total)} บาท',
       metadata: {'customerId': customerId, 'total': total},
     );
     return billingNoteDocument(note['id'] as int);
@@ -366,6 +383,7 @@ extension DemoStoreArDocuments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.billing_note_void',
+      summaryArgs: {'noteNo': note['noteNo'], 'customer': note['customerName']},
       entityType: 'billing_note',
       entityId: id,
       summary: 'ยกเลิกใบวางบิล ${note['noteNo']} ของ "${note['customerName']}"',

@@ -227,7 +227,13 @@ components:
         entityId: { type: integer, nullable: true }
         summary: { type: string, example: 'ยกเลิกออเดอร์ #ORD-20260101-0001' }
         reason: { type: string, nullable: true }
-        metadata: { type: object, nullable: true, description: รายละเอียดก่อน/หลังแบบ structured }
+        metadata:
+          type: object
+          nullable: true
+          description: >-
+            รายละเอียดก่อน/หลังแบบ structured — มี `summaryArgs` เสมอสำหรับ log ที่เขียนหลัง
+            DECISIONS #74: ค่าที่ใช้ประกอบ `summary` แบบไม่ผูกภาษา (ชื่อ เลขที่ ยอดเป็นบาท รหัสสถานะ)
+            ให้ไคลเอนต์แสดงประโยคเป็นภาษาของผู้ดู `summary` ยังเป็นภาษาไทยเหมือนเดิม
         createdAt: { type: string, format: date-time }
     Table:
       type: object

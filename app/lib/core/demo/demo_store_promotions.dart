@@ -78,6 +78,7 @@ extension DemoStorePromotions on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'promotion.create',
+        summaryArgs: {'name': promotion['name']},
         entityType: 'promotion',
         entityId: promotion['id'] as int,
         summary: 'สร้างโปรโมชัน "${promotion['name']}"',
@@ -98,6 +99,7 @@ extension DemoStorePromotions on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'promotion.update',
+      summaryArgs: {'name': promotion['name']},
       entityType: 'promotion',
       entityId: id,
       summary: 'แก้ไขโปรโมชัน "${promotion['name']}"',
@@ -111,6 +113,7 @@ extension DemoStorePromotions on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'promotion.delete',
+      summaryArgs: {'name': existing['name']},
       entityType: 'promotion',
       entityId: id,
       summary: 'ลบโปรโมชัน "${existing['name']}"',

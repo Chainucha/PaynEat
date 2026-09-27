@@ -22,6 +22,18 @@ extension DemoStoreOrderItems on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'order.item.add',
+      summaryArgs: {
+        'code': order['code'],
+        'count': added.length,
+        'items': [
+          for (final row in added)
+            {
+              'name': row['name'],
+              'quantity': row['quantity'],
+              'weightGrams': row['weightGrams'],
+            },
+        ],
+      },
       entityType: 'order',
       entityId: order['id'] as int,
       summary:
@@ -191,6 +203,12 @@ extension DemoStoreOrderItems on DemoStore {
         _logAudit(
           actorId: actorId,
           action: 'order.item.edit',
+          summaryArgs: {
+            'code': order['code'],
+            'name': item['name'],
+            'from': oldQuantity,
+            'to': quantity,
+          },
           entityType: 'order_item',
           entityId: itemId,
           summary:
@@ -232,6 +250,12 @@ extension DemoStoreOrderItems on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'order.item.remove',
+      summaryArgs: {
+        'code': order['code'],
+        'name': item['name'],
+        'quantity': item['quantity'],
+        'weightGrams': item['weightGrams'],
+      },
       entityType: 'order',
       entityId: orderId,
       summary:
@@ -304,6 +328,11 @@ extension DemoStoreOrderItems on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'order_item.void',
+        summaryArgs: {
+          'code': order['code'],
+          'name': item['name'],
+          'status': previousItemStatus,
+        },
         entityType: 'order_item',
         entityId: itemId,
         summary:

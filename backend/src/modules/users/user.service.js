@@ -77,6 +77,7 @@ export const userService = {
         auditLogService.log({
           actorUser: actingUser,
           action: 'user.role_change',
+          summaryArgs: { name: target.name, from: target.role, to: payload.role },
           entityType: 'user',
           entityId: target.id,
           summary: `เปลี่ยนสิทธิ์บัญชี "${target.name}" จาก ${target.role} เป็น ${payload.role}`,
@@ -87,6 +88,7 @@ export const userService = {
         auditLogService.log({
           actorUser: actingUser,
           action: 'user.deactivate',
+          summaryArgs: { name: target.name, username: target.username },
           entityType: 'user',
           entityId: target.id,
           summary: `ปิดการใช้งานบัญชี "${target.name}" (${target.username})`,
@@ -107,6 +109,7 @@ export const userService = {
       auditLogService.log({
         actorUser: actingUser,
         action: 'user.password_reset',
+        summaryArgs: { name: target.name, username: target.username },
         entityType: 'user',
         entityId: target.id,
         summary: `ตั้งรหัสผ่านใหม่ให้บัญชี "${target.name}" (${target.username})`,
@@ -128,6 +131,7 @@ export const userService = {
       auditLogService.log({
         actorUser: actingUser,
         action: 'user.delete',
+        summaryArgs: { name: target.name, username: target.username },
         entityType: 'user',
         entityId: target.id,
         summary: `ลบบัญชี "${target.name}" (${target.username}) ออกจากระบบ`,

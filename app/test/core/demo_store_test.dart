@@ -10,6 +10,8 @@ import 'package:payneat_pos/core/errors/exceptions.dart';
 import 'package:payneat_pos/core/utils/app_clock.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item_payload.dart';
 
+import '../helpers/audit_summary_expectations.dart';
+
 /// เทสต์ตรงต่อ DemoStore เอง (ไม่ผ่าน data source/repository) เพื่อยืนยันว่าเมธอด
 /// ที่ถูกแยกออกไปหลายไฟล์ตามโดเมนด้วย part/part of (auth, menu, tables, orders,
 /// payments, reports, seed history) ยังทำงานร่วมกันถูกต้องเหมือนตอนเป็นไฟล์เดียว —
@@ -19,6 +21,8 @@ void main() {
   late DemoStore store;
 
   setUp(() => store = DemoStore());
+  // ทุก audit log ที่เทสต์ในไฟล์นี้ทำให้เกิด ต้องแสดงเป็นทุกภาษาได้ ไม่ใช่แค่ประโยคไทย (DECISIONS #74)
+  tearDown(() => expectAuditSummariesRenderable(store.auditLogs));
 
   group('DemoStore auth', () {
     test('login ด้วยบัญชีที่ถูกต้องได้ token และ user', () {

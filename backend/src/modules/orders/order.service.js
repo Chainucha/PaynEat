@@ -250,6 +250,7 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.create',
+        summaryArgs: { code: order.code, count: itemRows.length },
         entityType: 'order',
         entityId: order.id,
         summary: `เปิดออเดอร์ใหม่ #${order.code} (${itemRows.length} รายการ)`,
@@ -288,6 +289,15 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.item.add',
+        summaryArgs: {
+          code: order.code,
+          count: itemRows.length,
+          items: itemRows.map((row) => ({
+            name: row.nameSnapshot,
+            quantity: row.quantity,
+            weightGrams: row.weightGrams ?? null,
+          })),
+        },
         entityType: 'order',
         entityId: order.id,
         summary: `เพิ่ม ${itemRows.length} รายการเข้าออเดอร์ #${order.code}: ${itemRows
@@ -344,6 +354,12 @@ export const orderService = {
         auditLogService.log({
           actorUser: user,
           action: 'order.item.edit',
+          summaryArgs: {
+            code: order.code,
+            name: item.name_snapshot,
+            from: item.quantity,
+            to: quantity,
+          },
           entityType: 'order_item',
           entityId: item.id,
           summary: `แก้ไขจำนวน "${item.name_snapshot}" ในออเดอร์ #${order.code} จาก ${item.quantity} เป็น ${quantity}`,
@@ -381,6 +397,12 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.item.remove',
+        summaryArgs: {
+          code: order.code,
+          name: item.name_snapshot,
+          quantity: item.quantity,
+          weightGrams: item.weight_grams ?? null,
+        },
         entityType: 'order',
         entityId: order.id,
         summary: `ลบรายการ "${describeLine(item.name_snapshot, {
@@ -431,6 +453,7 @@ export const orderService = {
         auditLogService.log({
           actorUser: user,
           action: 'order_item.void',
+          summaryArgs: { code: order.code, name: item.name_snapshot, status: item.status },
           entityType: 'order_item',
           entityId: item.id,
           summary: `ยกเลิกรายการ "${item.name_snapshot}" ในออเดอร์ #${order.code} (สถานะก่อนยกเลิก: ${item.status})`,
@@ -521,6 +544,7 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.discount',
+        summaryArgs: { code: order.code, type, value },
         entityType: 'order',
         entityId: order.id,
         summary:
@@ -574,6 +598,7 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.promotion_redeem',
+        summaryArgs: { code: order.code, promoCode: promotion.code, promoName: promotion.name },
         entityType: 'order',
         entityId: order.id,
         summary: `ใช้โค้ดส่วนลด "${promotion.code}" (${promotion.name}) กับออเดอร์ #${order.code}`,
@@ -614,6 +639,7 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.promotion_remove',
+        summaryArgs: { code: order.code },
         entityType: 'order',
         entityId: order.id,
         summary: `เอาโปรโมชันออกจากออเดอร์ #${order.code}`,
@@ -676,6 +702,11 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.move_table',
+        summaryArgs: {
+          code: order.code,
+          fromTable: oldTable?.name ?? oldTableId,
+          toTable: table.name,
+        },
         entityType: 'order',
         entityId: order.id,
         summary: `ย้ายออเดอร์ #${order.code} จากโต๊ะ "${oldTable?.name ?? oldTableId}" ไปโต๊ะ "${table.name}"`,
@@ -712,6 +743,7 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.merge',
+        summaryArgs: { source: source.code, target: target.code },
         entityType: 'order',
         entityId: target.id,
         summary: `รวมบิล #${source.code} เข้ากับ #${target.code}`,
@@ -750,6 +782,7 @@ export const orderService = {
       auditLogService.log({
         actorUser: user,
         action: 'order.cancel',
+        summaryArgs: { code: order.code },
         entityType: 'order',
         entityId: order.id,
         summary: `ยกเลิกออเดอร์ #${order.code}`,

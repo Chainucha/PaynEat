@@ -185,6 +185,7 @@ export const menuService = {
         auditLogService.log({
           actorUser: actingUser,
           action: 'menu.price_change',
+          summaryArgs: { name: before.name, from: before.price, to: payload.price },
           entityType: 'menu_item',
           entityId: id,
           summary: `แก้ราคาเมนู "${before.name}" ${before.price} → ${payload.price} บาท`,

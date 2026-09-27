@@ -50,27 +50,47 @@ extension DemoStoreSettings on DemoStore {
     final newVatRate = changes['vatRate'] as double?;
     final newServiceChargeRate = changes['serviceChargeRate'] as double?;
     final rateChanges = <String>[];
+    // ค่าเดียวกันแบบไม่ผูกภาษา ให้หน้าประวัติแสดงเป็นภาษาของผู้ดู (DECISIONS #74)
+    final changedRates = <Map<String, dynamic>>[];
     if (newVatRate != null && newVatRate != previousVatRate) {
-      rateChanges.add('VAT $previousVatRate% → $newVatRate%');
+      rateChanges.add(
+        'VAT ${_jsNumber(previousVatRate)}% → ${_jsNumber(newVatRate)}%',
+      );
+      changedRates.add({
+        'field': 'vat',
+        'from': previousVatRate,
+        'to': newVatRate,
+      });
     }
     if (newServiceChargeRate != null &&
         newServiceChargeRate != previousServiceChargeRate) {
       rateChanges.add(
-        'ค่าบริการ $previousServiceChargeRate% → $newServiceChargeRate%',
+        'ค่าบริการ ${_jsNumber(previousServiceChargeRate)}% → ${_jsNumber(newServiceChargeRate)}%',
       );
+      changedRates.add({
+        'field': 'service',
+        'from': previousServiceChargeRate,
+        'to': newServiceChargeRate,
+      });
     }
     // ดอกเบี้ยผิดนัดกระทบหนี้ลูกค้า — log เหมือน VAT/ค่าบริการ (ticket 21)
     final newLateFeeRate = (changes['lateFeeAnnualRatePercent'] as num?)
         ?.toDouble();
     if (newLateFeeRate != null && newLateFeeRate != previousLateFeeRate) {
       rateChanges.add(
-        'ดอกเบี้ยผิดนัด $previousLateFeeRate% → $newLateFeeRate% ต่อปี',
+        'ดอกเบี้ยผิดนัด ${_jsNumber(previousLateFeeRate)}% → ${_jsNumber(newLateFeeRate)}% ต่อปี',
       );
+      changedRates.add({
+        'field': 'late_fee',
+        'from': previousLateFeeRate,
+        'to': newLateFeeRate,
+      });
     }
     if (rateChanges.isNotEmpty) {
       _logAudit(
         actorId: actorId,
         action: 'settings.update',
+        summaryArgs: {'changes': changedRates},
         entityType: 'settings',
         summary: 'แก้ไขการตั้งค่า: ${rateChanges.join(', ')}',
         metadata: {

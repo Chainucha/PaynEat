@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-920%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-929%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) talking to a
 Node.js REST + WebSocket backend. Covers the complete floor-to-cash workflow: table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 920 automated tests.
+control and 929 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivatives are very
 > welcome, just keep the [`NOTICE`](NOTICE) file as required by the Apache License 2.0. Say hi on
@@ -36,7 +36,7 @@ control and 920 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 920 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 929 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -164,7 +164,7 @@ Each item is a problem big restaurants really face every day, and each is fixed 
 - **Debt collected reconciles with the drawer** — The Z-report shows debt collected apart from the day's sales.
 
 ✅ **0.485 kg × ฿1,200 = ฿582, no calculator**  
-🧪 **Taste it in the demo:** Open the demo, choose "Cashier" → "New takeaway/delivery" → Fresh Meat & Take-home → Tap Beef Ribeye — the simulated scale sends a weight to the screen → Sign in as "Manager" → "Receivables" → the wholesale customer Soul BBQ (บริษัท โซลบาร์บีคิว จำกัด)
+🧪 **Taste it in the demo:** Open the demo, choose "Cashier" → "New takeaway/delivery" → Fresh Meat & Take-home → Tap Beef Ribeye — the simulated scale sends a weight to the screen → Sign in as "Manager" → "Receivables" → the wholesale customer Soul BBQ Co., Ltd.
 
 > 🏷 The demo's scale label `2000101012504` (sliced pork belly, 1.250 kg × 280 = 350 baht) — type or scan it into the demo's scan box. The landing page draws it as a genuine EAN-13 barcode that scans off the screen.
 
@@ -608,8 +608,8 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
     **Ingredients/Stock** page shows ribeye down by exactly 0.485 kg (see
     `docs/tickets/18-sell-by-weight.md`, `19-barcode-scale.md`)
 26. **Sell on credit to a trade customer → billing note → collect payment** → ring up another bill as in
-    step 25, but before confirming, tap the customer bar, search `021234567` and pick **"บริษัท โซลบาร์บีคิว
-    จำกัด"** (Soul BBQ Co., Ltd. — 50,000 limit, 30-day term) → tap **"Collect payment / close bill"** → a new **"On credit"**
+    step 25, but before confirming, tap the customer bar, search `021234567` and pick **"Soul BBQ Co.,
+    Ltd."** (50,000 limit, 30-day term; the demo in Thai or Korean shows the name the shop typed in that language) → tap **"Collect payment / close bill"** → a new **"On credit"**
     method appears (only for customers with a credit limit, and only for non-waiter users), showing the
     remaining credit and the due date → pay: the bill closes with no money in yet → open the
     **Receivables** menu (the invoice icon) and the company is listed with what it owes → tap in →
@@ -630,7 +630,7 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
     it behaves exactly like a scanner (see `docs/tickets/22-live-scale-camera-scan.md`,
     `docs/DECISIONS.md` #54)
 28. **Late-payment interest → credit note → e-mail the PDF** → log in as `manager` → **Receivables** →
-    open **"บริษัท โซลบาร์บีคิว จำกัด"** (Demo Mode seeds a credit sale of meat from 45 days ago, now 15 days
+    open **"Soul BBQ Co., Ltd."** (Demo Mode seeds a credit sale of meat from 45 days ago, now 15 days
     overdue, and the shop has late interest set to 12% a year with 7 grace days under **Settings → Credit
     customers**) → tap **"Charge late interest"** → you see, per bill, how many days and on what principal
     before you tap **"Issue interest notice"** → document `LF69-000001`, and that bill's balance goes up at
@@ -685,6 +685,10 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
   editing VAT/service charge, a refund, voiding a tax invoice) is always recorded on the **Audit Log**
   page (`admin` only) with who did it, when, and why — try any of the above, then go check that page
   (see step 17 in the tour and `docs/DECISIONS.md` #21)
+- Log in as `admin` → switch the language to **한국어** (globe button) → **변경 이력** → every entry reads as a Korean
+  sentence, e.g. "주문 #ORD-… 취소", not a Thai one (Thai still shows the recorded sentence, which is the evidence) →
+  go to **고객/적립** and add a customer with any Korean name, e.g. "첫 손님" → it renders in full, no empty boxes
+  (see `docs/DECISIONS.md` #74)
 - Try redeeming more loyalty points than the customer has, or a points value greater than the amount
   due this round → both are rejected outright (never silently capped), and if the order isn't linked to
   a customer at all, the redeem control won't even show up — try paying part of a linked order's bill
@@ -720,7 +724,7 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
   misread"** and the cart doesn't change — the system never guesses a weight from a misread code (one
   smudged digit could turn 485 g into 4,850 g). And look for +/- on the meat line → there isn't one;
   you can only re-weigh (see `docs/DECISIONS.md` #48–#49)
-- Log in as `manager` → **Customers/Loyalty** → open "บริษัท โซลบาร์บีคิว จำกัด" → **Edit credit** and set
+- Log in as `manager` → **Customers/Loyalty** → open "Soul BBQ Co., Ltd." → **Edit credit** and set
   the limit to 100 → back at checkout for a bill linked to that customer, pick **"On credit"** → the credit
   box turns red, "exceeds the remaining credit", and the pay button is disabled (a direct API call gets a
   409) — log in as `waiter1` and check out the same bill → there is no "On credit" option at all
@@ -763,8 +767,8 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
 ### 🧪 Want to run the tests?
 
 ```bash
-cd backend && npm test      # 385 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 486 cases — domain / controller / widget
+cd backend && npm test      # 388 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 492 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -991,6 +995,10 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   filter** and a **CSV export** button for the finance team (web only, see `docs/DECISIONS.md` #27),
   and opening/closing a shift (with the cash variance), accepting a payment, and entering/removing a
   discount code (see `docs/DECISIONS.md` #28)
+- **The audit log reads in the viewer's language** — every log also stores the values its sentence is built from
+  (names, document numbers, amounts, status codes) in `metadata.summaryArgs`, so the Korean/English app builds the
+  sentence in its own language; Thai and the CSV export keep the recorded Thai sentence as the evidence, and older
+  logs without these values show the recorded sentence (see `docs/DECISIONS.md` #74)
 - **Customers/Loyalty** (`admin` and `manager`) — search the full customer list, tap into any customer to
   see their purchase history and current points balance (see `docs/DECISIONS.md` #22), plus a **Credit
   account** card: set the credit limit/term/tax ID/billing address/**billing e-mail** (manager and up,
@@ -1378,8 +1386,8 @@ Every endpoint shares the same response shape:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 385 cases
-cd app && flutter test      # 486 cases
+cd backend && npm test      # 388 cases
+cd app && flutter test      # 492 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 ```
 
@@ -1434,7 +1442,7 @@ images from the real Dockerfiles every time `main` changes (and on every PR touc
 and the web app answers 200 — only then does it upload them as the `demo` release for Option D (no job built the images
 before, which is how the web Dockerfile stayed broken unnoticed — see `docs/DECISIONS.md` #63, #65)
 
-**Backend (385 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (388 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The centerpiece is `tests/order-flow.test.js`, which walks the entire floor-to-cash path in 17 steps:
 
 > Pick a table → open an order with modifiers → verify the total is correct → the table becomes occupied →
@@ -1536,6 +1544,11 @@ log gaps: opening/closing a shift (`shift.open`/`shift.close` — checking the c
 on close), accepting a payment (`payment.pay`), and entering/removing a discount code
 (`order.promotion_redeem`/`order.promotion_remove`).
 
+`audit-summary-args.test.js` (3 cases, `docs/DECISIONS.md` #74) reads every file under `src/modules` and checks
+that each `auditLogService.log({…})` passes `summaryArgs` (removing it from one spot turns it red), then checks
+the real values for opening an order / moving a table (both table names) and for a settings change (`changes`
+field by field) — the Thai sentence in `summary` must stay identical, character for character.
+
 `ai-assistant.test.js` (9 cases) tests the AI assistant against a fake Anthropic client (never hits the
 real API in tests — the client is swapped out with `setAnthropicClientForTests`): RBAC (waiters/kitchen/
 cashiers can't reach it), an empty question gets a 422, an unconfigured `ANTHROPIC_API_KEY` returns a 503
@@ -1633,7 +1646,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, broken JSON containing a password now 400 (was 500) without the body leaking, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (486 cases)** — split into 3 levels:
+**Flutter (492 cases)** — split into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1677,6 +1690,9 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `kitchen_controller_test.dart` | (added) Undo after a status change sends the previous status back to the server, served items get no Undo bar, and the bar clears itself when time runs out (#64) |
 | Core | `api_client_test.dart` | (added) every request carries `Accept-Language` for the language shown at that moment — switching mid-shift changes the next request (#64) |
 | Core | `korean_font_coverage_test.dart` | (added) also counts Korean Material strings (date/time pickers, buttons) and the Korean backend error messages in `backend/src/i18n/errorMessages.js` — caught 18 missing glyphs before they could show up as boxes (#64) |
+| Core | `korean_font_coverage_test.dart` | (added, #74) every Korean font weight must hold ≥ 2,350 syllables (KS X 1001) plus all the jamo seen while typing — putting the old font back turns it red (it had only 474), and it also counts the Korean name/address of the credit customer |
+| Domain | `demo_store_test.dart` | (added, #74) after every case, checks **every** audit log that case created (28 actions): rebuilt in Thai from `summaryArgs` it must match the recorded sentence character for character, and rebuilt in English/Korean it must leave no Thai beyond values the user typed — this caught Demo Mode printing "500.0 บาท" where the backend prints "500" |
+| Presentation | `audit_summary_text_test.dart` | audit sentences for the backend-only actions (payment, shift open/close, move table, merge bills, apply/remove a code) in every language, a recipient e-mail containing `@` is not substituted twice, old logs and unknown actions fall back to the recorded sentence, and Thai always shows the recorded sentence |
 | Core | `locale_service_test.dart` | (added) the first launch uses the device language (Korean/English) and an unsupported one falls back to Thai (#62) |
 | Widget | `cart_panel_locale_test.dart` | The cart must show item names in the chosen language (English/Korean), matching the card just tapped — it had used the always-Thai `menuItem.name` since the first commit; also checks a weighed line doesn't overflow when glyphs are wide (see `docs/DECISIONS.md` #58) |
 | Core | `formatters_due_date_test.dart` | Due dates render in the current language ("11 Oct 2026" / "2026년 10월 11일") instead of a raw `2026-10-11`, without shifting a day with the device timezone |
@@ -1742,7 +1758,7 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   not just admins) and remembered per device. Every text token moves from AA (4.5:1) to AAA (7:1)
   and card borders from 1.24:1 to 4.10:1 (see `docs/DECISIONS.md` #18)
 - [x] **Korean language support** — done: 1,097 translation keys across every feature (verified to
-  match the Thai key set exactly), NotoSansKR embedded as a subset, a separately designed Korean
+  match the Thai key set exactly), NotoSansKR embedded as a subset (all 2,350 KS X 1001 syllables, so Korean can really be typed, #74), a separately designed Korean
   landing page with 5 real Korean-locale app screenshots, a three-way language switcher on all
   three landing pages (now visible on mobile too, where the whole group used to be hidden), and
   the AI assistant unlocked to answer in Korean. This was not on the roadmap — it came from a
@@ -1868,7 +1884,8 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   catalogue plus a test that scans the source so nothing slips through), Material strings/date pickers follow the
   language, demo staff names are translated, the kitchen has Undo, the QR menu says weighed meat is ordered from
   staff, and screenshots draw real shadows instead of black outlines (see `docs/DECISIONS.md` #64). Kept on purpose:
-  Thai branch name/address (tax-invoice rule), Thai audit-log summaries, and per-device data in demo mode
+  Thai branch name/address (tax-invoice rule) and per-device data in demo mode — audit-log summaries now read in the
+  viewer's language (the CSV stays Thai, see `docs/DECISIONS.md` #74)
 
 - [ ] **Connect to [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) (optional mode)** — the supply-side
   ERP for a chain that runs its own plant. When connected, the ERP owns ingredients, branches, menus,

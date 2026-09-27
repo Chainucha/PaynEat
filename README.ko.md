@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-920%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-929%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -54,6 +54,8 @@
 처음 여실 때는 기기 언어를 따라갑니다. 날짜 선택 달력, 기본 버튼, 그리고 **백엔드가 보내는 오류 메시지**도
 선택한 언어로 나옵니다.
 메뉴 이름, 카테고리, 구역 이름, 옵션까지 전부 한국어로 바뀝니다.
+**변경 이력**의 문장도 한국어로 나오고, 거래처·고객 이름처럼 매장이 입력하는 데이터도 한국어로 입력하시면 됩니다 —
+자주 쓰는 한글 2,350자(KS X 1001)를 모두 폰트에 넣어 두어 "첫 손님"처럼 입력해도 네모 상자로 깨지지 않습니다.
 
 ### 계정
 
@@ -102,7 +104,7 @@
 
 ## 🍽 문제 해결 메뉴
 
-대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 920개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
+대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 929개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
 
 | # | 가게의 문제 | 해결하는 세트 | 얻는 것 |
 |---|---|---|---|
@@ -230,7 +232,7 @@
 - **외상 회수액도 서랍 현금과 대조** — Z 리포트가 외상 회수액을 그날 매출과 따로 보여 줘요.
 
 ✅ **0.485kg × ฿1,200 = ฿582, 계산기 없이**  
-🧪 **데모에서 맛보기:** 데모를 열고 "캐셔" → "포장/배달 주문" → 정육 · 포장 → 소고기 꽃등심을 누르면 가상 저울이 무게를 화면에 보내요 → "매니저"로 들어가 "외상 매출" → 도매 고객 บริษัท โซลบาร์บีคิว จำกัด
+🧪 **데모에서 맛보기:** 데모를 열고 "캐셔" → "포장/배달 주문" → 정육 · 포장 → 소고기 꽃등심을 누르면 가상 저울이 무게를 화면에 보내요 → "매니저"로 들어가 "외상 매출" → 도매 고객 소울바비큐 주식회사
 
 > 🏷 데모의 저울 라벨 `2000101012504` (삼겹살 슬라이스 1.250kg × 280 = 350바트) — 데모의 스캔 칸에 입력하거나 스캔해 보세요. 랜딩 페이지에는 화면에서 바로 스캔되는 실제 EAN-13 바코드로 그려져 있습니다.
 
@@ -355,7 +357,7 @@
 - **PDF · 이메일 발송** — 청구서, 수금 영수증, 감액 전표, 이자 청구서를 태국어 A4 PDF(금액 문자 표기, 불기
   연도)로 웹에서 내려받고, PDF를 첨부해 거래처에 이메일로 보냅니다. 받는 주소는 고객 정보에서 자동으로 채워지고
   발송 내역이 문서 아래에 남습니다. 취소된 문서는 보낼 수 없습니다 (매장 SMTP 설정 필요, 데모는 발송을 흉내만 냅니다)
-- 수정할 수 없는 변경 이력
+- 수정할 수 없는 변경 이력 — 문장은 보는 사람이 고른 언어로 나옵니다 (태국어 원문은 증빙으로 그대로 저장되고 CSV에도 태국어로 나갑니다)
 - 여러 지점을 한 계정에서
 - 직원 계정 관리 — 역할 변경·사용 중지는 확인 후 적용되고, 본인 계정은 역할을 낮추거나 사용 중지할 수 없습니다
   (잘못 눌러 스스로 잠기는 일을 막습니다)
@@ -442,11 +444,11 @@ Developer Certificate of Origin(DCO)에 따라 서명(sign-off)해야 합니다 
 
 ## 테스트
 
-공개 전 **920건**의 자동화 테스트를 통과합니다.
+공개 전 **929건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 385건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 486건 — domain / controller / widget
+cd backend && npm test      # 388건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 492건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
 ```
 
@@ -471,7 +473,13 @@ PDF로 내려받아짐 → 청구서 이메일 발송 (`scale_documents_e2e_test
 
 - `korean_font_coverage_test.dart` — 내장한 한글 폰트에 화면에 뜨는 모든 글자의
   글리프가 실제로 있는지 폰트 파일의 cmap 테이블을 직접 읽어 확인합니다 (재료·메뉴 설명 번역을 추가하자
-  빠져 있던 8글자 `깃걀틸끈짠쌀걸쭉`을 바로 잡아냈고, 폰트를 다시 subset했습니다)
+  빠져 있던 8글자 `깃걀틸끈짠쌀걸쭉`을 바로 잡아냈고, 폰트를 다시 subset했습니다). 또 모든 굵기에 KS X 1001
+  한글 2,350자와 입력 중에 보이는 자모가 다 있는지 확인합니다 — 예전 폰트를 다시 넣으면 474자뿐이라 실패합니다
+  (`docs/DECISIONS.md` #74)
+- `audit_summary_text_test.dart`, `demo_store_test.dart` — 변경 이력 문장을 `metadata.summaryArgs`로 다시 만들었을 때
+  태국어는 저장된 문장과 한 글자도 다르지 않고, 한국어·영어에는 사용자가 입력한 값 말고는 태국어가 남지 않는지
+  데모 모드가 만든 **모든** 로그로 확인합니다. 백엔드의 `audit-summary-args.test.js`는 로그를 쓰는 모든 곳이
+  `summaryArgs`를 넘기는지 소스를 직접 읽어 확인합니다
 - `cart_panel_locale_test.dart` — 장바구니에 담긴 메뉴 이름이 선택한 언어로 보이는지 확인합니다
 - `destructive_labels_test.dart` — 문서 "발행 취소" 버튼이 일반 "취소"/"닫기" 버튼과 같은 이름이 되지 않도록 모든 언어에서
   확인합니다 (예전에는 둘 다 "취소"여서, 대화상자를 닫으려다 영수증을 취소할 수 있었습니다)

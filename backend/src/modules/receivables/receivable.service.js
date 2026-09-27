@@ -213,6 +213,12 @@ export const receivableService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.receipt',
+        summaryArgs: {
+          amount: toBaht(amountSatang),
+          method,
+          customer: customer.name,
+          receiptNo: created.receipt_no,
+        },
         entityType: 'ar_receipt',
         entityId: created.id,
         summary: `รับชำระหนี้ ${toBaht(amountSatang)} บาท (${method}) จาก "${customer.name}" ใบเสร็จ ${created.receipt_no}`,
@@ -269,6 +275,11 @@ export const receivableService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.receipt_void',
+        summaryArgs: {
+          receiptNo: row.receipt_no,
+          amount: toBaht(row.amount),
+          customer: row.customer_name,
+        },
         entityType: 'ar_receipt',
         entityId: id,
         summary: `ยกเลิกใบเสร็จรับชำระหนี้ ${row.receipt_no} (${toBaht(row.amount)} บาท) ของ "${row.customer_name}"`,
@@ -344,6 +355,12 @@ export const receivableService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.billing_note',
+        summaryArgs: {
+          noteNo: row.note_no,
+          customer: customer.name,
+          count: selected.length,
+          total: toBaht(total),
+        },
         entityType: 'billing_note',
         entityId: row.id,
         summary: `ออกใบวางบิล ${row.note_no} ให้ "${customer.name}" ${selected.length} บิล รวม ${toBaht(total)} บาท`,
@@ -377,6 +394,7 @@ export const receivableService = {
       auditLogService.log({
         actorUser: user,
         action: 'receivable.billing_note_void',
+        summaryArgs: { noteNo: row.note_no, customer: row.customer_name },
         entityType: 'billing_note',
         entityId: id,
         summary: `ยกเลิกใบวางบิล ${row.note_no} ของ "${row.customer_name}"`,

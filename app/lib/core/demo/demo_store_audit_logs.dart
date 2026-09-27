@@ -4,6 +4,15 @@
 part of 'demo_store.dart';
 
 // ------------------------------------------------------- audit logs -------
+/// ตัวเลขในประโยค audit แบบเดียวกับ backend (JavaScript): 500.0 เป็น "500", 12.5 คงเดิม
+///
+/// Dart พิมพ์ double ลงท้าย ".0" เสมอ ประโยคของ Demo Mode จึงเคยต่างจากระบบจริง
+/// ("รับชำระหนี้ 500.0 บาท") — เจอตอนเทสต์ประกอบประโยคจาก summaryArgs (DECISIONS #74)
+String _jsNumber(Object? value) => switch (value) {
+  final double v when v == v.roundToDouble() => v.toInt().toString(),
+  _ => '$value',
+};
+
 /// Mirror ของ backend audit-log.service.js (ดู docs/tickets/08-audit-log.md)
 /// เก็บ log append-only ไว้ในหน่วยความจำเหมือนข้อมูลอื่นๆ ของ Demo Mode —
 /// ไม่มี endpoint แก้ไข/ลบเปิดให้ใช้เลยเช่นเดียวกับฝั่ง backend
@@ -23,6 +32,7 @@ extension DemoStoreAuditLogs on DemoStore {
     required String entityType,
     int? entityId,
     required String summary,
+    Map<String, dynamic>? summaryArgs,
     String? reason,
     Map<String, dynamic>? metadata,
   }) {
@@ -35,7 +45,10 @@ extension DemoStoreAuditLogs on DemoStore {
       'entityId': entityId,
       'summary': summary,
       'reason': reason,
-      'metadata': metadata,
+      // เหมือน backend: ค่าที่ประกอบประโยคแบบไม่ผูกภาษา อยู่ใน metadata.summaryArgs (DECISIONS #74)
+      'metadata': summaryArgs == null
+          ? metadata
+          : {...?metadata, 'summaryArgs': summaryArgs},
       'createdAt': _now(),
     });
   }

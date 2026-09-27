@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-920%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-929%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) talking to a
 Node.js REST + WebSocket backend. Covers the complete floor-to-cash workflow: table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 920 automated tests.
+control and 929 automated tests.
 
 > 👤 **สร้างและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — ถ้าคุณ fork หรือต่อยอดโปรเจกต์นี้
 > ยินดีมากๆ แค่ขอให้คงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 ทักทาย/พูดคุยได้ที่
@@ -34,7 +34,7 @@ control and 920 automated tests.
 
 ## 🍽 เมนูแก้ปัญหาร้านอาหาร
 
-ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 920 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
+ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 929 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
 
 | # | ปัญหาของร้าน | ชุดที่แก้ | ได้อะไร |
 |---|---|---|---|
@@ -637,6 +637,9 @@ flutter run -d chrome --dart-define=DEMO_MODE=true
   ปิดใช้งาน/ลบ/เปลี่ยนสิทธิ์พนักงาน, แก้ VAT/ค่าบริการ, คืนเงิน, ยกเลิกใบกำกับภาษี) ถูกบันทึกไว้ที่
   หน้า **ประวัติการทำรายการ** (เห็นเฉพาะ `admin`) เสมอ พร้อมผู้ทำ/เวลา/เหตุผล — ลองทำข้อไหนก็ได้
   ข้างบนนี้แล้วกลับไปดูหน้านั้น (ดูขั้นตอน 17 ในทัวร์ และ `docs/DECISIONS.md` #21)
+- เข้าเป็น `admin` → สลับภาษาเป็น **한국어** (ปุ่มลูกโลก) → **변경 이력** → ประโยคของทุกรายการเป็นภาษาเกาหลี เช่น
+  "주문 #ORD-… 취소" ไม่ใช่ประโยคไทย (ภาษาไทยยังแสดงประโยคที่บันทึกไว้จริงเป็นหลักฐาน) → ไปที่ **고객/적립** เพิ่มลูกค้า
+  ชื่อภาษาเกาหลีอะไรก็ได้ เช่น "첫 손님" → ขึ้นครบ ไม่เป็นกล่องสี่เหลี่ยม (ดู `docs/DECISIONS.md` #74)
 - ลองแลกแต้มสะสมตอนเก็บเงินเกินยอดที่ลูกค้ามี หรือเกินยอดที่ต้องจ่ายรอบนั้น → ระบบปฏิเสธทั้งคู่
   (ไม่ปัดลดให้อัตโนมัติ) และถ้าออเดอร์ไม่ได้ผูกลูกค้าไว้ตั้งแต่แรก ช่องแลกแต้มจะไม่ให้ใช้เลย — ลองจ่าย
   ออเดอร์ที่ผูกลูกค้าด้วยแต้มบางส่วนแล้วดูว่ายอดที่ "นับเข้าออเดอร์" กับยอดที่ "เก็บเงินจริง" ต่างกัน
@@ -699,8 +702,8 @@ flutter run -d chrome --dart-define=DEMO_MODE=true
 ### 🧪 อยากรันเทสต์ดู
 
 ```bash
-cd backend && npm test      # 385 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 486 เคส — domain / controller / widget
+cd backend && npm test      # 388 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
+cd app && flutter test      # 492 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -884,6 +887,9 @@ cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุ
   เปลี่ยนจริง), สร้าง/แก้ไข/ลบโปรโมชัน, ปรับสต๊อกวัตถุดิบด้วยมือ — มี **ตัวกรองช่วงวันที่** และปุ่ม
   **ส่งออกเป็น CSV** ให้ฝ่ายบัญชี (รองรับเฉพาะเว็บ ดู `docs/DECISIONS.md` #27) และเปิด/ปิดกะ (พร้อม
   ส่วนต่างเงินสด), รับชำระเงิน, กรอก/ถอดโค้ดส่วนลด (ดู `docs/DECISIONS.md` #28)
+- **ประวัติการทำรายการแสดงตามภาษาของผู้ดู** — backend เก็บค่าที่ใช้ประกอบประโยค (ชื่อ เลขที่ ยอด รหัสสถานะ) ไว้ใน
+  `metadata.summaryArgs` ทุกครั้ง แอปภาษาเกาหลี/อังกฤษจึงประกอบประโยคเป็นภาษานั้นเอง ส่วนภาษาไทยและไฟล์ CSV ยังใช้ประโยค
+  ไทยที่บันทึกไว้เป็นหลักฐาน log เก่าที่ไม่มีค่าชุดนี้แสดงประโยคเดิม (ดู `docs/DECISIONS.md` #74)
 - **ลูกค้า/แต้มสะสม** เห็นได้ทั้ง `admin`/`manager` — ค้นหารายชื่อลูกค้าทั้งหมด กดเข้าไปดูประวัติ
   การซื้อและแต้มสะสมคงเหลือของลูกค้ารายคนได้ (ดู `docs/DECISIONS.md` #22) พร้อมการ์ด **บัญชีเครดิต**:
   ตั้งวงเงิน/เครดิตเทอม/เลขผู้เสียภาษี/ที่อยู่ออกเอกสาร/**อีเมลรับใบวางบิล** (ผู้จัดการขึ้นไป บันทึก audit log)
@@ -1252,8 +1258,8 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 ## 🧪 การทดสอบ
 
 ```bash
-cd backend && npm test      # 385 เคส
-cd app && flutter test      # 486 เคส
+cd backend && npm test      # 388 เคส
+cd app && flutter test      # 492 เคส
 cd app && flutter test test_e2e   # 49 เคส (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -1297,7 +1303,7 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 ให้ API ตอบ `/health`, ล็อกอินได้, ตาชั่งจำลองเปิดอยู่ และเว็บตอบ 200 — ผ่านแล้วถึงอัปโหลดเป็น release `demo` ของทางเลือก D
 (ก่อนหน้านี้ไม่มี job ไหน build image จริง Dockerfile เว็บจึงพังเงียบอยู่นาน ดู `docs/DECISIONS.md` #63, #65)
 
-**Backend (385 เคส)** — `node:test` + `supertest` ยิงผ่าน HTTP จริงบนฐานข้อมูลแยกต่างหาก
+**Backend (388 เคส)** — `node:test` + `supertest` ยิงผ่าน HTTP จริงบนฐานข้อมูลแยกต่างหาก
 เทสต์เด่นคือ `tests/order-flow.test.js` ที่ไล่เส้นทางทั้งร้านตั้งแต่ต้นจนจบใน 17 ขั้น:
 
 > เลือกโต๊ะ → เปิดออเดอร์พร้อมตัวเลือกเสริม → ตรวจว่ายอดคิดถูก → โต๊ะเปลี่ยนเป็นไม่ว่าง →
@@ -1389,6 +1395,10 @@ promptPayId, โครงสร้าง TLV self-consistent ครบทุก 
 (`shift.open`/`shift.close` — ตรวจ metadata ส่วนต่างเงินสดตอนปิดกะ), รับชำระเงิน (`payment.pay`),
 และกรอก/ถอดโค้ดส่วนลด (`order.promotion_redeem`/`order.promotion_remove`)
 
+`audit-summary-args.test.js` (3 เคส, `docs/DECISIONS.md` #74) อ่านซอร์สทุกไฟล์ใน `src/modules` ว่าทุก
+`auditLogService.log({…})` ส่ง `summaryArgs` มาด้วย (ลองลบออกจุดเดียวแล้วแดงจริง) และตรวจค่าจริงของการเปิดออเดอร์/ย้ายโต๊ะ
+(ชื่อโต๊ะทั้งต้นทางและปลายทาง) กับการแก้การตั้งค่า (`changes` ทีละช่อง) — ประโยคไทยใน `summary` ต้องเหมือนเดิมทุกตัวอักษร
+
 `ai-assistant.test.js` (9 เคส) เทสต์ผู้ช่วย AI ผ่าน fake Anthropic client (ไม่เรียก API จริงในเทสต์ —
 สลับ client ด้วย `setAnthropicClientForTests`): RBAC (เสิร์ฟ/ครัว/แคชเชียร์เข้าไม่ได้), คำถามว่าง
 โดน 422, ยังไม่ตั้งค่า `ANTHROPIC_API_KEY` ตอบ 503 พร้อม error code เฉพาะ, เรียก tool จริงแล้วตอบ
@@ -1466,7 +1476,7 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 เบอร์ อีเมล เลขผู้เสียภาษี ที่อยู่ รหัสผ่าน หรือ token ไว้ใน log, JSON พังที่มีรหัสผ่านได้ 400 (เดิม 500) โดยเนื้อ body ไม่หลุด
 และ QR token ของโต๊ะไม่อยู่ใน log (ดู `docs/DECISIONS.md` #68)
 
-**Flutter (486 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (492 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|
@@ -1511,6 +1521,9 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 | Controller | `kitchen_controller_test.dart` | (เพิ่ม) กดเดินสถานะแล้ว "เลิกทำ" ส่งสถานะเดิมกลับไปเซิร์ฟเวอร์, เสิร์ฟแล้วไม่มีแถบเลิกทำ, แถบหายเองเมื่อหมดเวลา (#64) |
 | Core | `api_client_test.dart` | (เพิ่ม) ทุก request แนบ `Accept-Language` ตามภาษาที่แสดงอยู่ตอนนั้น — สลับภาษากลางกะแล้ว request ถัดไปเปลี่ยนตาม (#64) |
 | Core | `korean_font_coverage_test.dart` | (เพิ่ม) นับข้อความ Material ภาษาเกาหลี (ปฏิทิน/นาฬิกา/ปุ่ม) และข้อความ error เกาหลีจาก `backend/src/i18n/errorMessages.js` ด้วย — จับตัวอักษรที่ขาดได้ 18 ตัวก่อนขึ้นจอเป็นกล่อง (#64) |
+| Core | `korean_font_coverage_test.dart` | (เพิ่ม, #74) ฟอนต์เกาหลีทุกน้ำหนักต้องมีพยางค์ ≥ 2,350 ตัว (KS X 1001) + จาโมที่เห็นระหว่างพิมพ์ครบ — ใส่ฟอนต์เก่ากลับเข้าไปแล้วแดง (มีแค่ 474 ตัว) และนับชื่อ/ที่อยู่ลูกค้าเครดิตภาษาเกาหลีด้วย |
+| Domain | `demo_store_test.dart` | (เพิ่ม, #74) หลังทุกเคส ตรวจ audit log **ทุกรายการ**ที่เคสนั้นสร้าง (28 action): ประกอบเป็นไทยจาก `summaryArgs` แล้วต้องตรงกับประโยคที่บันทึกทุกตัวอักษร และประกอบเป็นอังกฤษ/เกาหลีได้โดยไม่มีอักษรไทยเหลือนอกจากค่าที่ผู้ใช้กรอก — จับได้ว่า Demo Mode พิมพ์ "500.0 บาท" ต่างจาก backend |
+| Presentation | `audit_summary_text_test.dart` | ประโยค audit ของ action ที่มีแต่ backend (รับชำระ เปิด/ปิดกะ ย้ายโต๊ะ รวมบิล ใช้/เอาโค้ดส่วนลดออก) ครบทุกภาษา, อีเมลปลายทางที่มี `@` ไม่ถูกแทนซ้ำ, log เก่า/action ที่ไม่รู้จักถอยไปใช้ประโยคเดิม และภาษาไทยแสดงประโยคที่บันทึกไว้เสมอ |
 | Core | `locale_service_test.dart` | (เพิ่ม) เปิดแอปครั้งแรกได้ภาษาของเครื่อง (เกาหลี/อังกฤษ) ภาษาที่ไม่รองรับตกเป็นไทย (#62) |
 | Widget | `cart_panel_locale_test.dart` | ตะกร้าต้องโชว์ชื่อเมนูตามภาษา (อังกฤษ/เกาหลี) เหมือนการ์ดที่เพิ่งแตะ — เดิมใช้ `menuItem.name` ไทยเสมอมาตั้งแต่คอมมิตแรก และบรรทัดชั่งน้ำหนักต้องไม่ล้นเมื่อตัวอักษรกว้าง (ดู `docs/DECISIONS.md` #58) |
 | Core | `formatters_due_date_test.dart` | วันครบกำหนดชำระแสดงตามภาษา ("11 Oct 2026" / "2026년 10월 11일") ไม่ใช่ `2026-10-11` ดิบ และไม่เลื่อนวันตามโซนเวลาเครื่อง |
@@ -1574,7 +1587,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   — ระหว่างทำเจอว่าพาเลตต์เดิมวัดคอนทราสต์บนพื้นขาวอย่างเดียว พอวัดกับพื้นที่ใช้จริงพบว่า
   `textSecondary` `warningInk` `infoInk` และพื้นปุ่มสีเขียว/ส้ม/เหลือง ตกเกณฑ์ AA แก้ครบแล้ว
 - [x] **รองรับภาษาเกาหลี** — ทำแล้ว: คำแปล 1,097 คีย์ครบทุกฟีเจอร์ (ตรวจแล้วว่าชุดคีย์ตรงกับ
-  ภาษาไทยเป๊ะ), ฝังฟอนต์ NotoSansKR แบบ subset, หน้า Landing ฉบับเกาหลีดีไซน์แยกต่างหาก
+  ภาษาไทยเป๊ะ), ฝังฟอนต์ NotoSansKR แบบ subset (ครบพยางค์ KS X 1001 2,350 ตัว พิมพ์ภาษาเกาหลีได้จริง #74), หน้า Landing ฉบับเกาหลีดีไซน์แยกต่างหาก
   พร้อมภาพแอปภาษาเกาหลีจริง 5 ภาพ, ตัวสลับภาษาสามทางทุกหน้า Landing (และแสดงบนมือถือด้วย
   ซึ่งเดิมซ่อนไว้ทั้งก้อน) และปลดล็อกให้ผู้ช่วย AI ตอบเกาหลีได้ — งานนี้ไม่ได้อยู่ในแผนเดิม
   แต่มาจากเจ้าของธุรกิจเกาหลีในกรุงเทพฯ ที่เจอโปรเจกต์บน GitHub แล้วติดต่อเข้ามา
@@ -1675,7 +1688,8 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
 - [x] **ปิดข้อค้างจากรอบ UAT** — ทำแล้ว: ข้อความ error จาก backend แปลตามภาษาแอป (แคตตาล็อก + เทสต์สแกนซอร์สกันหลุด),
   ปฏิทิน/ข้อความมาตรฐาน Material ตามภาษา, ชื่อพนักงานสาธิตตามภาษา, จอครัวมีปุ่มเลิกทำ, หน้า QR บอกว่าเนื้อชั่งกิโลสั่งกับ
   พนักงาน และภาพหน้าจอวาดเงาจริงแทนกรอบดำ (ดู `docs/DECISIONS.md` #64) — ที่ยังตั้งใจคงไว้: ชื่อสาขา/ที่อยู่ภาษาไทย
-  (ข้อบังคับใบกำกับภาษี), สรุปใน audit log เป็นภาษาไทย และโหมดสาธิตยังเก็บข้อมูลแยกเครื่อง
+  (ข้อบังคับใบกำกับภาษี) และโหมดสาธิตยังเก็บข้อมูลแยกเครื่อง — ส่วนสรุปใน audit log ตอนนี้แสดงตามภาษาของผู้ดูแล้ว
+  (CSV ยังเป็นไทย ดู `docs/DECISIONS.md` #74)
 
 - [ ] **เชื่อมกับ [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) (โหมดเลือกได้)** — ERP ฝั่งซัพพลาย
   ของเชนร้านที่มีโรงงานของตัวเอง เมื่อเชื่อมต่อ ERP เป็นเจ้าของวัตถุดิบ/สาขา เมนู ราคา และสูตร และ POS ส่งยอดขาย

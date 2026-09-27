@@ -96,9 +96,10 @@ extension DemoStoreRefunds on DemoStore {
     _logAudit(
       actorId: refundedById,
       action: 'payment.refund',
+      summaryArgs: {'code': order['code'], 'amount': amount},
       entityType: 'refund',
       entityId: refund['id'] as int,
-      summary: 'คืนเงิน $amount บาท ให้ออเดอร์ #${order['code']}',
+      summary: 'คืนเงิน ${_jsNumber(amount)} บาท ให้ออเดอร์ #${order['code']}',
       reason: reason,
       metadata: {
         'paymentId': paymentId,

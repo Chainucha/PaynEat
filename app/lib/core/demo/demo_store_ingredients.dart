@@ -90,11 +90,18 @@ extension DemoStoreIngredients on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'ingredient.stock_adjust',
+      summaryArgs: {
+        'name': raw['name'],
+        'delta': delta,
+        'unit': raw['unit'],
+        'from': previousStock,
+        'to': previousStock + delta,
+      },
       entityType: 'ingredient',
       entityId: id,
       summary:
-          'ปรับสต๊อก "${raw['name']}" $direction ${delta.abs()} ${raw['unit']} '
-          '($previousStock → ${previousStock + delta})',
+          'ปรับสต๊อก "${raw['name']}" $direction ${_jsNumber(delta.abs())} ${raw['unit']} '
+          '(${_jsNumber(previousStock)} → ${_jsNumber(previousStock + delta)})',
       metadata: {
         'delta': delta,
         'previousStock': previousStock,

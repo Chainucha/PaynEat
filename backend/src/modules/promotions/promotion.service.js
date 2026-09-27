@@ -59,6 +59,7 @@ export const promotionService = {
       auditLogService.log({
         actorUser: actingUser,
         action: 'promotion.create',
+        summaryArgs: { name: created.name },
         entityType: 'promotion',
         entityId: created.id,
         summary: `สร้างโปรโมชัน "${created.name}"`,
@@ -90,6 +91,7 @@ export const promotionService = {
       auditLogService.log({
         actorUser: actingUser,
         action: 'promotion.update',
+        summaryArgs: { name: updated.name },
         entityType: 'promotion',
         entityId: id,
         summary: `แก้ไขโปรโมชัน "${updated.name}"`,
@@ -108,6 +110,7 @@ export const promotionService = {
       auditLogService.log({
         actorUser: actingUser,
         action: 'promotion.delete',
+        summaryArgs: { name: existing.name },
         entityType: 'promotion',
         entityId: id,
         summary: `ลบโปรโมชัน "${existing.name}"`,

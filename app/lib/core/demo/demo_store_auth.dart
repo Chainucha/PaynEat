@@ -102,6 +102,11 @@ extension DemoStoreAuth on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'user.role_change',
+        summaryArgs: {
+          'name': user['name'],
+          'from': previousRole,
+          'to': changes['role'],
+        },
         entityType: 'user',
         entityId: id,
         summary:
@@ -117,6 +122,7 @@ extension DemoStoreAuth on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'user.deactivate',
+        summaryArgs: {'name': user['name'], 'username': user['username']},
         entityType: 'user',
         entityId: id,
         summary: 'ปิดการใช้งานบัญชี "${user['name']}" (${user['username']})',
@@ -127,6 +133,7 @@ extension DemoStoreAuth on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'user.password_reset',
+        summaryArgs: {'name': user['name'], 'username': user['username']},
         entityType: 'user',
         entityId: id,
         summary:
@@ -144,6 +151,7 @@ extension DemoStoreAuth on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'user.delete',
+      summaryArgs: {'name': user['name'], 'username': user['username']},
       entityType: 'user',
       entityId: id,
       summary: 'ลบบัญชี "${user['name']}" (${user['username']}) ออกจากระบบ',

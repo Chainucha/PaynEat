@@ -322,7 +322,7 @@ class ScreenshotHarness {
           'menuItemId': 2,
           'quantity': 2,
           'optionIds': [1023, 1031],
-          'note': 'ไม่ใส่ผัก',
+          'note': _note('ไม่ใส่ผัก', '야채 빼주세요', 'No vegetables'),
         },
         {
           'menuItemId': 17,
@@ -404,11 +404,30 @@ class ScreenshotHarness {
     // ---- ลูกค้า/แต้มสะสม (ticket 09) ----
     // ไม่มีในข้อมูลสาธิตเดิม ทำให้หน้ารายชื่อลูกค้าและกล่องเลือกลูกค้าถ่ายภาพ
     // ออกมาเป็นหน้าว่างเปล่า มองไม่เห็นว่าหน้าตาจริงเป็นยังไง
+    // ชื่อลูกค้าคือข้อมูลที่ร้านกรอกเอง ระบบไม่แปลให้ — ภาพภาษาอื่นจึงสมมติว่า
+    // ร้านกรอกชื่อไว้เป็นภาษานั้นตั้งแต่แรก ไม่อย่างนั้นหน้าลูกค้าในภาพ EN/KO
+    // จะเต็มไปด้วยอักษรไทย (ชื่อเกาหลีต้องใช้แต่อักษรที่อยู่ใน subset ฟอนต์)
     final regulars = [
-      (name: 'คุณสมหญิง ใจดี', phone: '0812345678', points: 240),
-      (name: 'คุณวิชัย ตั้งมั่น', phone: '0898765432', points: 85),
-      (name: 'คุณนภา ศรีสุข', phone: '0863334455', points: 1120),
-      (name: 'คุณธนกร พงษ์ไพศาล', phone: '0917778899', points: 0),
+      (
+        name: _note('คุณสมหญิง ใจดี', '이서연', 'Somying Jaidee'),
+        phone: '0812345678',
+        points: 240,
+      ),
+      (
+        name: _note('คุณวิชัย ตั้งมั่น', '박준호', 'Wichai Tangman'),
+        phone: '0898765432',
+        points: 85,
+      ),
+      (
+        name: _note('คุณนภา ศรีสุข', '정하늘', 'Napa Srisuk'),
+        phone: '0863334455',
+        points: 1120,
+      ),
+      (
+        name: _note('คุณธนกร พงษ์ไพศาล', '오지은', 'Thanakorn Pongpaisan'),
+        phone: '0917778899',
+        points: 0,
+      ),
     ];
     var firstCustomerId = 0;
     for (final regular in regulars) {
@@ -435,7 +454,11 @@ class ScreenshotHarness {
     );
     store.cancelOrder(
       voided['id'] as int,
-      'ลูกค้าเปลี่ยนใจ ยังไม่ได้ส่งครัว',
+      _note(
+        'ลูกค้าเปลี่ยนใจ ยังไม่ได้ส่งครัว',
+        '손님 변심, 주방 전송 전',
+        'Guest changed their mind before it reached the kitchen',
+      ),
       actorId: 2,
     );
 

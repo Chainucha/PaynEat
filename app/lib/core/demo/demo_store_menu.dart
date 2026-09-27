@@ -194,9 +194,15 @@ extension DemoStoreMenu on DemoStore {
       _logAudit(
         actorId: actorId,
         action: 'menu.price_change',
+        summaryArgs: {
+          'name': item['name'],
+          'from': previousPrice,
+          'to': newPrice,
+        },
         entityType: 'menu_item',
         entityId: id,
-        summary: 'แก้ราคาเมนู "${item['name']}" $previousPrice → $newPrice บาท',
+        summary:
+            'แก้ราคาเมนู "${item['name']}" ${_jsNumber(previousPrice)} → ${_jsNumber(newPrice)} บาท',
         metadata: {'previousPrice': previousPrice, 'newPrice': newPrice},
       );
     }

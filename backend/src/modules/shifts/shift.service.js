@@ -36,6 +36,7 @@ export const shiftService = {
       auditLogService.log({
         actorUser: user,
         action: 'shift.open',
+        summaryArgs: { cash: toBaht(shift.opening_cash) },
         entityType: 'shift',
         entityId: shift.id,
         summary: `เปิดกะ เงินสดตั้งต้น ${toBaht(shift.opening_cash)} บาท`,
@@ -74,6 +75,11 @@ export const shiftService = {
       auditLogService.log({
         actorUser: user,
         action: 'shift.close',
+        summaryArgs: {
+          counted: toBaht(counted),
+          expected: toBaht(expectedCash),
+          variance: toBaht(variance),
+        },
         entityType: 'shift',
         entityId: id,
         summary: `ปิดกะ นับได้ ${toBaht(counted)} บาท คาดไว้ ${toBaht(expectedCash)} บาท (ส่วนต่าง ${toBaht(variance)} บาท)`,

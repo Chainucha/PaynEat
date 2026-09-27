@@ -111,7 +111,23 @@ class DemoStore {
     auditLogs.clear();
     customers
       ..clear()
-      ..addAll(DemoSeed.customers());
+      ..addAll([
+        // ร้านกรอกชื่อลูกค้าเป็นภาษาที่ตัวเองใช้ (DECISIONS #74) — เลือกครั้งเดียวตอนเริ่ม
+        // ข้อมูลที่กรอกไปแล้วไม่เปลี่ยนภาษาตามปุ่มสลับภาษา เหมือนร้านจริง
+        for (final row in DemoSeed.customers())
+          {
+            ...row,
+            'name': DemoNames.of(row),
+            'address': DemoNames.of(row, key: 'address'),
+          }..removeWhere(
+            (key, _) => const {
+              'nameEn',
+              'nameKo',
+              'addressEn',
+              'addressKo',
+            }.contains(key),
+          ),
+      ]);
     arReceipts.clear();
     billingNotes.clear();
     arCharges.clear();

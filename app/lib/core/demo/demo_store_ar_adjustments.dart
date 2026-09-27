@@ -164,10 +164,17 @@ extension DemoStoreArAdjustments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.late_fee',
+      summaryArgs: {
+        'total': total,
+        'rate': computed.rate,
+        'customer': customer['name'],
+        'count': computed.lines.length,
+        'chargeNo': charge['chargeNo'],
+      },
       entityType: 'ar_charge',
       entityId: charge['id'] as int,
       summary:
-          'คิดดอกเบี้ยผิดนัด $total บาท (${computed.rate}% ต่อปี) ให้ '
+          'คิดดอกเบี้ยผิดนัด ${_jsNumber(total)} บาท (${_jsNumber(computed.rate)}% ต่อปี) ให้ '
           '"${customer['name']}" ${computed.lines.length} บิล ใบแจ้ง ${charge['chargeNo']}',
       metadata: {'customerId': customerId, 'total': total},
     );
@@ -228,10 +235,15 @@ extension DemoStoreArAdjustments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.late_fee_void',
+      summaryArgs: {
+        'chargeNo': charge['chargeNo'],
+        'total': charge['total'],
+        'customer': charge['customerName'],
+      },
       entityType: 'ar_charge',
       entityId: id,
       summary:
-          'ยกเลิกใบแจ้งดอกเบี้ย ${charge['chargeNo']} (${charge['total']} บาท) '
+          'ยกเลิกใบแจ้งดอกเบี้ย ${charge['chargeNo']} (${_jsNumber(charge['total'])} บาท) '
           'ของ "${charge['customerName']}"',
       reason: reason,
       metadata: {'chargeNo': charge['chargeNo'], 'pointsEarned': points.earned},
@@ -294,10 +306,16 @@ extension DemoStoreArAdjustments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.credit_note',
+      summaryArgs: {
+        'noteNo': note['noteNo'],
+        'amount': amount,
+        'code': order['code'],
+        'customer': customer['name'],
+      },
       entityType: 'credit_note',
       entityId: note['id'] as int,
       summary:
-          'ออกใบลดหนี้ ${note['noteNo']} $amount บาท ให้บิล #${order['code']} '
+          'ออกใบลดหนี้ ${note['noteNo']} ${_jsNumber(amount)} บาท ให้บิล #${order['code']} '
           'ของ "${customer['name']}"',
       reason: refund['reason'] as String?,
       metadata: {'noteNo': note['noteNo'], 'amount': amount},
@@ -417,6 +435,13 @@ extension DemoStoreArAdjustments on DemoStore {
     _logAudit(
       actorId: actorId,
       action: 'receivable.document_email',
+      summaryArgs: {
+        'document': kind,
+        'number': number,
+        'customer': customer['name'],
+        'to': recipient,
+        'demo': true,
+      },
       entityType: kind,
       entityId: id,
       summary:

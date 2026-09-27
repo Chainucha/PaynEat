@@ -34,3 +34,11 @@
 `Copyright 2026 Suruch Chakrapeesirisuk` และ `SPDX-License-Identifier: Apache-2.0` — รัน
 `node scripts/license-headers.mjs --fix` ที่ root แล้วสคริปต์จะใส่ให้ ถ้าลืม job "License headers" ใน CI
 (`.github/workflows/license-check.yml`) จะแดง
+
+## ช่องโหว่ด้านความปลอดภัย — ห้ามเขียนในที่สาธารณะจนกว่าจะแก้ (DECISIONS #81)
+
+ถ้าเจอช่องโหว่ที่ยังไม่แก้ (หรือไม่แน่ใจว่าใช่ไหม ให้ถือว่าใช่) **ห้ามเปิด Issue หรือ PR และห้ามเขียนไว้ใน commit message,
+คอมเมนต์ในโค้ด, DECISIONS หรือ README** ให้เขียนร่าง advisory (สิ่งที่ผิด, ขั้นตอนทำซ้ำสั้นๆ, ผลกระทบ, แนวทางแก้) แล้วส่งให้เจ้าของโปรเจกต์
+ยื่นเองทาง Security → Report a vulnerability ตามที่ [`SECURITY.md`](SECURITY.md) เขียนไว้ PR ที่แก้ช่องโหว่ให้บรรยายเป็นการแก้แบบกลางๆ
+(เช่น "ตรวจสาขาของรายการก่อนแก้ไข") ไม่ใช่วิธีโจมตี
+

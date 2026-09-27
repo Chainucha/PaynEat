@@ -1920,7 +1920,7 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   ERP for a chain that runs its own plant. When connected, the ERP owns ingredients, branches, menus,
   prices and recipes and the POS sends sales to it through an outbox, exactly once even across outages —
   **without the ERP, everything works exactly as today** (see tickets 25–28 and `docs/DECISIONS.md` #66). The
-  ERP side of contract v1 merged on 2026-09-27; ticket 25 starts after T01 (#80)
+  ERP side of contract v1 merged on 2026-09-27, and ticket 25 can start now
 - [x] **A Google Play channel (ticket 29a)** — done: CI builds an `.aab` signed with the upload key from GitHub Secrets
   when a tag is pushed (`versionCode` from the tag, attached to the GitHub Release), in demo mode for closed testing;
   the PaynEat app icon replaces the Flutter logo; a privacy policy page in three languages; Data safety answers and

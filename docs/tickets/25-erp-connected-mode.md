@@ -1,11 +1,11 @@
 # Ticket: โหมดเชื่อมต่อ PaynEat ERP — ลงทะเบียน, ดึง master data ตามเวอร์ชัน, หน้าจัดการเป็นอ่านอย่างเดียว
 
 **Priority:** 🟠 High — สัปดาห์ที่ 4 ของแผน PaynEat ERP v1
-**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — สัญญา POS v1 1.0.0 merge แล้วใน PaynEat-ERP#9 (PR PaynEat-ERP#55 พร้อมข้อแก้ของ POS PO ครบ 4 ข้อ) เหลือรอ T01 [#80](https://github.com/SuruchBoss/PaynEat/issues/80) ซึ่งอยู่ระหว่างรีวิวใน PR [#119](https://github.com/SuruchBoss/PaynEat/pull/119)
+**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — สัญญา POS v1 1.0.0 merge แล้วใน PaynEat-ERP#9 (PR PaynEat-ERP#55 พร้อมข้อแก้ของ POS PO ครบ 4 ข้อ) และ T01 [#80](https://github.com/SuruchBoss/PaynEat/issues/80) merge แล้วใน PR [#119](https://github.com/SuruchBoss/PaynEat/pull/119) — **เริ่มได้** โดยตาราง mirror ต้องเป็น migration ใหม่ตาม `docs/DECISIONS.md` #79
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [ERP ADR-0011](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0011-ecosystem-and-sherwhyve.md),
 [สเปก ERP #1](https://github.com/SuruchBoss/PaynEat-ERP/issues/1), `docs/DECISIONS.md` #66
-**Blocked by:** [#80](https://github.com/SuruchBoss/PaynEat/issues/80) (T01 migration แบบมีเวอร์ชัน — ตาราง mirror ต้องเข้าผ่านทางนี้, `docs/DECISIONS.md` #77),
+**Blocked by:** ~~[#80](https://github.com/SuruchBoss/PaynEat/issues/80)~~ ✅ (T01 migration แบบมีเวอร์ชัน — ตาราง mirror ต้องเข้าผ่านทางนี้, `docs/DECISIONS.md` #77),
 ~~[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9)~~ ✅ (สัญญาเชื่อมต่อ v1 merge แล้ว 2026-09-27),
 `24-telemetry-contract.md`
 

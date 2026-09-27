@@ -1718,7 +1718,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
 - [ ] **เชื่อมกับ [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) (โหมดเลือกได้)** — ERP ฝั่งซัพพลาย
   ของเชนร้านที่มีโรงงานของตัวเอง เมื่อเชื่อมต่อ ERP เป็นเจ้าของวัตถุดิบ/สาขา เมนู ราคา และสูตร และ POS ส่งยอดขาย
   เข้า ERP ผ่าน outbox ครั้งเดียวแน่นอนแม้เน็ตหลุด — **ไม่เชื่อมต่อก็ใช้ได้เหมือนเดิมทุกอย่าง** (ดู tickets 25–28 และ
-  `docs/DECISIONS.md` #66) — สัญญาเชื่อมต่อ v1 ฝั่ง ERP merge แล้ว (2026-09-27) ticket 25 เริ่มหลัง T01 (#80)
+  `docs/DECISIONS.md` #66) — สัญญาเชื่อมต่อ v1 ฝั่ง ERP merge แล้ว (2026-09-27) และ ticket 25 เริ่มได้แล้ว
 - [x] **ช่องทางขึ้น Google Play (ticket 29a)** — ทำแล้ว: CI build `.aab` ที่ลงนามด้วย upload key จาก GitHub Secrets เมื่อติด tag
   (`versionCode` จาก tag แนบกับ GitHub Release) เป็นโหมดสาธิตสำหรับการทดสอบแบบปิด, ไอคอนแอป PaynEat แทนโลโก้ Flutter,
   หน้านโยบายความเป็นส่วนตัวสามภาษา, คำตอบ Data safety และข้อความ/ภาพหน้า store ไทย-อังกฤษใน `docs/store/`

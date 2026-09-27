@@ -442,6 +442,12 @@ The app uses local mock data instead — every feature works.
 > 💡 This mode is switched at a **single point** (`_bindDataSources()`) without touching any screen,
 > controller, or use case — a concrete example of why the Clean Architecture split is worth it.
 
+**📱 From Google Play (in closed testing)** — this same demo-mode build is a signed Android app that CI builds for every
+`vX.Y.Z` tag (see [`docs/store/README.md`](docs/store/README.md), in Thai). It is not public yet and **cannot connect to a
+real shop server** until ticket 29b adds entering the server address in the app — for a real restaurant today, use
+option A/B/D and open the app in the device's browser, or build the app yourself with `--dart-define=API_BASE_URL=...`.
+Restaurants that want to join the test can ask on [GitHub Issues](https://github.com/SuruchBoss/PaynEat/issues).
+
 ---
 
 ### 🅳 Option D — Windows + Docker Desktop in one line (no code on your machine)
@@ -1067,6 +1073,13 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   template on port 9464, separate from the API and never exposed by docker compose · names, phone numbers,
   e-mails, tax IDs, addresses, passwords, tokens, QR tokens, request bodies and query strings never reach the
   log (tested) (see `docs/tickets/24-telemetry-contract.md`, `docs/DECISIONS.md` #68)
+- **A Google Play channel** — tag `vX.Y.Z` and CI builds an `.aab` signed with the upload key from GitHub Secrets (no
+  key in the repo), with the `versionCode` worked out from the tag and a check that it was not signed with a debug key,
+  then attaches it to the GitHub Release · a PR touching Android files builds the same way with a throwaway key to show
+  signing still works · the app icon is the PaynEat logo (an adaptive icon on Android 8+, a themed icon on Android 13+)
+  · a [privacy policy page](https://suruchboss.github.io/PaynEat/privacy.en.html) in three languages that says plainly
+  the barcode scanner (Google ML Kit) sends diagnostic data to Google · Data safety answers and store text and images
+  in two languages under `docs/store/` (see `docs/tickets/29-android-google-play.md`, `docs/DECISIONS.md` #75)
 
 ---
 
@@ -1389,7 +1402,12 @@ Every endpoint shares the same response shape:
 cd backend && npm test      # 388 cases
 cd app && flutter test      # 492 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
+node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
+
+The badge counts the backend and app tests (388 + 492 + 49). The `android-version.mjs` script tests check that a `vX.Y.Z` tag always
+gives a higher `versionCode` and that a malformed or out-of-range tag stops with a reason; the `android-release.yml` workflow runs them
+before every build (see `docs/DECISIONS.md` #75)
 
 **E2E — the real app talking to the real backend (49 cases)** — `app/test_e2e/` boots the real backend
 (`node src/server.js`) on a random port with a brand-new temporary database per file, then drives the
@@ -1891,9 +1909,15 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   ERP for a chain that runs its own plant. When connected, the ERP owns ingredients, branches, menus,
   prices and recipes and the POS sends sales to it through an outbox, exactly once even across outages —
   **without the ERP, everything works exactly as today** (see tickets 25–28 and `docs/DECISIONS.md` #66)
-- [ ] **The app on Google Play** — one app for every restaurant: enter the shop server's address or scan a QR code on
-  first start, or try demo mode with no server at all. Free, like everything else. The App Store follows when a
-  restaurant asks for it; the server itself still installs in the shop (see ticket 29 and `docs/DECISIONS.md` #69)
+- [x] **A Google Play channel (ticket 29a)** — done: CI builds an `.aab` signed with the upload key from GitHub Secrets
+  when a tag is pushed (`versionCode` from the tag, attached to the GitHub Release), in demo mode for closed testing;
+  the PaynEat app icon replaces the Flutter logo; a privacy policy page in three languages; Data safety answers and
+  Thai/English store text and images under `docs/store/` (see `docs/DECISIONS.md` #75). What is left happens in the
+  owner's account: open a Play Console account, add the upload key to Secrets, and find 12 testers for 14 days in a row
+- [ ] **One Google Play app for every restaurant (ticket 29b)** — enter the shop server's address or scan a QR code on
+  first start, or tap into demo mode with no server at all. Free, like everything else. Comes after ticket 25. The App
+  Store follows when a restaurant asks for it; the server itself still installs in the shop (see ticket 29 and
+  `docs/DECISIONS.md` #69)
 - [ ] **A faster web app for anyone not using Korean** — the full Korean font (3.2MB) loads only when needed, and Korean
   data still never shows as empty boxes, even in a shop with no internet (see ticket 30)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — done: JSON logs per contract v1.1 (no vendor

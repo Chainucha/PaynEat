@@ -66,8 +66,8 @@ Google Play จึงเป็นช่องทางที่คุ้มท�
 - [ ] "ลองใช้โดยไม่มีเซิร์ฟเวอร์" เข้าโหมดสาธิตได้และออกได้ ไม่มีคำขอใดวิ่งออกเครือข่ายในโหมดนี้
 - [ ] HTTP ในร้านใช้ได้พร้อมคำเตือน และไม่ส่งรหัสผ่านไป IP สาธารณะผ่าน HTTP
 - [ ] build ที่มี `API_BASE_URL` (web/e2e) ทำงานเหมือนเดิม เทสต์เดิมผ่านโดยไม่แก้
-- [ ] CI สร้าง `.aab` ที่ลงนามแล้วจาก tag โดยไม่มี key ใน repo
-- [ ] หน้านโยบายความเป็นส่วนตัวและคำตอบ Data safety พร้อม
+- [x] CI สร้าง `.aab` ที่ลงนามแล้วจาก tag โดยไม่มี key ใน repo (29a — `.github/workflows/android-release.yml`)
+- [x] หน้านโยบายความเป็นส่วนตัวและคำตอบ Data safety พร้อม (29a — `docs/landing/privacy*.html`, `docs/store/data-safety.md`)
 - [ ] README (ไทย/อังกฤษ), `docs/DECISIONS.md`, `docs/FEATURE-GAP-ANALYSIS.md` อัปเดตตาม `CLAUDE.md`
 
 ## เทสต์

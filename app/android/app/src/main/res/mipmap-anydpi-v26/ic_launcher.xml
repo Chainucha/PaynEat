@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ไอคอนแอปบน Android 8+ (adaptive icon) — พื้นส้มของแบรนด์ + ตัว P สีขาว ตรงกับโลโก้ของ landing page
+     monochrome = ไอคอนตามธีมของ Android 13+ ใช้รูปตัว P ชุดเดียวกัน
+     Android รุ่นเก่ากว่าใช้ mipmap-*/ic_launcher.png ที่ docs/generator/store/build_store_assets.py วาดไว้ -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+    <monochrome android:drawable="@drawable/ic_launcher_foreground"/>
+</adaptive-icon>

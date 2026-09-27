@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- สีส้มของแบรนด์ (ตัวแปร brand ใน CSS ของ landing page) -->
+    <color name="ic_launcher_background">#FF6B2C</color>
+</resources>

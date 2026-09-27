@@ -1,0 +1,134 @@
+name: Android store bundle (Google Play)
+
+# ticket 29a (docs/store/README.md, DECISIONS #75): ไฟล์ .aab ที่ลงนามด้วย upload key สำหรับ Google Play
+# - push tag vX.Y.Z → build .aab ลงนามด้วย upload key จาก GitHub Secrets (ไม่มีใน repo เด็ดขาด) แล้วแนบกับ
+#   GitHub Release ของ tag นั้น ให้เจ้าของอัปโหลดขึ้น closed testing ได้ทันที — versionCode มาจาก tag
+#   (scripts/android-version.mjs) และตอนนี้เป็น build โหมดสาธิต (DEMO_MODE=true) จนกว่า ticket 29b จะเพิ่ม
+#   การตั้งที่อยู่เซิร์ฟเวอร์ตอนใช้งาน
+# - PR ที่แตะไฟล์ Android → build แบบเดียวกันทุกขั้น ด้วย key ทิ้งที่สร้างในงานนั้นเอง พิสูจน์ว่า build และ
+#   ลงนามได้จริงโดยไม่ต้องใช้ secret (PR จาก fork ไม่เห็น secret อยู่แล้ว)
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/android/**'
+      - 'app/pubspec.*'
+      - 'scripts/android-version*.mjs'
+      - '.github/workflows/android-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      IS_TAG: ${{ startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.1'
+          channel: stable
+          cache: true
+
+      - name: เวอร์ชันจาก tag
+        id: version
+        run: |
+          node --test scripts/android-version.test.mjs
+          node scripts/android-version.mjs "$GITHUB_REF" >> "$GITHUB_OUTPUT"
+
+      # tag: upload key จริงจาก GitHub Secrets — ถ้าไม่มีให้หยุดพร้อมเหตุผล ห้ามได้ไฟล์ debug ขึ้น store
+      # อื่นๆ: key ทิ้ง สร้างใหม่ทุกครั้ง อยู่แค่ใน runner นี้
+      - name: upload key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          keystore="$RUNNER_TEMP/upload.jks"
+          if [ "$IS_TAG" = "true" ]; then
+            if [ -z "$KEYSTORE_BASE64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+              echo "::error::ยังไม่ได้ตั้ง upload key ใน GitHub Secrets (ANDROID_UPLOAD_KEYSTORE_BASE64, ANDROID_UPLOAD_STORE_PASSWORD, ANDROID_UPLOAD_KEY_ALIAS, ANDROID_UPLOAD_KEY_PASSWORD) — ดู docs/store/README.md"
+              exit 1
+            fi
+            printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+            {
+              echo "PAYNEAT_UPLOAD_STORE_PASSWORD=$STORE_PASSWORD"
+              echo "PAYNEAT_UPLOAD_KEY_ALIAS=$KEY_ALIAS"
+              echo "PAYNEAT_UPLOAD_KEY_PASSWORD=$KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+          else
+            password="$(openssl rand -hex 24)"
+            echo "::add-mask::$password"
+            keytool -genkeypair -noprompt -keystore "$keystore" -storetype JKS \
+              -alias ci-throwaway -keyalg RSA -keysize 2048 -validity 1 \
+              -storepass "$password" -keypass "$password" -dname "CN=PaynEat CI throwaway"
+            {
+              echo "PAYNEAT_UPLOAD_STORE_PASSWORD=$password"
+              echo "PAYNEAT_UPLOAD_KEY_ALIAS=ci-throwaway"
+              echo "PAYNEAT_UPLOAD_KEY_PASSWORD=$password"
+            } >> "$GITHUB_ENV"
+          fi
+          echo "PAYNEAT_UPLOAD_STORE_FILE=$keystore" >> "$GITHUB_ENV"
+
+      - name: build .aab (โหมดสาธิต สำหรับการทดสอบแบบปิด)
+        working-directory: app
+        env:
+          PAYNEAT_REQUIRE_UPLOAD_KEY: 'true'
+        run: |
+          flutter pub get
+          flutter build appbundle --release \
+            --build-name='${{ steps.version.outputs.name }}' \
+            --build-number='${{ steps.version.outputs.code }}' \
+            --dart-define=DEMO_MODE=true
+
+      # ต้องลงนามแล้ว และไม่ใช่ debug key — ด่านสุดท้ายก่อนไฟล์จะออกจาก runner
+      - name: ตรวจลายเซ็น
+        run: |
+          set -euo pipefail
+          aab=app/build/app/outputs/bundle/release/app-release.aab
+          jarsigner -verify "$aab" | tee "$RUNNER_TEMP/verify.txt"
+          grep -q "jar verified" "$RUNNER_TEMP/verify.txt"
+          keytool -printcert -jarfile "$aab" | tee "$RUNNER_TEMP/cert.txt"
+          if grep -q "CN=Android Debug" "$RUNNER_TEMP/cert.txt"; then
+            echo "::error::ไฟล์ลงนามด้วย debug key — ขึ้น store ไม่ได้"
+            exit 1
+          fi
+          cp "$aab" "$RUNNER_TEMP/payneat-pos-${{ steps.version.outputs.name }}-demo.aab"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: payneat-pos-${{ steps.version.outputs.name }}-demo-aab
+          path: ${{ runner.temp }}/payneat-pos-${{ steps.version.outputs.name }}-demo.aab
+          retention-days: 14
+
+      - name: แนบกับ GitHub Release ของ tag
+        if: env.IS_TAG == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/}"
+          file="$RUNNER_TEMP/payneat-pos-${{ steps.version.outputs.name }}-demo.aab"
+          if ! gh release view "$tag" > /dev/null 2>&1; then
+            gh release create "$tag" --title "PaynEat POS $tag" \
+              --notes "ไฟล์ .aab สำหรับ Google Play (โหมดสาธิต สำหรับการทดสอบแบบปิด) — ขั้นตอนอัปโหลดอยู่ใน docs/store/README.md"
+          fi
+          gh release upload "$tag" "$file" --clobber

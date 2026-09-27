@@ -24,6 +24,7 @@ class IngredientFormData {
     required this.unit,
     this.currentStock = 0,
     this.lowStockThreshold = 0,
+    this.itemCode,
   });
 
   final String name;
@@ -31,17 +32,28 @@ class IngredientFormData {
   final double currentStock;
   final double lowStockThreshold;
 
+  /// รหัสสินค้าใน PaynEat ERP (ว่าง = ไม่มี) — ตั้งไว้ก่อนเชื่อมต่อ ERP ให้วัตถุดิบเดิมจับคู่ได้ (ticket 25)
+  final String? itemCode;
+
+  String? get _itemCode {
+    final code = itemCode?.trim().toUpperCase();
+    return code == null || code.isEmpty ? null : code;
+  }
+
   Map<String, dynamic> toCreateJson() => {
     'name': name,
     'unit': unit,
     'currentStock': currentStock,
     'lowStockThreshold': lowStockThreshold,
+    if (_itemCode != null) 'itemCode': _itemCode,
   };
 
+  /// แก้ไข: ส่ง itemCode เสมอ (null = ล้างรหัสที่เคยตั้ง)
   Map<String, dynamic> toUpdateJson() => {
     'name': name,
     'unit': unit,
     'lowStockThreshold': lowStockThreshold,
+    'itemCode': _itemCode,
   };
 }
 

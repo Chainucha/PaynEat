@@ -16,6 +16,9 @@ import '../../../features/auth/domain/repositories/auth_repository.dart';
 import '../../../features/customer/data/datasources/customer_remote_data_source.dart';
 import '../../../features/customer/data/repositories/customer_repository_impl.dart';
 import '../../../features/customer/domain/repositories/customer_repository.dart';
+import '../../../features/erp_connection/data/datasources/erp_connection_remote_data_source.dart';
+import '../../../features/erp_connection/data/repositories/erp_connection_repository_impl.dart';
+import '../../../features/erp_connection/domain/repositories/erp_connection_repository.dart';
 import '../../../features/ingredient/data/datasources/ingredient_remote_data_source.dart';
 import '../../../features/ingredient/data/repositories/ingredient_repository_impl.dart';
 import '../../../features/ingredient/domain/repositories/ingredient_repository.dart';
@@ -135,6 +138,11 @@ void bindRepositories(StorageService storage) {
   );
   Get.lazyPut<ScaleRepository>(
     () => ScaleRepositoryImpl(Get.find<ScaleRemoteDataSource>()),
+    fenix: true,
+  );
+  Get.lazyPut<ErpConnectionRepository>(
+    () =>
+        ErpConnectionRepositoryImpl(Get.find<ErpConnectionRemoteDataSource>()),
     fenix: true,
   );
 }

@@ -7,9 +7,12 @@ import 'package:get/get.dart';
 
 import '../../../../app/config/app_config.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/localization/locale_service.dart';
+import '../../../../core/services/session_service.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../erp_connection/presentation/widgets/erp_connection_card.dart';
 import '../controllers/printer_settings_controller.dart';
 import '../controllers/settings_controller.dart';
 
@@ -316,6 +319,15 @@ class SettingsPage extends GetView<SettingsController> {
               ),
             ),
           ),
+          // การเชื่อมต่อ (เซิร์ฟเวอร์ร้าน + PaynEat ERP) — admin เท่านั้น (ticket 25)
+          if (Get.find<SessionService>().currentUser?.role ==
+              UserRole.admin) ...[
+            const SizedBox(height: 12),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: const ErpConnectionCard(),
+            ),
+          ],
           const SizedBox(height: 12),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),

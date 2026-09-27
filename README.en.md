@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-936%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-978%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) talking to a
 Node.js REST + WebSocket backend. Covers the complete floor-to-cash workflow: table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 936 automated tests.
+control and 978 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivatives are very
 > welcome, just keep the [`NOTICE`](NOTICE) file as required by the Apache License 2.0. Say hi on
@@ -36,7 +36,7 @@ control and 936 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 936 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 978 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -683,6 +683,11 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
   starting stock) → go back to order taking and "Steamed Fish with Lime" now shows "Sold Out" **on its own**,
   with nobody toggling it manually (automatic stock deduction — see `docs/DECISIONS.md` #15) — hit "Receive"
   to restock it and it re-enables itself the same way
+- Log in as `admin` → **Settings** → the **Connections** card → the PaynEat ERP part says **"Standalone"** — press **Connect** with a
+  credential that doesn't start with `pnepos_` → you're told at once, before the ERP is called (needs a real backend, option A/B/D;
+  demo mode is always "Standalone"). With [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) running: register a POS in the
+  ERP for branch `SUKHUMVIT` and paste its credential → the ERP's items appear on **Ingredients/Stock** read-only, the add/edit/delete
+  buttons are gone, and branch `THONGLOR` is flagged as not assigned to this POS by the ERP (see `docs/DECISIONS.md` #80)
 - Try requesting a tax invoice again for the same bill → rejected (only 1 active invoice per bill) —
   log in as `manager` and tap **"Void this invoice"** on that same receipt page first, and you can
   issue a fresh one for that bill again with a brand-new running number (see `docs/DECISIONS.md` #19)
@@ -773,8 +778,8 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
 ### 🧪 Want to run the tests?
 
 ```bash
-cd backend && npm test      # 395 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 492 cases — domain / controller / widget
+cd backend && npm test      # 419 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 510 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -977,6 +982,17 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   interest 0–15% a year + grace days after the due date — changes are audit-logged, and it shows whether
   the server has e-mail configured; see `docs/DECISIONS.md` #55, #57)
 - **Receipt printer settings** — this device's IP/port/paper size, with a test-print button
+- **PaynEat ERP connection** (admin, Settings) for chains whose ingredients and branches are managed in
+  [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) — a single shop does nothing: it shows "Standalone" and works exactly as before
+  - Enter the ERP's address and this POS's credential (`pnepos_…`) → the POS checks the branch codes (a branch with a malformed
+    code is named, with a button to fix it) and the contract version, then pulls ingredients and branches by version at once,
+    and after that every 5 minutes or when you press "Pull now"
+  - A pull cut off midway resumes where it stopped
+  - The credential is never shown again, and never reaches a log or an export
+  - Connected mode: the ingredients page is read-only with a "Managed in PaynEat ERP" badge (the API answers 409), ERP units show
+    in the app's language, and menu items are not closed automatically from this device's stock, because stock on hand belongs to the ERP
+  - Give existing ingredients their "item code in the ERP" beforehand and their recipes stay linked when you connect
+  - You can leave connected mode, and the pulled data stays (see `docs/tickets/25-erp-connected-mode.md`, `docs/DECISIONS.md` #80)
 - **Conditional promotions/discounts** — create/edit/disable 3 promotion types (percent off, amount off,
   buy-one-get-one), with conditions for day/time window, eligible categories/menu items, minimum spend, and
   campaign start/end dates — auto-applies when eligible or lets customers redeem a discount code (one promotion
@@ -1043,7 +1059,7 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   categories, table zones and add-on options — so you never see one language's UI wrapped around
   another language's data. A real restaurant's own entries always display exactly as typed, and
   names already printed on kitchen tickets and past receipts do not move, since those were
-  captured when the order was placed. All 1,097 keys are translated for every language, and the
+  captured when the order was placed. All 1,225 keys are translated for every language, and the
   Korean font ships inside the app as a subset of only the characters actually used (4 weights,
   ~350 KB), so it never depends on the device's own fonts. A test parses the font file's cmap table
   to stop any translation from using a character outside that subset, and the AI assistant answers
@@ -1246,6 +1262,7 @@ PaynEat/
 │   │   │       └── order.schema.js       # Zod
 │   │   └── routes.js
 │   ├── assets/fonts/                 # Thai font for receivables PDFs
+│   ├── contracts/erp-pos/            # copy of the POS ↔ PaynEat ERP contract v1 1.0.0 (never edited — copied from the ERP)
 │   ├── docs/openapi.yaml
 │   └── tests/
 │
@@ -1404,13 +1421,13 @@ Every endpoint shares the same response shape:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 395 cases
-cd app && flutter test      # 492 cases
+cd backend && npm test      # 419 cases
+cd app && flutter test      # 510 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (395 + 492 + 49). The `android-version.mjs` script tests check that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (419 + 510 + 49). The `android-version.mjs` script tests check that a `vX.Y.Z` tag always
 gives a higher `versionCode` and that a malformed or out-of-range tag stops with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1465,7 +1482,7 @@ images from the real Dockerfiles every time `main` changes (and on every PR touc
 and the web app answers 200 — only then does it upload them as the `demo` release for Option D (no job built the images
 before, which is how the web Dockerfile stayed broken unnoticed — see `docs/DECISIONS.md` #63, #65)
 
-**Backend (395 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (419 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The centerpiece is `tests/order-flow.test.js`, which walks the entire floor-to-cash path in 17 steps:
 
 > Pick a table → open an order with modifiers → verify the total is correct → the table becomes occupied →
@@ -1634,6 +1651,27 @@ the server from starting; the migration files match `checksums.json` (a Windows 
 checksum); and a database created before T01, with seed data, a sale and a refund, upgrades with every table's row
 count unchanged (see `docs/DECISIONS.md` #79)
 
+`erp-connection.test.js` (16 cases) walks PaynEat ERP connected mode (ticket 25) against a fake ERP (`tests/helpers/erpStub.js`)
+from standalone to leaving connected mode:
+- by default the ERP is never called;
+- branches with a malformed or missing code are named with the problem (in English for an English app);
+- a wrong credential, a major-2 contract and an unreachable ERP are refused without entering the mode;
+- the credential never appears in answers, logs, the audit log, the CSV export or settings;
+- an ingredient given an item code beforehand is overwritten in place, so its recipes stay linked;
+- editing ingredients or branches gets 409;
+- menu items closed by stock reopen and sell even with local stock at 0;
+- pulls go page by page from the last version, and pulling again duplicates nothing;
+- a 503 midway resumes exactly after the pages already applied;
+- a superseded branch moves to its new code with its sales history;
+- a revoked credential stops all calls until a new one is saved, then pulling resumes from the same version;
+- every pull log line carries `pos_instance`;
+- after leaving connected mode the data stays and is editable again
+
+`erp-contract.test.js` (8 cases) pins POS contract v1 at 1.0.0 (files match the checksums copied from the ERP), checks the
+contract's examples against its schemas, and that the POS client reads every example, ignores unknown fields and entity types,
+refuses another major before looking at the shape, and turns 401/429/503/5xx/404/302 and network loss into what the contract
+says (see `docs/DECISIONS.md` #80)
+
 `late-fees-credit-notes.test.js` (7 cases) the 15% rate cap / cashiers can't set it / rate changes are
 audited, no rate = no interest, only bills past their grace period are charged through today and a second
 run the same day charges nothing, the next run continues from where the last stopped on the principal
@@ -1675,7 +1713,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, broken JSON containing a password now 400 (was 500) without the body leaking, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (492 cases)** — split into 3 levels:
+**Flutter (510 cases)** — split into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1701,6 +1739,8 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `checkout_controller_test.dart` | (added) a greyed-out pay button always explains why below it (no shift / invalid amount / cash short) and says nothing once payment is possible (#62) |
 | Controller | `receipt_controller_test.dart` | Loading a receipt by orderId, the `Payment.tendered` rule (a receipt shows the cash the customer handed over, not the amount applied to the bill: tendered − change = amount applied), silently loading the tax invoice when none has been issued yet (404 isn't an error), and tax-invoice void permission (manager role or above) |
 | Controller | `settings_controller_test.dart` | Loading store settings into the correct form fields |
+| Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, demo mode always standalone, parsing the backend's status, and ERP unit names (unknown codes shown as they are) |
+| Controller | `ingredients_controller_test.dart` | The ingredients page is read-only when connected to the ERP, an unreadable mode keeps the last value, the "low stock" filter is cleared in connected mode, item codes are sent in capitals and an edit sends null to clear one (ticket 25) |
 | Controller | `staff_controller_test.dart` | Filtering staff by role, counting by role |
 | Controller | `order_detail_controller_test.dart` | Order management permissions, moving item status forward |
 | Controller | `dashboard_controller_test.dart` | Loading today's sales summary + live counters |
@@ -1786,7 +1826,7 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
 - [x] **High-contrast mode** — done: toggled from the **Profile** page (reachable by every role,
   not just admins) and remembered per device. Every text token moves from AA (4.5:1) to AAA (7:1)
   and card borders from 1.24:1 to 4.10:1 (see `docs/DECISIONS.md` #18)
-- [x] **Korean language support** — done: 1,097 translation keys across every feature (verified to
+- [x] **Korean language support** — done: 1,225 translation keys across every feature (verified to
   match the Thai key set exactly), NotoSansKR embedded as a subset (all 2,350 KS X 1001 syllables, so Korean can really be typed, #74), a separately designed Korean
   landing page with 5 real Korean-locale app screenshots, a three-way language switcher on all
   three landing pages (now visible on mobile too, where the whole group used to be hidden), and
@@ -1919,8 +1959,9 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
 - [ ] **Connect to [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) (optional mode)** — the supply-side
   ERP for a chain that runs its own plant. When connected, the ERP owns ingredients, branches, menus,
   prices and recipes and the POS sends sales to it through an outbox, exactly once even across outages —
-  **without the ERP, everything works exactly as today** (see tickets 25–28 and `docs/DECISIONS.md` #66). The
-  ERP side of contract v1 merged on 2026-09-27, and ticket 25 can start now
+  **without the ERP, everything works exactly as today** (see tickets 25–28 and `docs/DECISIONS.md` #66) — done so far:
+  **ticket 25**, connecting with a credential, pulling ingredients and branches by version, read-only management screens, and no
+  automatic sold-out from local stock (`docs/DECISIONS.md` #80); 26 (sales), 27 (menus/prices/recipes) and 28 (from config) remain
 - [x] **A Google Play channel (ticket 29a)** — done: CI builds an `.aab` signed with the upload key from GitHub Secrets
   when a tag is pushed (`versionCode` from the tag, attached to the GitHub Release), in demo mode for closed testing;
   the PaynEat app icon replaces the Flutter logo; a privacy policy page in three languages; Data safety answers and

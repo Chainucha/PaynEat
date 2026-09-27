@@ -1,0 +1,23 @@
+{
+  "CHANGELOG.md": "faf1f77d56b1e3cb4f24f08e59d494e279da1e905099677334189e6a57ee1f6c",
+  "v1/error.schema.json": "da96800c5564eaadd8cf60a0fefa3fed65472cf5b65f972d740931d32e8209a1",
+  "v1/examples/error.credential-revoked.json": "2eede77c1923480b7f0cb1c7d09fef1613f9e38da4f8677c4aea5c842c7b9cf0",
+  "v1/examples/error.schema-invalid.json": "846fe0123b5fdd502374727b8923d4c31b01f696820910e4c122270d7296e2b7",
+  "v1/examples/invalid/sales-event.colon-in-key.json": "209a5aade34a2d0050ad673279f73fbafdfa8bac3b014774c3ebac016855b0f1",
+  "v1/examples/invalid/sales-event.quantity-and-weight.json": "3a14e224d83fd8ff95e70fd0a2122fa632357efac34010e87d4c4289a1a709e9",
+  "v1/examples/invalid/sales-event.refund.json": "624621fd1225f6b3030e0988fb5cd6ffb173a528814b37865f6684fceb6d1102",
+  "v1/examples/invalid/sales-event.time-without-offset.json": "9450dfb788d9a1c8f725152e01555701890ac3b2b12a6b8db550f94c8d61a1aa",
+  "v1/examples/invalid/sales-event.unknown-field.json": "5b77d50d17472c6f145e4d66f0df7146367b5e85e5de177fb766a738e115b7d0",
+  "v1/examples/invalid/sales-event.zero-weight.json": "ec5ccf0c2be4425a2445a14e4fcb2369dba91f46c3661a29b0c0118a5d33e429",
+  "v1/examples/master-data-changes.json": "b2c9641529e2a734407a82543906953e43bed54154f779e5a889ea226ef83ea1",
+  "v1/examples/pos-instance.json": "aef5497cf06a93e63e5078660ce6f82bf1938f789a1a00e961b67e360fe337fd",
+  "v1/examples/sales-event-receipt.duplicate.json": "4ae0c4bf11624275de72f0919ac5bf627d40f5271bd11a67ae92f14a475babd7",
+  "v1/examples/sales-event-receipt.json": "b5e8c1fa180764ef36d8a1c128619cd3620be62b06ec03d6d5a6866d86cf82b1",
+  "v1/examples/sales-event.counted.json": "32124bf9e1df80b0edbfef9e4fb91bcaca25db7882c2887381fcfc9f7dcd1bc3",
+  "v1/examples/sales-event.weighed.json": "ef616ebc6231591cf0f8f2ba9039b126a2d8b6ffb3104afbb1ed8d91c05b3f01",
+  "v1/master-data-changes.schema.json": "85607143ca2e77639e6f0dc5b0f8d803622b805f4edc22da8a3824c71363682c",
+  "v1/openapi.yaml": "55f86124a5e397150e5e322725f85f8dd6a5532159af2e8126315b57b93734d1",
+  "v1/pos-instance.schema.json": "4dad949255ad644d8f2f5d748f61f2fe1dd7c20aea55cb0f5767c37dfb5189e4",
+  "v1/sales-event-receipt.schema.json": "d533f516cbea68a0478dd08c49678384c4a9d976bb5d5f3de9ad818148b085b0",
+  "v1/sales-event.schema.json": "659802e9aa3cbea4d547359b086e47a47235efb0086f4de48228200326488f10"
+}

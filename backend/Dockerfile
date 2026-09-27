@@ -21,6 +21,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY package*.json ./
 COPY src ./src
 COPY docs ./docs
+COPY contracts ./contracts
 # ฟอนต์ไทยสำหรับ PDF เอกสารลูกหนี้ (ดู src/core/documentPdf.js)
 COPY assets ./assets
 

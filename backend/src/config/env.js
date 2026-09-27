@@ -88,6 +88,14 @@ export const env = {
     pollCommand: process.env.SCALE_POLL_COMMAND,
     pollMs: toInt(process.env.SCALE_POLL_MS, 500),
   },
+  // โหมดเชื่อมต่อ PaynEat ERP (ticket 25) — URL และ credential ตั้งที่หน้าตั้งค่าของแอป ไม่ใช่ env (DECISIONS #80)
+  //   ERP_PULL_INTERVAL_SECONDS — ดึง master data ทุกกี่วินาที (0 = ไม่ดึงเองตามรอบ ดึงเมื่อกดปุ่มเท่านั้น)
+  //   ERP_TIMEOUT_MS            — รอคำตอบของ ERP นานสุดต่อคำขอ
+  erp: {
+    pullIntervalSeconds: Math.max(0, toInt(process.env.ERP_PULL_INTERVAL_SECONDS, 300)),
+    timeoutMs: Math.max(1000, toInt(process.env.ERP_TIMEOUT_MS, 15000)),
+    pageSize: 500,
+  },
   // log และ metric ตามสัญญา telemetry v1.1 ของระบบนิเวศ PaynEat (ดู docs/tickets/24-telemetry-contract.md)
   //   LOG_FORMAT=gcp — เฉพาะ deployment บน Google Cloud: ย้าย labels/trace ไปที่ key ที่ Cloud Logging อ่าน
   //   METRICS_PORT   — /metrics อยู่พอร์ตของตัวเอง ไม่ใช่พอร์ต API (DECISIONS #68) docker compose ไม่เปิดพอร์ตนี้

@@ -3,11 +3,24 @@
 
 import { z } from 'zod';
 
+// รหัสสินค้าของ PaynEat ERP (รูปแบบรหัสกลางของระบบนิเวศ) — ตั้งไว้ล่วงหน้าในโหมดเดี่ยวได้ เพื่อให้วัตถุดิบเดิม
+// (และสูตรเมนูที่ผูกอยู่) จับคู่กับรายการสินค้าเมื่อเชื่อมต่อ ERP (ticket 25) — null = ล้างรหัส
+const itemCode = z
+  .string()
+  .trim()
+  .regex(
+    /^[A-Z0-9][A-Z0-9-]{1,31}$/,
+    'รหัสสินค้าต้องเป็นตัวพิมพ์ใหญ่ A-Z ตัวเลข หรือ - ยาว 2-32 ตัว และขึ้นต้นด้วยตัวอักษรหรือตัวเลข',
+  )
+  .nullable()
+  .optional();
+
 export const createIngredientSchema = z.object({
   name: z.string().min(1, 'กรุณากรอกชื่อวัตถุดิบ').max(120),
   unit: z.string().min(1, 'กรุณากรอกหน่วยนับ').max(30),
   currentStock: z.number().min(0).default(0),
   lowStockThreshold: z.number().min(0).default(0),
+  itemCode,
   // ใช้เฉพาะตอนผู้สร้างเป็น admin ในโหมด "ทุกสาขา" (ดู docs/DECISIONS.md #36)
   branchId: z.number().int().positive().optional(),
 });
@@ -18,6 +31,7 @@ export const updateIngredientSchema = z.object({
   name: z.string().min(1).max(120).optional(),
   unit: z.string().min(1).max(30).optional(),
   lowStockThreshold: z.number().min(0).optional(),
+  itemCode,
 });
 
 export const adjustStockSchema = z.object({

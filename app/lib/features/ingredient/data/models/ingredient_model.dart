@@ -10,20 +10,31 @@ class IngredientModel extends Ingredient {
     required super.unit,
     super.currentStock,
     super.lowStockThreshold,
+    super.itemCode,
+    super.erpItem,
     super.createdAt,
     super.updatedAt,
   });
 
-  factory IngredientModel.fromJson(Map<String, dynamic> json) =>
-      IngredientModel(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String? ?? '',
-        unit: json['unit'] as String? ?? '',
-        currentStock: (json['currentStock'] as num?)?.toDouble() ?? 0,
-        lowStockThreshold: (json['lowStockThreshold'] as num?)?.toDouble() ?? 0,
-        createdAt: json['createdAt'] as String?,
-        updatedAt: json['updatedAt'] as String?,
-      );
+  factory IngredientModel.fromJson(Map<String, dynamic> json) {
+    final erp = json['erpItem'] as Map<String, dynamic>?;
+    return IngredientModel(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String? ?? '',
+      unit: json['unit'] as String? ?? '',
+      currentStock: (json['currentStock'] as num?)?.toDouble() ?? 0,
+      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toDouble() ?? 0,
+      itemCode: json['itemCode'] as String?,
+      erpItem: erp == null
+          ? null
+          : ErpItemInfo(
+              nameEn: erp['nameEn'] as String? ?? '',
+              active: erp['active'] as bool? ?? true,
+            ),
+      createdAt: json['createdAt'] as String?,
+      updatedAt: json['updatedAt'] as String?,
+    );
+  }
 }
 
 class MenuItemIngredientUsageModel extends MenuItemIngredientUsage {

@@ -39,6 +39,10 @@ tags:
   - name: Receivables
   - name: Scale
     description: ตาชั่งต่อสาย อ่านน้ำหนักสด (ดู docs/tickets/22-live-scale-camera-scan.md)
+  - name: Erp
+    description: >-
+      โหมดเชื่อมต่อ PaynEat ERP — ลงทะเบียน ดึง master data ตามเวอร์ชัน และหน้าจัดการเป็นอ่านอย่างเดียว
+      (ดู docs/tickets/25-erp-connected-mode.md, docs/DECISIONS.md #80)
 
 components:
   securitySchemes:
@@ -170,6 +174,78 @@ components:
         currentStock: { type: number, example: 3000 }
         lowStockThreshold: { type: number, example: 500 }
         isLowStock: { type: boolean, description: 'currentStock <= lowStockThreshold' }
+        itemCode:
+          type: string
+          nullable: true
+          pattern: '^[A-Z0-9][A-Z0-9-]{1,31}$'
+          example: WHOLE-CHICKEN
+          description: >-
+            รหัสสินค้าใน PaynEat ERP ที่วัตถุดิบนี้จับคู่ (ticket 25) — ตั้งเองได้ในโหมดเดี่ยว หนึ่งรหัสต่อหนึ่งวัตถุดิบในสาขา
+            ส่ง null เพื่อล้าง เมื่อดึงจาก ERP วัตถุดิบที่รหัสตรงกันถูกเขียนทับชื่อและหน่วย (หน่วย = รหัสหน่วยฐานของ ERP เช่น kg)
+        erpItem:
+          type: object
+          nullable: true
+          readOnly: true
+          description: ข้อมูลจากรายการสินค้าใน ERP ที่จับคู่อยู่ (null = ไม่มีใน ERP)
+          properties:
+            nameEn: { type: string, example: Whole chicken }
+            active: { type: boolean, description: false = ERP เลิกใช้รายการนี้แล้ว }
+    ErpStatus:
+      type: object
+      description: สถานะการเชื่อมต่อ PaynEat ERP สำหรับหน้าตั้งค่าของ admin — ไม่มี credential ไม่ว่ากรณีไหน
+      properties:
+        mode: { type: string, enum: [standalone, connected] }
+        connection:
+          type: object
+          nullable: true
+          description: null = ใช้งานเดี่ยว
+          properties:
+            erpUrl: { type: string, example: 'https://erp.example.com' }
+            instanceCode: { type: string, example: POS-SILOM-1 }
+            instanceName: { type: string }
+            contractVersion: { type: string, example: 1.0.0 }
+            connectedAt: { type: string, format: date-time }
+            appliedVersion: { type: integer, description: เวอร์ชัน master data ล่าสุดที่นำไปใช้แล้ว }
+            latestVersion: { type: integer, nullable: true, description: เวอร์ชันล่าสุดของ ERP ตอนดึงครั้งล่าสุด }
+            lastPullAt: { type: string, format: date-time, nullable: true }
+            lastError:
+              type: object
+              nullable: true
+              description: ผลของการดึงครั้งล่าสุดที่ล้มเหลว (null หลังดึงสำเร็จ)
+              properties:
+                kind:
+                  type: string
+                  enum: [credential_rejected, rate_limited, unavailable, network, unsupported_contract, invalid_response, refused, internal]
+                status: { type: integer, nullable: true }
+                reason: { type: string, nullable: true, description: details.reason ที่ ERP ส่งมา เช่น credential_revoked }
+                at: { type: string, format: date-time }
+            credentialRejected: { type: boolean, description: true = หยุดเรียก ERP จนกว่าจะบันทึก credential ใหม่ }
+            retryAfter: { type: string, format: date-time, nullable: true }
+            credentialSaved: { type: boolean }
+        branches:
+          type: array
+          description: สาขาในเครื่อง พร้อมปัญหาของรหัส (ต้องแก้ก่อนเชื่อมต่อ) และว่า ERP ให้ instance นี้ดูแลไหม
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              name: { type: string }
+              code: { type: string, nullable: true }
+              isActive: { type: boolean }
+              codeProblem: { type: string, nullable: true, enum: [missing, invalid, null] }
+              servedByErp: { type: boolean, nullable: true, description: null = ใช้งานเดี่ยว }
+              supersededBy: { type: string, nullable: true, description: รหัสที่ ERP ใช้แทนรหัสนี้ (ย้ายไม่ได้เพราะมีสาขารหัสนั้นอยู่แล้ว) }
+        servedBranches:
+          type: array
+          description: สาขาที่ ERP ให้ instance นี้ดูแล (จาก GET /api/v1/pos/instance ของ ERP)
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              nameTh: { type: string }
+              nameEn: { type: string }
+              isActive: { type: boolean }
+              localBranchId: { type: integer, nullable: true, description: null = ยังไม่มีสาขานี้ในเครื่อง }
     TaxInvoice:
       type: object
       description: ใบกำกับภาษี (ดู ticket 07) — snapshot ข้อมูลร้าน+ยอดเงิน ณ เวลาที่ออก
@@ -650,6 +726,7 @@ paths:
             schema: { $ref: '#/components/schemas/Branch' }
       responses:
         '201': { description: สร้างสำเร็จ }
+        '409': { description: 'โหมดเชื่อมต่อ ERP — code MANAGED_BY_ERP (สาขาจัดการใน PaynEat ERP)' }
   /branches/mine:
     get:
       tags: [Branches]
@@ -682,6 +759,7 @@ paths:
       summary: แก้ไข/ปิดใช้งานสาขา (admin เท่านั้น) — ปิดแล้ว token ที่ผูกกับสาขานี้ใช้ต่อไม่ได้ทันที
       responses:
         '200': { description: สำเร็จ }
+        '409': { description: 'โหมดเชื่อมต่อ ERP — code MANAGED_BY_ERP (สาขาจัดการใน PaynEat ERP)' }
 
   /users:
     get:
@@ -902,6 +980,7 @@ paths:
             schema: { $ref: '#/components/schemas/Ingredient' }
       responses:
         '201': { description: สร้างสำเร็จ }
+        '409': { description: 'รหัสสินค้าซ้ำในสาขา หรือโหมดเชื่อมต่อ ERP (code MANAGED_BY_ERP)' }
   /ingredients/{id}:
     parameters:
       - in: path
@@ -915,15 +994,16 @@ paths:
         '200': { description: สำเร็จ }
     patch:
       tags: [Ingredients]
-      summary: แก้ชื่อ/หน่วยนับ/threshold (admin/manager) — แก้ currentStock ตรง ๆ ไม่ได้ ต้องผ่าน adjust-stock
+      summary: แก้ชื่อ/หน่วยนับ/threshold/รหัสสินค้า (admin/manager) — แก้ currentStock ตรง ๆ ไม่ได้ ต้องผ่าน adjust-stock
       responses:
         '200': { description: สำเร็จ }
+        '409': { description: 'รหัสสินค้าซ้ำในสาขา หรือโหมดเชื่อมต่อ ERP (code MANAGED_BY_ERP)' }
     delete:
       tags: [Ingredients]
       summary: ลบวัตถุดิบ (admin/manager) — ลบไม่ได้ถ้ายังผูกกับเมนูอยู่
       responses:
         '204': { description: ลบแล้ว }
-        '409': { description: ยังถูกผูกกับเมนูอยู่ }
+        '409': { description: 'ยังถูกผูกกับเมนูอยู่ หรือโหมดเชื่อมต่อ ERP (code MANAGED_BY_ERP)' }
   /ingredients/{id}/adjust-stock:
     parameters:
       - in: path
@@ -947,6 +1027,7 @@ paths:
                 note: { type: string, nullable: true }
       responses:
         '200': { description: สำเร็จ }
+        '409': { description: 'โหมดเชื่อมต่อ ERP — code MANAGED_BY_ERP (ยอดคงเหลือเป็นของ ERP)' }
         '422': { description: delta เป็น 0 }
 
   /tables:
@@ -2175,6 +2256,100 @@ paths:
                   success: { type: boolean }
                   data: { $ref: '#/components/schemas/ScaleStatus' }
         '403': { description: ครัวไม่มีสิทธิ์ }
+  /erp/mode:
+    get:
+      tags: [Erp]
+      summary: โหมดของเครื่องนี้ (ใช้งานเดี่ยว/เชื่อมต่อ ERP) — ทุกบทบาท ใช้ตัดสินว่าหน้าวัตถุดิบเป็นอ่านอย่างเดียวไหม
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      mode: { type: string, enum: [standalone, connected] }
+                      instanceCode: { type: string, nullable: true }
+  /erp/connection:
+    get:
+      tags: [Erp]
+      summary: สถานะการเชื่อมต่อ PaynEat ERP และรหัสสาขาในเครื่อง (admin)
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ErpStatus' }
+    put:
+      tags: [Erp]
+      summary: >-
+        เข้าโหมดเชื่อมต่อ หรือบันทึก credential/ที่อยู่ใหม่ (admin) — ตรวจรหัสสาขาในเครื่อง, เรียก GET /api/v1/pos/instance
+        ของ ERP (สัญญา POS v1) แล้วดึง master data รอบแรกทันที credential ไม่ถูกส่งกลับในคำตอบใดๆ ไม่ log และไม่อยู่ในไฟล์ export
+        เมนูที่ระบบสต๊อกปิดขายไว้ถูกเปิดคืน เพราะในโหมดเชื่อมต่อยอดในเครื่องไม่ใช่ความจริง
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [erpUrl, credential]
+              properties:
+                erpUrl: { type: string, example: 'https://erp.example.com', description: 'http(s) ไม่มีชื่อผู้ใช้/รหัสผ่าน query หรือ #' }
+                credential: { type: string, writeOnly: true, pattern: '^pnepos_[A-Za-z0-9_-]{16,200}$' }
+      responses:
+        '200':
+          description: เชื่อมต่อแล้ว (ถ้าดึงรอบแรกไม่สำเร็จ ดูเหตุผลที่ connection.lastError)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/ErpStatus' }
+        '409': { description: 'รหัสสาขาในเครื่องไม่ตรงรูปแบบ — code BRANCH_CODES_INVALID, details บอกสาขาและปัญหา (missing/invalid)' }
+        '422': { description: 'ข้อมูลผิดรูปแบบ, ERP ไม่รับ credential (ERP_CREDENTIAL_REJECTED) หรือใช้สัญญา major อื่น (ERP_CONTRACT_UNSUPPORTED)' }
+        '502': { description: 'ติดต่อ ERP ไม่ได้/ERP ตอบผิดสัญญา — code ERP_UNREACHABLE, ERP_UNAVAILABLE, ERP_RATE_LIMITED, ERP_BAD_RESPONSE, ERP_REFUSED' }
+    delete:
+      tags: [Erp]
+      summary: ออกจากโหมดเชื่อมต่อ (admin) — ลบ credential ข้อมูลที่ mirror ไว้ยังอยู่และกลับมาแก้ได้ในโหมดเดี่ยว
+      responses:
+        '200': { description: สำเร็จ (data เป็น ErpStatus) }
+  /erp/pull:
+    post:
+      tags: [Erp]
+      summary: >-
+        ดึง master data ทันที (admin) — ถามด้วยเวอร์ชันล่าสุดที่นำไปใช้แล้ว ดึงต่อจนกว่า hasMore เป็น false แต่ละหน้าใช้ใน transaction
+        เดียวกับการบันทึกเวอร์ชัน (เน็ตหลุดกลางทางก็ดึงต่อได้ไม่พลาด) เซิร์ฟเวอร์ดึงเองทุก ERP_PULL_INTERVAL_SECONDS ด้วย
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      result:
+                        type: object
+                        properties:
+                          applied: { type: integer }
+                          skipped: { type: integer, description: entityType ที่ POS รุ่นนี้ไม่รู้จัก (สัญญา 1.x เพิ่มได้) }
+                          appliedVersion: { type: integer }
+                      status: { $ref: '#/components/schemas/ErpStatus' }
+        '409': { description: ยังไม่ได้เชื่อมต่อ หรือ ERP ไม่รับ credential แล้ว (บันทึกใหม่ก่อน) }
+        '422': { description: ERP เพิ่งปฏิเสธ credential (ERP_CREDENTIAL_REJECTED) }
+        '502': { description: ติดต่อ ERP ไม่ได้/ERP ตอบผิดสัญญา — หน้าที่ดึงแล้วยังอยู่ ดึงต่อได้ }
   /ai/ask:
     post:
       tags: [AiAssistant]

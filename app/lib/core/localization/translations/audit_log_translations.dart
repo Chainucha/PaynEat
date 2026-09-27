@@ -3,6 +3,11 @@
 
 /// คำแปลของฟีเจอร์ audit log (ดู docs/tickets/08-audit-log.md)
 const Map<String, String> auditLogTranslationsTh = {
+  'audit_log_action_erp_connect': 'เชื่อมต่อ PaynEat ERP',
+  'audit_log_action_erp_disconnect': 'ออกจากการเชื่อมต่อ PaynEat ERP',
+  'audit_summary_erp_connect': 'เชื่อมต่อ PaynEat ERP ในนาม POS @instance',
+  'audit_summary_erp_disconnect':
+      'ออกจากการเชื่อมต่อ PaynEat ERP (POS @instance)',
   'audit_log_empty_state': 'ยังไม่มีประวัติการทำรายการ',
   'audit_log_reason_prefix': 'เหตุผล: @reason',
   'audit_log_actor_prefix': 'โดย @name',
@@ -126,6 +131,10 @@ const Map<String, String> auditLogTranslationsTh = {
 };
 
 const Map<String, String> auditLogTranslationsEn = {
+  'audit_log_action_erp_connect': 'Connect PaynEat ERP',
+  'audit_log_action_erp_disconnect': 'Leave PaynEat ERP',
+  'audit_summary_erp_connect': 'Connected to PaynEat ERP as POS @instance',
+  'audit_summary_erp_disconnect': 'Left PaynEat ERP (POS @instance)',
   'audit_log_empty_state': 'No activity recorded yet',
   'audit_log_reason_prefix': 'Reason: @reason',
   'audit_log_actor_prefix': 'By @name',
@@ -249,6 +258,10 @@ const Map<String, String> auditLogTranslationsEn = {
 };
 
 const Map<String, String> auditLogTranslationsKo = {
+  'audit_log_action_erp_connect': 'PaynEat ERP 연결',
+  'audit_log_action_erp_disconnect': 'PaynEat ERP 연결 해제',
+  'audit_summary_erp_connect': 'POS @instance(으)로 PaynEat ERP에 연결',
+  'audit_summary_erp_disconnect': 'PaynEat ERP 연결 해제 (POS @instance)',
   'audit_log_empty_state': '기록된 활동이 없습니다',
   'audit_log_reason_prefix': '사유: @reason',
   'audit_log_actor_prefix': '처리자: @name',

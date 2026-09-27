@@ -42,6 +42,7 @@ extension DemoStoreIngredients on DemoStore {
         'currentStock': (body['currentStock'] as num?)?.toDouble() ?? 0,
         'lowStockThreshold':
             (body['lowStockThreshold'] as num?)?.toDouble() ?? 0,
+        'itemCode': body['itemCode'],
       };
       ingredients.add(ingredient);
       return _withIsLowStock(ingredient);
@@ -65,6 +66,8 @@ extension DemoStoreIngredients on DemoStore {
     if (body['lowStockThreshold'] != null) {
       raw['lowStockThreshold'] = (body['lowStockThreshold'] as num).toDouble();
     }
+    // รหัสสินค้าใน ERP (ticket 25) — null = ล้างรหัส เหมือน backend
+    if (body.containsKey('itemCode')) raw['itemCode'] = body['itemCode'];
     return _withIsLowStock(raw);
   }
 

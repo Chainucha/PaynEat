@@ -3,6 +3,7 @@
 **Priority:** 🟠 High (ยกระดับจาก 🟡 Medium เดิม — ดู `docs/DECISIONS.md` #35)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #12, `docs/DECISIONS.md` #35
 **สถานะ:** ✅ เสร็จแล้ว — implement ที่ commit `4e2684d` และ merge เข้า `main` แล้ว
+— QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T12 [#106](https://github.com/SuruchBoss/PaynEat/issues/106), T16 [#107](https://github.com/SuruchBoss/PaynEat/issues/107), T25 [#89](https://github.com/SuruchBoss/PaynEat/issues/89)
 
 > **ที่มาของเอกสารสองชั้นในไฟล์นี้** — ticket นี้ถูกทำจริงและเขียนสเปกขึ้นมาใหม่ *พร้อมกัน* โดยคนละ
 > session ที่ไม่เห็นงานของกันและกัน (session หนึ่งทำโค้ดบน branch

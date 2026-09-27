@@ -1,6 +1,7 @@
 # Ticket: QR สั่งอาหารเอง (QR Self-Order)
 
 **Priority:** 🟠 High
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #37)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #17
 
 ## ปัญหา

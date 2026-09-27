@@ -1,6 +1,7 @@
 # Ticket: สต๊อก/วัตถุดิบ (Inventory)
 
 **Priority:** 🟠 High
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #38) — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T27 [#110](https://github.com/SuruchBoss/PaynEat/issues/110)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #6
 
 ## ปัญหา

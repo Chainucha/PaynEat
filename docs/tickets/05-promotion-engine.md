@@ -1,6 +1,7 @@
 # Ticket: ส่วนลด/โปรโมชันแบบมีเงื่อนไข (Promotion Engine)
 
 **Priority:** 🟠 High
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #14) — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T10 [#83](https://github.com/SuruchBoss/PaynEat/issues/83), T17 [#108](https://github.com/SuruchBoss/PaynEat/issues/108)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #5
 
 ## ปัญหา

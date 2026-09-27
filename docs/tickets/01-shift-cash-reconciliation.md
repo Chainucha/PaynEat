@@ -1,6 +1,7 @@
 # Ticket: เปิด/ปิดกะ + กระทบยอดเงินสด (Shift & Cash Drawer Reconciliation)
 
 **Priority:** 🔴 Critical
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #35 (Z-report), #38) — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T11 [#101](https://github.com/SuruchBoss/PaynEat/issues/101), T12 [#106](https://github.com/SuruchBoss/PaynEat/issues/106)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #1
 
 ## ปัญหา

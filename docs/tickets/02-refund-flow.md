@@ -1,6 +1,7 @@
 # Ticket: คืนเงินหลังชำระเงินแล้ว (Refund)
 
 **Priority:** 🔴 Critical
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #38) — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T06 [#82](https://github.com/SuruchBoss/PaynEat/issues/82), T08 [#100](https://github.com/SuruchBoss/PaynEat/issues/100), T13 [#102](https://github.com/SuruchBoss/PaynEat/issues/102)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #2
 
 ## ปัญหา

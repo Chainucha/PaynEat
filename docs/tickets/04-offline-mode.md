@@ -1,6 +1,7 @@
 # Ticket: Offline Mode (Local Queue + Sync)
 
 **Priority:** 🔴 Critical
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #4
 
 ## ปัญหา

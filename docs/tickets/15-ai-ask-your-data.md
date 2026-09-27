@@ -2,6 +2,7 @@
 
 **Priority:** นอกเหนือจาก gap analysis เดิม — ฟีเจอร์เชิงจุดขาย/นวัตกรรม (ผู้ใช้ร้องขอโดยตรง)
 **สถานะ:** ✅ เสร็จแล้ว (ดู `docs/DECISIONS.md` #33 สำหรับรายละเอียดการตัดสินใจ)
+— QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T24 [#88](https://github.com/SuruchBoss/PaynEat/issues/88)
 **Ref:** ต่อยอดจาก `backend/src/modules/reports/`, ดีไซน์ dashboard ที่ทำไว้ก่อนหน้า
 (Artifact "ยอดขายวันนี้"), และ `docs/tickets/14-financial-audit-trail.md` (เฟส 2 ของทิกเก็ตนี้)
 

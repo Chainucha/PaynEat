@@ -1,6 +1,7 @@
 # Ticket: เชื่อมต่อ PaynEat ERP จากค่าตั้งค่าตอนเปิดเครื่อง และปักเวอร์ชันที่ ERP ใช้ทำเดโมได้
 
 **Priority:** 🟡 Medium — สัปดาห์ที่ 6 ของแผน PaynEat ERP v1
+**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — รอ 25, 26 และ 27
 **Ref:** [PaynEat-ERP#27 — คำสั่งเดียวรัน ERP + POS + PostgreSQL พร้อมเดโมครบเส้นทาง](https://github.com/SuruchBoss/PaynEat-ERP/issues/27),
 [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md), `docs/DECISIONS.md` #66
 **Blocked by:** `25-erp-connected-mode.md`, `26-erp-sales-outbox.md`, `27-erp-menu-pull.md`

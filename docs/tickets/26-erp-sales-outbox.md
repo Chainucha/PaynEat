@@ -1,9 +1,10 @@
 # Ticket: ส่งยอดขายเข้า PaynEat ERP ผ่าน outbox — ครั้งเดียวแน่นอน แม้เน็ตหลุด
 
 **Priority:** 🟠 High — สัปดาห์ที่ 4 ของแผน PaynEat ERP v1
+**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — รอ 25, 27 และ T02 [#81](https://github.com/SuruchBoss/PaynEat/issues/81) (สัญญา 1.0.0 merge แล้ว)
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [สัญญา telemetry v1.2](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/TELEMETRY.md), `docs/DECISIONS.md` #66
-**Blocked by:** `25-erp-connected-mode.md`, `27-erp-menu-pull.md`, [PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9),
+**Blocked by:** `25-erp-connected-mode.md`, `27-erp-menu-pull.md`, ~~[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9)~~ ✅,
 [#81](https://github.com/SuruchBoss/PaynEat/issues/81) (T02 แก้ออเดอร์ใน transaction เดียว — outbox ต้องเขียนใน transaction เดียวกับการชำระ, `docs/DECISIONS.md` #77)
 
 ## ปัญหา
@@ -34,7 +35,7 @@ ERP ต้องรู้ว่าแต่ละสาขาขายอะไ�
     ที่ ERP เก็บไว้แล้ว และยอดขายใหม่จะถูกปฏิเสธเป็น `idempotency_key_reused`
   - ทำเฉพาะโหมดเชื่อมต่อ ส่วนโหมดเดี่ยวไม่เขียนแถวใดๆ
 - **ตัวส่ง** (background): `POST /api/v1/sales-events` ทีละ event ตามลำดับ ใส่ `x-request-id` = idempotency key
-  ตามสัญญา POS v1 **1.0.0** ใน `contracts/` ของ PaynEat-ERP (PR PaynEat-ERP#55) — ทำตามตารางคำตอบของสัญญา:
+  ตามสัญญา POS v1 **1.0.0** ใน `contracts/` ของ PaynEat-ERP (PR PaynEat-ERP#55 merge แล้ว พร้อมข้อแก้ของ POS PO) — ทำตามตารางคำตอบของสัญญา:
   - `201` หรือ `200` ที่มี `duplicate: true` = สำเร็จ ทำเครื่องหมายว่าส่งแล้ว
   - `422 SALES_EVENT_REJECTED` = dead-letter พร้อม `details.reason` (`schema_invalid`, `pos_instance_mismatch`,
     `branch_not_served`, `idempotency_key_reused`)

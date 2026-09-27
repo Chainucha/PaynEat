@@ -1,7 +1,10 @@
 # Ticket: Multi-branch / Multi-store Support
 
 **Priority:** 🟡 Medium
-**Status:** 🚧 **กำลังทำอยู่ (บน branch อื่น)** — พบว่าอีก session เริ่มงานนี้จริงแล้วบน branch
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว — merge เข้า `main` ครบทั้ง backend และหน้าเลือกสาขาใน Flutter (`docs/DECISIONS.md` #36)
+— QA รอบ ก.ย. 2026 (#79) พบการแยกสาขายังไม่ครบ แก้ใน T21 [#109](https://github.com/SuruchBoss/PaynEat/issues/109), T22 [#86](https://github.com/SuruchBoss/PaynEat/issues/86), T32 [#117](https://github.com/SuruchBoss/PaynEat/issues/117)
+
+**Status เดิม (บันทึกไว้เป็นประวัติ):** 🚧 **กำลังทำอยู่ (บน branch อื่น)** — พบว่าอีก session เริ่มงานนี้จริงแล้วบน branch
 `claude/pos-restaurant-project-3djpp6` (commit `68568c1`, ยังไม่ merge เข้า `main` ณ ตอนที่เขียน
 บันทึกนี้) ขณะที่เซสชันนี้เพิ่งยืนยันไปเมื่อ 2026-09-19 ว่า "ยัง out-of-scope ไม่มี drift" (ดู
 `docs/DECISIONS.md` #35/#36) — เป็นอีกตัวอย่างของ concurrent session ทำงานซ้อนกัน ของจริงที่ทำไปแล้ว:

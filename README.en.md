@@ -1877,7 +1877,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   number; the queue counter is entirely independent of the bill-number sequence); the KDS shows a
   distinct icon/label for all 3 order types on every ticket; cashier checkout/payment for
   takeaway orders never requires selecting a table (see the ✨ Features section and `docs/DECISIONS.md` #23).
-  **Integration with external delivery platforms** (Grab, LINE MAN, etc.) is intentionally not included, as
+  **Integration with external delivery platforms** is intentionally not included, as
   recommended by the ticket: the scope is large and depends on each platform's external API,
   and it should be handled in a separate follow-up ticket once the first platform to integrate is decided
 - [x] **Real PromptPay QR** — the `qr` method generates a real QR code to the EMV QR standard for the customer
@@ -2054,7 +2054,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   job-application use (key figures and highlights, considerably shorter than this README)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — a 30-page document covering every screen with explanations (Thai)
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — English edition, rewritten for business audiences (30 pages)
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 70 design decisions and their accepted trade-offs (e.g. why
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 81 design decisions and their accepted trade-offs (e.g. why
   amounts are stored in satang, why the billing logic is intentionally implemented twice, why SQLite is used)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards derived from a code-quality audit
   covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure; the

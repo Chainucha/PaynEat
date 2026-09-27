@@ -451,6 +451,8 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
   한국어로 작성하셔도 됩니다. 문의 내용은 공개 기록으로 남아 같은 질문을 가진 다른 매장에도 참고가 됩니다
 - **[LinkedIn](https://www.linkedin.com/in/suruchboss)** — 개별 연락이 필요한 경우
 
+보안 취약점은 공개 Issue가 아니라 [`SECURITY.md`](SECURITY.md)의 절차에 따라 비공개로 제보해 주십시오.
+
 개발: **[SuruchBoss](https://github.com/SuruchBoss)**
 
 ---

@@ -11,6 +11,7 @@ import '../../../features/ai_assistant/data/datasources/ai_assistant_remote_data
 import '../../../features/audit_log/data/datasources/audit_log_remote_data_source.dart';
 import '../../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../../features/customer/data/datasources/customer_remote_data_source.dart';
+import '../../../features/erp_connection/data/datasources/erp_connection_remote_data_source.dart';
 import '../../../features/ingredient/data/datasources/ingredient_remote_data_source.dart';
 import '../../../features/menu/data/datasources/menu_remote_data_source.dart';
 import '../../../features/order/data/datasources/order_remote_data_source.dart';
@@ -111,6 +112,10 @@ void bindDataSources() {
     () => ScaleRemoteDataSourceImpl(client, Get.find<SocketClient>()),
     fenix: true,
   );
+  Get.lazyPut<ErpConnectionRemoteDataSource>(
+    () => ErpConnectionRemoteDataSourceImpl(client),
+    fenix: true,
+  );
 }
 
 /// โหมดสาธิต: เปลี่ยนเฉพาะชั้น data source ชั้นอื่นทั้งหมดไม่ต้องแก้แม้แต่บรรทัดเดียว
@@ -178,4 +183,8 @@ void _bindDemoDataSources() {
     permanent: true,
   );
   Get.put<ScaleRemoteDataSource>(DemoScaleDataSource(), permanent: true);
+  Get.put<ErpConnectionRemoteDataSource>(
+    const DemoErpConnectionDataSource(),
+    permanent: true,
+  );
 }

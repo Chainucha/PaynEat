@@ -1,7 +1,7 @@
 # Ticket: โหมดเชื่อมต่อ PaynEat ERP — ลงทะเบียน, ดึง master data ตามเวอร์ชัน, หน้าจัดการเป็นอ่านอย่างเดียว
 
 **Priority:** 🟠 High — สัปดาห์ที่ 4 ของแผน PaynEat ERP v1
-**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — สัญญา POS v1 1.0.0 merge แล้วใน PaynEat-ERP#9 (PR PaynEat-ERP#55 พร้อมข้อแก้ของ POS PO ครบ 4 ข้อ) และ T01 [#80](https://github.com/SuruchBoss/PaynEat/issues/80) merge แล้วใน PR [#119](https://github.com/SuruchBoss/PaynEat/pull/119) — **เริ่มได้** โดยตาราง mirror ต้องเป็น migration ใหม่ตาม `docs/DECISIONS.md` #79
+**สถานะ:** ✅ เสร็จแล้ว (2026-09-27) — ดู "สิ่งที่ทำไปแล้ว" ท้ายไฟล์ และ `docs/DECISIONS.md` #80
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [ERP ADR-0011](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0011-ecosystem-and-sherwhyve.md),
 [สเปก ERP #1](https://github.com/SuruchBoss/PaynEat-ERP/issues/1), `docs/DECISIONS.md` #66
@@ -53,15 +53,41 @@
 - การส่งยอดขาย (ticket 26)
 
 ## Acceptance Criteria
-- [ ] ร้านที่ไม่ตั้งค่า ERP ทำงานเหมือนเดิมทุกประการ (เทสต์เดิมทั้งหมดผ่านโดยไม่ต้องแก้)
-- [ ] เข้าและออกจากโหมดเชื่อมต่อได้ credential ไม่โผล่ใน log, response หรือไฟล์ export
-- [ ] ดึง master data ตามเวอร์ชันได้ ดึงซ้ำไม่ได้ข้อมูลซ้ำ ต่อจากเน็ตหลุดได้โดยไม่พลาดรายการ
-- [ ] สาขาที่รหัสไม่ตรงรูปแบบถูกบอกชัดว่าต้องแก้อะไรก่อนเชื่อมต่อ
-- [ ] โหมดเชื่อมต่อ: แก้วัตถุดิบ/สาขาไม่ได้ทั้งทางหน้าจอและ API (409) และไม่มีการปิดขายอัตโนมัติจากสต๊อกในเครื่อง
-- [ ] contract test ผ่านกับไฟล์สัญญา v1
-- [ ] README (ไทย/อังกฤษ), `docs/DECISIONS.md`, `docs/FEATURE-GAP-ANALYSIS.md` อัปเดตตาม `CLAUDE.md`
+- [x] ร้านที่ไม่ตั้งค่า ERP ทำงานเหมือนเดิมทุกประการ (เทสต์เดิมทั้งหมดผ่านโดยไม่ต้องแก้)
+- [x] เข้าและออกจากโหมดเชื่อมต่อได้ credential ไม่โผล่ใน log, response หรือไฟล์ export
+- [x] ดึง master data ตามเวอร์ชันได้ ดึงซ้ำไม่ได้ข้อมูลซ้ำ ต่อจากเน็ตหลุดได้โดยไม่พลาดรายการ
+- [x] สาขาที่รหัสไม่ตรงรูปแบบถูกบอกชัดว่าต้องแก้อะไรก่อนเชื่อมต่อ
+- [x] สาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี admin สร้างได้จากหน้าตั้งค่า โดยไม่ได้สาขาซ้ำเมื่อ ERP เพิ่งเปลี่ยนรหัส (รีวิว #121)
+- [x] log การดึงใช้ชื่อ event และ `reason` ตามสัญญา telemetry v1.2 (รีวิว #121)
+- [x] โหมดเชื่อมต่อ: แก้วัตถุดิบ/สาขาไม่ได้ทั้งทางหน้าจอและ API (409) และไม่มีการปิดขายอัตโนมัติจากสต๊อกในเครื่อง
+- [x] contract test ผ่านกับไฟล์สัญญา v1
+- [x] README (ไทย/อังกฤษ), `docs/DECISIONS.md`, `docs/FEATURE-GAP-ANALYSIS.md` อัปเดตตาม `CLAUDE.md`
 
 ## เทสต์
 backend: stub server ของ ERP ในเทสต์ (ไม่ต้องรัน ERP จริง) ครอบคลุมการเข้า/ออกโหมด การดึงตามเวอร์ชัน รหัสสาขาผิดรูปแบบ
 และการปฏิเสธการแก้ในโหมดเชื่อมต่อ
 แอป: controller test ของหน้าตั้งค่าการเชื่อมต่อ และของหน้าจัดการในโหมดอ่านอย่างเดียว
+
+## สิ่งที่ทำไปแล้ว (2026-09-27)
+- **backend** — `backend/src/modules/erp/` (client, contract, repository, service, routes) และ migration 0002
+  (`erp_connection`, `erp_instance_branches`, `erp_items`, `erp_locations`, `ingredients.item_code`)
+  - `PUT/GET/DELETE /api/v1/erp/connection` (admin), `POST /api/v1/erp/pull` (admin), `GET /api/v1/erp/mode` (ทุกบทบาท)
+  - ดึงตามรอบทุก `ERP_PULL_INTERVAL_SECONDS` (ค่าเริ่มต้น 300) และเมื่อกด "ดึงทันที"
+  - แต่ละหน้าใช้ใน transaction เดียวกับการบันทึกเวอร์ชัน; 401 หยุดเรียก ERP จนกว่าจะบันทึก credential ใหม่
+  - 409 `MANAGED_BY_ERP` ที่วัตถุดิบ (เพิ่ม/แก้/ปรับสต๊อก/ลบ) และสาขา (เพิ่ม/แก้); ไม่ปิด/เปิดขายเมนูอัตโนมัติจากสต๊อกในเครื่อง
+- **สัญญา** — สำเนาสัญญา POS v1 1.0.0 จาก PaynEat-ERP `3661204` ใน `backend/contracts/erp-pos/` ตรวจคำตอบของ ERP ด้วย
+  JSON Schema ชุดเดียวกับที่ ERP ใช้ (ajv) และ `tests/erp-contract.test.js` ปักเวอร์ชัน + checksum ของไฟล์
+- **แอป** — หัวข้อ "การเชื่อมต่อ" ในหน้าตั้งค่า (admin): ส่วนบนเซิร์ฟเวอร์ร้าน (สำหรับ 29b) ส่วนล่าง PaynEat ERP พร้อมรายการสาขาที่
+  ต้องแก้รหัสและปุ่มแก้ หน้าวัตถุดิบเป็นอ่านอย่างเดียวพร้อมป้าย "จัดการใน PaynEat ERP" ชื่อหน่วยจาก ERP แสดงตามภาษา
+  ฟอร์มวัตถุดิบมีช่องรหัสสินค้า (ตั้งไว้ก่อนเชื่อมต่อได้) โหมดสาธิตขึ้น "ใช้งานเดี่ยว" เสมอ
+- **เทสต์** — `tests/erp-connection.test.js` (ERP ปลอม `tests/helpers/erpStub.js`) และ `tests/erp-contract.test.js`;
+  แอป `test/presentation/erp_connection_controller_test.dart` และ `ingredients_controller_test.dart`
+- **แก้ตามรีวิว PR #121 (POS PO + ERP PO)**
+  - ปุ่ม "สร้างในเครื่อง" ข้างสาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี (`POST /api/v1/erp/branches`, admin เท่านั้น) แทนทางอ้อม
+    "ออกจากโหมดแล้วเชื่อมต่อใหม่": ดึง master data ให้ครบก่อนเสมอ แล้วสร้างเฉพาะเมื่อรหัสนั้นยังไม่มีในเครื่อง (มีแล้ว = 409
+    `BRANCH_ALREADY_LOCAL`, ERP ไม่ได้ให้ดูแล = 409 `BRANCH_NOT_SERVED`) ด้วยรหัสและชื่อไทยของ ERP พร้อมวัตถุดิบ mirror และ
+    audit log `erp.branch_create` — เทสต์ 3 เคส: สร้างได้, supersede ที่ค้างอยู่ถูกใช้ก่อนจึงไม่ได้สาขาซ้ำ, ไม่ใช่ admin ได้ 403
+  - log ของการดึงเปลี่ยนจาก `app.log` เป็น `master_data.pull.completed` (INFO) และ `master_data.pull.failed` พร้อม `reason`
+    ตามสัญญา telemetry v1.2 ("Additions to v1.2", PaynEat-ERP#57) — `ERROR` เมื่อ POS หยุดดึงตามรอบเวลาจนกว่าจะมีคนมาจัดการ
+    (`pull_stopped` ในสถานะ; กด "ดึงทันที" ได้) ฟังก์ชันแปลง `reason`/severity อยู่ใน `erp.client.js` ให้ ticket 26 ใช้ต่อ และ
+    `tests/erp-contract.test.js` ครอบทุก reason

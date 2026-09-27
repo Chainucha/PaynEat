@@ -4,6 +4,7 @@
 import { ApiError } from '../../core/ApiError.js';
 import { branchRepository } from './branch.repository.js';
 import { toBranchDto } from './branch.mapper.js';
+import { assertNotManagedByErp } from '../erp/erp.mode.js';
 
 export const branchService = {
   list() {
@@ -22,10 +23,12 @@ export const branchService = {
   },
 
   create(payload) {
+    assertNotManagedByErp('สาขาจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่');
     return toBranchDto(branchRepository.create(payload));
   },
 
   update(id, payload) {
+    assertNotManagedByErp('สาขาจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่');
     this.getById(id);
     return toBranchDto(branchRepository.update(id, payload));
   },

@@ -165,8 +165,8 @@ describe('the real migrations', () => {
 
   test('a database created before T01 upgrades once, with every seeded and sold row intact', () => {
     // ฐานข้อมูลของร้านก่อน T01 = ผลของ schema.sql + patch ทุกตัว (ตอนนี้คือ migration 0001) โดยไม่มี
-    // schema_migrations — สร้างแบบนั้นขึ้นมา: seed เต็ม มียอดขาย ชำระเงิน และคืนเงิน แล้วลบตารางติดตามทิ้ง
-    seed();
+    // schema_migrations — สร้างแบบนั้นขึ้นมา: seed บน schema ถึง 0001 มียอดขาย ชำระเงิน และคืนเงิน แล้วลบตารางติดตามทิ้ง
+    seed({ migrations: MIGRATIONS.slice(0, 1) });
     const db = getDb();
     const cashier = db.prepare("SELECT id FROM users WHERE role = 'cashier' LIMIT 1").get();
     const branch = db.prepare('SELECT id FROM branches ORDER BY id LIMIT 1').get();
@@ -217,6 +217,12 @@ describe('the real migrations', () => {
       .get(payment.lastInsertRowid);
     assert.deepEqual(kept, { amount: 11770, received: 20000, change_amount: 8230, refunded: 1000 });
     assert.deepEqual(db.pragma('foreign_key_check'), []);
+    // migration หลัง 0001 ก็รันต่อจนครบ เช่น 0002 เพิ่มรหัสสินค้าให้วัตถุดิบเดิม (ว่างไว้) และตารางของ ERP (ว่าง)
+    assert.equal(
+      db.prepare('SELECT COUNT(*) AS c FROM ingredients WHERE item_code IS NULL').get().c,
+      before.ingredients,
+    );
+    assert.equal(db.prepare('SELECT COUNT(*) AS c FROM erp_connection').get().c, 0);
 
     // boot ครั้งถัดไป: ไม่มีอะไรให้รัน และเวลาที่บันทึกไว้ไม่เปลี่ยน
     const appliedAt = recorded(db).map((row) => row.applied_at);

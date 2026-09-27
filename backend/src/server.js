@@ -11,6 +11,7 @@ import { seed } from './db/seed.js';
 import { initSocket } from './realtime/socket.js';
 import { closeDb } from './db/index.js';
 import { scaleService } from './modules/scale/scale.service.js';
+import { startErpPullSchedule, stopErpPullSchedule } from './modules/erp/erp.service.js';
 import { logger } from './core/telemetry/logger.js';
 import { startMetricsServer } from './core/telemetry/metrics.js';
 
@@ -21,6 +22,8 @@ const app = createApp();
 const server = http.createServer(app);
 initSocket(server);
 scaleService.start();
+// ดึง master data จาก PaynEat ERP ตามรอบ — เครื่องที่ใช้งานเดี่ยวไม่มีการเชื่อมต่อ จึงไม่มีอะไรเกิดขึ้น (ticket 25)
+startErpPullSchedule();
 
 server.listen(env.port, env.host, () => {
   // log เป็น JSON บรรทัดละ object ตามสัญญา telemetry (ticket 24) — แทนป้ายต้อนรับแบบข้อความเดิม
@@ -49,6 +52,7 @@ startMetricsServer()
 const shutdown = (signal) => {
   logger.info(`${signal} received, shutting down`);
   scaleService.stop();
+  stopErpPullSchedule();
   metricsServer?.close();
   server.close(() => {
     closeDb();

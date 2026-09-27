@@ -280,8 +280,9 @@ const TABLES_BRANCH_2 = [
   { name: 'TL-VIP', zone: 'ห้องส่วนตัว', seats: 8 },
 ];
 
-export const seed = () => {
-  migrate();
+/** `migrations`: ใช้เฉพาะเทสต์ที่ต้องการฐานข้อมูลรุ่นเก่า (seed บน schema ถึง migration ที่กำหนด) */
+export const seed = ({ migrations } = {}) => {
+  migrate({ migrations });
   const db = getDb();
 
   const run = db.transaction(() => {

@@ -40,6 +40,8 @@ import '../../../report/presentation/controllers/dashboard_controller.dart';
 import '../../../report/presentation/controllers/report_controller.dart';
 import '../../../report/presentation/pages/dashboard_page.dart';
 import '../../../report/presentation/pages/reports_page.dart';
+import '../../../erp_connection/domain/usecases/erp_connection_usecases.dart';
+import '../../../erp_connection/presentation/controllers/erp_connection_controller.dart';
 import '../../../settings/domain/usecases/settings_usecases.dart';
 import '../../../settings/presentation/controllers/printer_settings_controller.dart';
 import '../../../settings/presentation/controllers/settings_controller.dart';
@@ -141,6 +143,18 @@ class HomeBinding extends Bindings {
         saveIngredient: Get.find<SaveIngredientUseCase>(),
         adjustStock: Get.find<AdjustStockUseCase>(),
         deleteIngredient: Get.find<DeleteIngredientUseCase>(),
+        getErpMode: Get.find<GetErpModeUseCase>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => ErpConnectionController(
+        getStatus: Get.find<GetErpStatusUseCase>(),
+        connect: Get.find<ConnectErpUseCase>(),
+        disconnect: Get.find<DisconnectErpUseCase>(),
+        pullNow: Get.find<PullErpNowUseCase>(),
+        updateBranchCode: Get.find<UpdateBranchCodeUseCase>(),
+        createServedBranch: Get.find<CreateServedBranchUseCase>(),
       ),
       fenix: true,
     );

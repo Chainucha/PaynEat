@@ -13,6 +13,7 @@ class ApiEndpoints {
 
   // Branches (ดู docs/tickets/11-multi-branch.md)
   static const String branchesMine = '/branches/mine';
+  static String branch(int id) => '/branches/$id';
 
   // Users
   static const String users = '/users';
@@ -142,6 +143,12 @@ class ApiEndpoints {
 
   // ตาชั่งต่อสาย (ดู docs/tickets/22-live-scale-camera-scan.md)
   static const String scale = '/scale';
+
+  // โหมดเชื่อมต่อ PaynEat ERP (ดู docs/tickets/25-erp-connected-mode.md)
+  static const String erpMode = '/erp/mode';
+  static const String erpConnection = '/erp/connection';
+  static const String erpPull = '/erp/pull';
+  static const String erpBranches = '/erp/branches';
 
   // AI assistant
   static const String aiAssistantAsk = '/ai/ask';

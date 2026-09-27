@@ -111,6 +111,9 @@ class ApiClient {
   Future<ApiResult> patch(String path, {Object? body}) =>
       _request(() => _dio.patch(path, data: body));
 
+  Future<ApiResult> put(String path, {Object? body}) =>
+      _request(() => _dio.put(path, data: body));
+
   Future<ApiResult> delete(String path) => _request(() => _dio.delete(path));
 
   /// ดึง response แบบข้อความดิบ (ไม่ใช่ envelope `{success,data}`) — ใช้กับ endpoint ที่ตอบเป็น

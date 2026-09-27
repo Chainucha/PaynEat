@@ -18,6 +18,8 @@ import '../../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../../features/auth/domain/usecases/select_branch_usecase.dart';
 import '../../../features/customer/domain/repositories/customer_repository.dart';
 import '../../../features/customer/domain/usecases/customer_usecases.dart';
+import '../../../features/erp_connection/domain/repositories/erp_connection_repository.dart';
+import '../../../features/erp_connection/domain/usecases/erp_connection_usecases.dart';
 import '../../../features/ingredient/domain/repositories/ingredient_repository.dart';
 import '../../../features/ingredient/domain/usecases/ingredient_usecases.dart';
 import '../../../features/menu/domain/repositories/menu_repository.dart';
@@ -493,6 +495,36 @@ void bindUseCases() {
   );
   Get.lazyPut(
     () => AddSelfOrderItemsUseCase(Get.find<SelfOrderRepository>()),
+    fenix: true,
+  );
+
+  // โหมดเชื่อมต่อ PaynEat ERP (ดู docs/tickets/25-erp-connected-mode.md)
+  Get.lazyPut(
+    () => GetErpModeUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => GetErpStatusUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => ConnectErpUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => DisconnectErpUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => PullErpNowUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => UpdateBranchCodeUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => CreateServedBranchUseCase(Get.find<ErpConnectionRepository>()),
     fenix: true,
   );
 }

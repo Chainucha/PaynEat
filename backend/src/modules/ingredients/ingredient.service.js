@@ -7,6 +7,7 @@ import { getDb } from '../../db/index.js';
 import { effectiveQuantity } from '../../core/weight.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
 import { menuRepository } from '../menu/menu.repository.js';
+import { assertNotManagedByErp, isErpConnected } from '../erp/erp.mode.js';
 import { ingredientRepository } from './ingredient.repository.js';
 import { toIngredientDto } from './ingredient.mapper.js';
 
@@ -25,6 +26,9 @@ const STOCK_EPSILON = 1e-9;
  * ไม่ไล่ทุกเมนูในระบบทุกครั้งที่มีการตัด/คืนสต๊อก
  */
 const syncMenuItemAvailabilityForIngredients = (ingredientIds) => {
+  // โหมดเชื่อมต่อ ERP: ยอดคงเหลือเป็นของ ERP (ADR-0003) และยังไม่มี feed กลับมา ยอดในเครื่องจึงไม่ใช่ความจริง —
+  // ไม่ปิด/เปิดขายเมนูอัตโนมัติจากยอดนี้ ใช้การปิดขายด้วยมือแทน และการขายไม่ถูกบล็อกเพราะสต๊อก (ticket 25)
+  if (isErpConnected()) return;
   const menuItemIds = new Set();
   for (const ingredientId of ingredientIds) {
     for (const link of ingredientRepository.findMenuItemLinksForIngredient(ingredientId)) {
@@ -74,6 +78,14 @@ const applyDeltaForOrderItem = (item, factor) => {
   syncMenuItemAvailabilityForIngredients(links.map((link) => link.ingredient_id));
 };
 
+/** รหัสสินค้าหนึ่งรหัสมีวัตถุดิบได้ตัวเดียวต่อสาขา (ตอนเชื่อมต่อ ERP จะจับคู่ได้ไม่กำกวม) */
+const assertItemCodeFree = (branchId, itemCode, exceptId) => {
+  if (!itemCode) return;
+  if (ingredientRepository.findByItemCode(branchId, itemCode, exceptId)) {
+    throw ApiError.conflict('รหัสสินค้านี้ใช้กับวัตถุดิบอื่นในสาขานี้แล้ว');
+  }
+};
+
 export const ingredientService = {
   list(filters, currentBranchId) {
     return ingredientRepository
@@ -88,18 +100,23 @@ export const ingredientService = {
   },
 
   create(payload, currentBranchId) {
+    assertNotManagedByErp('วัตถุดิบจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่');
     const branchId = resolveBranchIdForWrite(currentBranchId, payload.branchId);
+    assertItemCodeFree(branchId, payload.itemCode);
     return toIngredientDto(ingredientRepository.create({ ...payload, branchId }));
   },
 
   update(id, payload) {
-    this.getById(id);
+    assertNotManagedByErp('วัตถุดิบจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่');
+    const current = this.getById(id);
+    assertItemCodeFree(current.branchId, payload.itemCode, id);
     return toIngredientDto(ingredientRepository.update(id, payload));
   },
 
   /** ปรับสต๊อกมือโดยแอดมิน/ผู้จัดการ (ต่างจาก deductForOrderItem/restoreForOrderItem ที่ตัดอัตโนมัติ
    * ตามออเดอร์) — ดู docs/tickets/14-financial-audit-trail.md: กระทบต้นทุน/สต๊อกโดยตรงจึงต้อง log */
   adjustStock(id, delta, note, actingUser) {
+    assertNotManagedByErp('วัตถุดิบจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่');
     const before = this.getById(id);
     const run = getDb().transaction(() => {
       ingredientRepository.adjustStock(id, delta);
@@ -131,6 +148,7 @@ export const ingredientService = {
   },
 
   remove(id) {
+    assertNotManagedByErp('วัตถุดิบจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่');
     this.getById(id);
     if (ingredientRepository.countMenuItemLinks(id) > 0) {
       throw ApiError.conflict('ลบไม่ได้ เพราะวัตถุดิบนี้ถูกผูกกับเมนูอยู่');

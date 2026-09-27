@@ -22,6 +22,7 @@ import aiAssistantRoutes from './modules/ai-assistant/ai-assistant.routes.js';
 import publicOrderRoutes from './modules/public-order/public-order.routes.js';
 import receivableRoutes from './modules/receivables/receivable.routes.js';
 import scaleRoutes from './modules/scale/scale.routes.js';
+import erpRoutes from './modules/erp/erp.routes.js';
 
 const router = Router();
 
@@ -45,5 +46,6 @@ router.use('/ai', aiAssistantRoutes);
 router.use('/public', publicOrderRoutes);
 router.use('/receivables', receivableRoutes);
 router.use('/scale', scaleRoutes);
+router.use('/erp', erpRoutes);
 
 export default router;

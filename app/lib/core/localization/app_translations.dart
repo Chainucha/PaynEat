@@ -9,6 +9,7 @@ import 'translations/audit_log_translations.dart';
 import 'translations/auth_translations.dart';
 import 'translations/common_translations.dart';
 import 'translations/customer_translations.dart';
+import 'translations/erp_connection_translations.dart';
 import 'translations/home_translations.dart';
 import 'translations/ingredient_translations.dart';
 import 'translations/kitchen_translations.dart';
@@ -50,6 +51,7 @@ class AppTranslations extends Translations {
       ...auditLogTranslationsTh,
       ...authTranslationsTh,
       ...customerTranslationsTh,
+      ...erpConnectionTranslationsTh,
       ...homeTranslationsTh,
       ...ingredientTranslationsTh,
       ...kitchenTranslationsTh,
@@ -76,6 +78,7 @@ class AppTranslations extends Translations {
       ...auditLogTranslationsEn,
       ...authTranslationsEn,
       ...customerTranslationsEn,
+      ...erpConnectionTranslationsEn,
       ...homeTranslationsEn,
       ...ingredientTranslationsEn,
       ...kitchenTranslationsEn,
@@ -102,6 +105,7 @@ class AppTranslations extends Translations {
       ...auditLogTranslationsKo,
       ...authTranslationsKo,
       ...customerTranslationsKo,
+      ...erpConnectionTranslationsKo,
       ...homeTranslationsKo,
       ...ingredientTranslationsKo,
       ...kitchenTranslationsKo,

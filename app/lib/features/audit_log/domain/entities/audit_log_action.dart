@@ -43,6 +43,10 @@ class AuditLogAction {
   static const String receivableLateFeeVoid = 'receivable.late_fee_void';
   static const String receivableCreditNote = 'receivable.credit_note';
   static const String receivableDocumentEmail = 'receivable.document_email';
+  // โหมดเชื่อมต่อ PaynEat ERP (ticket 25)
+  static const String erpConnect = 'erp.connect';
+  static const String erpDisconnect = 'erp.disconnect';
+  static const String erpBranchCreate = 'erp.branch_create';
 
   static const List<String> all = [
     orderCreate,
@@ -75,6 +79,9 @@ class AuditLogAction {
     receivableLateFeeVoid,
     receivableCreditNote,
     receivableDocumentEmail,
+    erpConnect,
+    erpDisconnect,
+    erpBranchCreate,
   ];
 
   static const Map<String, String> _keys = {
@@ -108,6 +115,9 @@ class AuditLogAction {
     receivableLateFeeVoid: 'audit_log_action_receivable_late_fee_void',
     receivableCreditNote: 'audit_log_action_receivable_credit_note',
     receivableDocumentEmail: 'audit_log_action_receivable_document_email',
+    erpConnect: 'audit_log_action_erp_connect',
+    erpDisconnect: 'audit_log_action_erp_disconnect',
+    erpBranchCreate: 'audit_log_action_erp_branch_create',
   };
 
   static String translationKey(String action) => _keys[action] ?? action;

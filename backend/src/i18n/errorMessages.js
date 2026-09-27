@@ -733,6 +733,108 @@ export const ERROR_MESSAGES = [
     en: "You can't delete your own account",
     ko: '본인 계정은 삭제할 수 없습니다',
   },
+
+  // ---------------------------------------------------------------- เชื่อมต่อ PaynEat ERP (ticket 25)
+  {
+    th: 'วัตถุดิบจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่',
+    en: 'Ingredients are managed in PaynEat ERP — change them there, then pull again',
+    ko: '재료는 PaynEat ERP에서 관리합니다 — ERP에서 수정한 뒤 다시 가져오세요',
+  },
+  {
+    th: 'สาขาจัดการใน PaynEat ERP แก้ที่ ERP แล้วดึงข้อมูลใหม่',
+    en: 'Branches are managed in PaynEat ERP — change them there, then pull again',
+    ko: '지점은 PaynEat ERP에서 관리합니다 — ERP에서 수정한 뒤 다시 가져오세요',
+  },
+  {
+    th: 'แก้รหัสสาขาให้ตรงรูปแบบก่อนเชื่อมต่อ PaynEat ERP',
+    en: 'Fix the branch codes before connecting to PaynEat ERP',
+    ko: 'PaynEat ERP에 연결하기 전에 지점 코드를 고쳐 주세요',
+  },
+  {
+    th: 'สาขานี้ยังไม่มีรหัส ตั้งรหัสให้ตรงกับรหัสสาขาใน PaynEat ERP',
+    en: "This branch has no code — give it the branch's code in PaynEat ERP",
+    ko: '이 지점에는 코드가 없습니다 — PaynEat ERP의 지점 코드를 입력하세요',
+  },
+  {
+    th: 'รหัสสาขาต้องเป็นตัวพิมพ์ใหญ่ A-Z ตัวเลข หรือ - ยาว 2-32 ตัว และขึ้นต้นด้วยตัวอักษรหรือตัวเลข',
+    en: 'A branch code is 2–32 capital letters A–Z, digits or -, starting with a letter or digit',
+    ko: '지점 코드는 대문자 A-Z, 숫자, - 로 2-32자이며 문자나 숫자로 시작해야 합니다',
+  },
+  {
+    th: 'รหัสสินค้าต้องเป็นตัวพิมพ์ใหญ่ A-Z ตัวเลข หรือ - ยาว 2-32 ตัว และขึ้นต้นด้วยตัวอักษรหรือตัวเลข',
+    en: 'An item code is 2–32 capital letters A–Z, digits or -, starting with a letter or digit',
+    ko: '품목 코드는 대문자 A-Z, 숫자, - 로 2-32자이며 문자나 숫자로 시작해야 합니다',
+  },
+  {
+    th: 'รหัสสินค้านี้ใช้กับวัตถุดิบอื่นในสาขานี้แล้ว',
+    en: 'Another ingredient in this branch already has this item code',
+    ko: '이 지점의 다른 재료가 이미 이 품목 코드를 쓰고 있습니다',
+  },
+  {
+    th: 'ที่อยู่ของ PaynEat ERP ต้องเป็น http:// หรือ https:// เช่น https://erp.example.com',
+    en: "PaynEat ERP's address must start with http:// or https://, for example https://erp.example.com",
+    ko: 'PaynEat ERP 주소는 http:// 또는 https://로 시작해야 합니다 (예: https://erp.example.com)',
+  },
+  {
+    th: 'credential ต้องขึ้นต้นด้วย pnepos_ ตามที่ PaynEat ERP แสดงตอนลงทะเบียน POS',
+    en: 'The credential starts with pnepos_, as PaynEat ERP showed it when the POS was registered',
+    ko: '자격 증명은 POS 등록 시 PaynEat ERP가 보여 준 대로 pnepos_로 시작합니다',
+  },
+  {
+    th: 'PaynEat ERP ไม่รับ credential นี้ (ถูกเพิกถอนหรือไม่มีอยู่) ขอ credential ใหม่จากผู้ดูแล ERP',
+    en: "PaynEat ERP doesn't accept this credential (revoked or unknown) — ask the ERP administrator for a new one",
+    ko: 'PaynEat ERP가 이 자격 증명을 받지 않습니다 (폐기되었거나 없음) — ERP 관리자에게 새로 요청하세요',
+  },
+  {
+    th: 'PaynEat ERP ไม่รับ credential นี้แล้ว บันทึก credential ใหม่ก่อนดึงข้อมูล',
+    en: 'PaynEat ERP no longer accepts this credential — save a new one before pulling',
+    ko: 'PaynEat ERP가 더 이상 이 자격 증명을 받지 않습니다 — 가져오기 전에 새 자격 증명을 저장하세요',
+  },
+  {
+    th: 'PaynEat ERP ใช้สัญญาเชื่อมต่อเวอร์ชัน {version} ซึ่ง POS รุ่นนี้ไม่รองรับ อัปเดต POS ก่อนเชื่อมต่อ',
+    en: "PaynEat ERP uses integration contract {version}, which this POS version doesn't support — update the POS first",
+    ko: 'PaynEat ERP가 이 POS 버전이 지원하지 않는 연동 규약 {version}을(를) 사용합니다 — 먼저 POS를 업데이트하세요',
+  },
+  {
+    th: 'ติดต่อ PaynEat ERP ไม่ได้ ตรวจที่อยู่และการเชื่อมต่อเครือข่าย',
+    en: "Couldn't reach PaynEat ERP — check the address and the network",
+    ko: 'PaynEat ERP에 연결할 수 없습니다 — 주소와 네트워크를 확인하세요',
+  },
+  {
+    th: 'PaynEat ERP ไม่พร้อมให้บริการชั่วคราว ลองใหม่อีกครั้งภายหลัง',
+    en: 'PaynEat ERP is temporarily unavailable — try again later',
+    ko: 'PaynEat ERP를 잠시 사용할 수 없습니다 — 나중에 다시 시도하세요',
+  },
+  {
+    th: 'PaynEat ERP ขอให้รอสักครู่ก่อนเรียกอีกครั้ง',
+    en: 'PaynEat ERP asked us to wait a moment before trying again',
+    ko: 'PaynEat ERP가 잠시 후 다시 시도하라고 요청했습니다',
+  },
+  {
+    th: 'คำตอบของ PaynEat ERP ไม่ตรงกับสัญญาเชื่อมต่อ POS v1',
+    en: "PaynEat ERP's answer doesn't match the POS v1 integration contract",
+    ko: 'PaynEat ERP의 응답이 POS v1 연동 규약과 맞지 않습니다',
+  },
+  {
+    th: 'PaynEat ERP ตอบ HTTP {status} ตรวจว่าที่อยู่ชี้ไปที่ PaynEat ERP จริงและไม่มี proxy ขวางอยู่',
+    en: 'PaynEat ERP answered HTTP {status} — check that the address points at PaynEat ERP and no proxy is in the way',
+    ko: 'PaynEat ERP가 HTTP {status}로 응답했습니다 — 주소가 PaynEat ERP를 가리키는지, 중간에 프록시가 없는지 확인하세요',
+  },
+  {
+    th: 'ยังไม่ได้เชื่อมต่อ PaynEat ERP',
+    en: 'Not connected to PaynEat ERP',
+    ko: 'PaynEat ERP에 연결되어 있지 않습니다',
+  },
+  {
+    th: 'PaynEat ERP ไม่ได้ให้เครื่องนี้ดูแลสาขารหัสนี้',
+    en: "PaynEat ERP doesn't assign the branch with this code to this POS",
+    ko: 'PaynEat ERP가 이 코드의 지점을 이 POS에 맡기지 않았습니다',
+  },
+  {
+    th: 'มีสาขารหัสนี้ในเครื่องแล้ว',
+    en: 'A branch with this code already exists on this POS',
+    ko: '이 코드의 지점이 이미 이 POS에 있습니다',
+  },
 ];
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

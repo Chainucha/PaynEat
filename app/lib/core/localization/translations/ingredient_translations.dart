@@ -3,6 +3,11 @@
 
 /// คำแปลของฟีเจอร์ ingredient (วัตถุดิบ/สต๊อก — ดู docs/tickets/06-inventory-stock.md)
 const Map<String, String> ingredientTranslationsTh = {
+  'ingredient_form_item_code_label': 'รหัสสินค้าใน PaynEat ERP (ถ้ามี)',
+  'ingredient_form_item_code_hint':
+      'เช่น WHOLE-CHICKEN — ใส่ไว้แล้ววัตถุดิบนี้จะจับคู่กับ ERP เมื่อเชื่อมต่อ สูตรเมนูเดิมไม่หลุด',
+  'ingredient_form_item_code_invalid':
+      'รหัสสินค้าต้องเป็นตัวพิมพ์ใหญ่ A–Z ตัวเลข หรือ - ยาว 2–32 ตัว',
   // List page
   'ingredient_add_button': 'เพิ่มวัตถุดิบ',
   'ingredient_low_stock_filter': 'ใกล้หมดเท่านั้น',
@@ -53,6 +58,11 @@ const Map<String, String> ingredientTranslationsTh = {
 };
 
 const Map<String, String> ingredientTranslationsEn = {
+  'ingredient_form_item_code_label': 'Item code in PaynEat ERP (optional)',
+  'ingredient_form_item_code_hint':
+      'e.g. WHOLE-CHICKEN — with it, this ingredient is matched to the ERP when the POS connects, keeping its recipes',
+  'ingredient_form_item_code_invalid':
+      'An item code is 2–32 capital letters A–Z, digits or -',
   // List page
   'ingredient_add_button': 'Add ingredient',
   'ingredient_low_stock_filter': 'Low stock only',
@@ -103,6 +113,10 @@ const Map<String, String> ingredientTranslationsEn = {
 };
 
 const Map<String, String> ingredientTranslationsKo = {
+  'ingredient_form_item_code_label': 'PaynEat ERP 품목 코드 (선택)',
+  'ingredient_form_item_code_hint':
+      '예: WHOLE-CHICKEN — 입력해 두면 ERP에 연결할 때 이 재료가 연결되어 기존 레시피가 유지됩니다',
+  'ingredient_form_item_code_invalid': '품목 코드는 대문자 A–Z, 숫자, - 로 2–32자입니다',
   'ingredient_add_button': '재료 추가',
   'ingredient_low_stock_filter': '재고 부족만',
   'ingredient_empty_state': '등록된 재료가 없습니다',

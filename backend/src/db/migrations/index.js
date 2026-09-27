@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import baseline from './0001_baseline.js';
+import erpConnection from './0002_erp_connection.js';
 
 /**
  * Migrations ทั้งหมดตามลำดับ (T01 #80, docs/DECISIONS.md #79) — ตัวรันอยู่ที่ ../migrate.js
@@ -18,7 +19,7 @@ import baseline from './0001_baseline.js';
  * ห้ามแก้ migration ที่อยู่ใน main แล้ว แม้แต่คอมเมนต์หรือการจัดรูปแบบ: checksum ถูกบันทึกในทุกฐานข้อมูลที่รัน
  * และเซิร์ฟเวอร์ของร้านจะไม่ยอมเปิดถ้าไฟล์ไม่ตรงกับที่รันไปแล้ว
  */
-const DEFINITIONS = [baseline];
+const DEFINITIONS = [baseline, erpConnection];
 
 /** sha256 ของไฟล์ของ migration — ปรับบรรทัดเป็น \n ก่อน เพื่อให้ checkout บน Windows (CRLF) ได้ค่าเดียวกัน */
 export const checksumOf = (files) => {

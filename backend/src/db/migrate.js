@@ -109,9 +109,9 @@ const ensureDefaultSettings = (db) => {
   for (const [key, value] of Object.entries(defaults)) upsert.run(key, value);
 };
 
-export const migrate = () => {
+export const migrate = ({ migrations = MIGRATIONS } = {}) => {
   const db = getDb();
-  runMigrations(db);
+  runMigrations(db, migrations);
   ensureDefaultSettings(db);
   return db;
 };

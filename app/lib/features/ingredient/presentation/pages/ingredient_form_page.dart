@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/widgets/app_card.dart';
+import '../../../erp_connection/domain/entities/erp_connection_status.dart';
 import '../../domain/entities/ingredient.dart';
 import '../../domain/usecases/ingredient_usecases.dart';
 import '../controllers/ingredients_controller.dart';
@@ -25,6 +26,7 @@ class _IngredientFormPageState extends State<IngredientFormPage> {
   final _unitController = TextEditingController();
   final _currentStockController = TextEditingController(text: '0');
   final _lowStockThresholdController = TextEditingController(text: '0');
+  final _itemCodeController = TextEditingController();
 
   final IngredientsController _controller = Get.find<IngredientsController>();
 
@@ -40,6 +42,7 @@ class _IngredientFormPageState extends State<IngredientFormPage> {
     if (ingredient != null) {
       _nameController.text = ingredient.name;
       _unitController.text = ingredient.unit;
+      _itemCodeController.text = ingredient.itemCode ?? '';
       _lowStockThresholdController.text = ingredient.lowStockThreshold
           .toStringAsFixed(
             ingredient.lowStockThreshold ==
@@ -56,6 +59,7 @@ class _IngredientFormPageState extends State<IngredientFormPage> {
     _unitController.dispose();
     _currentStockController.dispose();
     _lowStockThresholdController.dispose();
+    _itemCodeController.dispose();
     super.dispose();
   }
 
@@ -70,6 +74,7 @@ class _IngredientFormPageState extends State<IngredientFormPage> {
         currentStock: double.tryParse(_currentStockController.text.trim()) ?? 0,
         lowStockThreshold:
             double.tryParse(_lowStockThresholdController.text.trim()) ?? 0,
+        itemCode: _itemCodeController.text,
       ),
     );
   }
@@ -164,6 +169,24 @@ class _IngredientFormPageState extends State<IngredientFormPage> {
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
+                  const SizedBox(height: 14),
+                  // รหัสสินค้าใน PaynEat ERP (ticket 25) — ไม่บังคับ ร้านเดี่ยวเว้นว่างได้
+                  TextFormField(
+                    controller: _itemCodeController,
+                    textCapitalization: TextCapitalization.characters,
+                    autocorrect: false,
+                    decoration: InputDecoration(
+                      labelText: 'ingredient_form_item_code_label'.tr,
+                      helperText: 'ingredient_form_item_code_hint'.tr,
+                      helperMaxLines: 3,
+                    ),
+                    validator: (value) {
+                      final code = value?.trim().toUpperCase() ?? '';
+                      return code.isEmpty || EcosystemCode.isValid(code)
+                          ? null
+                          : 'ingredient_form_item_code_invalid'.tr;
+                    },
+                  ),
                 ],
               ),
             ),

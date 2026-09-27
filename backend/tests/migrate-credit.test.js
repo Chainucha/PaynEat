@@ -21,9 +21,12 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret';
 process.env.DATABASE_FILE = dbFile;
 
-/** schema.sql ปัจจุบันถอยกลับเป็นรุ่นก่อน ticket 20 เฉพาะส่วน payments ที่เปลี่ยน */
+/** baseline (schema.sql เดิม) ถอยกลับเป็นรุ่นก่อน ticket 20 เฉพาะส่วน payments ที่เปลี่ยน */
 const legacySchema = () => {
-  const current = fs.readFileSync(path.join(here, '../src/db/schema.sql'), 'utf8');
+  const current = fs.readFileSync(
+    path.join(here, '../src/db/migrations/0001_baseline.sql'),
+    'utf8',
+  );
   // คงคอมเมนต์ที่เอ่ยถึง 'credit' ไว้ในนิยามตารางโดยตั้งใจ — migrate.js ต้องดูที่ CHECK จริง ไม่ใช่
   // แค่ค้นข้อความ (รอบแรกค้นทั้งข้อความแล้วถูกคอมเมนต์หลอกว่าย้ายไปแล้ว)
   const legacy = current

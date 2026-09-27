@@ -48,8 +48,8 @@ android {
 
     defaultConfig {
         // ห้ามเปลี่ยนหลังอัปโหลดขึ้น Google Play ครั้งแรก: Play ผูกแอปกับ applicationId ตลอดไป
-        // (docs/store/README.md, DECISIONS #75)
-        applicationId = "com.payneat.payneat_pos"
+        // (docs/store/README.md, DECISIONS #75, #78) — namespace ด้านบนเป็นแค่ package ของโค้ด Kotlin ไม่ต้องตรงกัน
+        applicationId = "suruch.boss.payneat"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

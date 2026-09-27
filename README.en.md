@@ -1912,7 +1912,8 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
 - [x] **A Google Play channel (ticket 29a)** — done: CI builds an `.aab` signed with the upload key from GitHub Secrets
   when a tag is pushed (`versionCode` from the tag, attached to the GitHub Release), in demo mode for closed testing;
   the PaynEat app icon replaces the Flutter logo; a privacy policy page in three languages; Data safety answers and
-  Thai/English store text and images under `docs/store/` (see `docs/DECISIONS.md` #75). What is left happens in the
+  Thai/English store text and images under `docs/store/` (see `docs/DECISIONS.md` #75). The Play applicationId is
+  `suruch.boss.payneat` (#78). What is left happens in the
   owner's account: open a Play Console account, add the upload key to Secrets, and find 12 testers for 14 days in a row
 - [ ] **One Google Play app for every restaurant (ticket 29b)** — enter the shop server's address or scan a QR code on
   first start, or tap into demo mode with no server at all. Free, like everything else. Comes after ticket 25. The App

@@ -1713,7 +1713,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
 - [x] **ช่องทางขึ้น Google Play (ticket 29a)** — ทำแล้ว: CI build `.aab` ที่ลงนามด้วย upload key จาก GitHub Secrets เมื่อติด tag
   (`versionCode` จาก tag แนบกับ GitHub Release) เป็นโหมดสาธิตสำหรับการทดสอบแบบปิด, ไอคอนแอป PaynEat แทนโลโก้ Flutter,
   หน้านโยบายความเป็นส่วนตัวสามภาษา, คำตอบ Data safety และข้อความ/ภาพหน้า store ไทย-อังกฤษใน `docs/store/`
-  (ดู `docs/DECISIONS.md` #75) — ที่เหลือเป็นงานในบัญชีของเจ้าของ: เปิดบัญชี Play Console, ใส่ upload key ใน Secrets
+  (ดู `docs/DECISIONS.md` #75) ชื่อแอปบน Play (applicationId) คือ `suruch.boss.payneat` (#78) — ที่เหลือเป็นงานในบัญชีของเจ้าของ: เปิดบัญชี Play Console, ใส่ upload key ใน Secrets
   และหาผู้ทดสอบ 12 คนต่อเนื่อง 14 วัน
 - [ ] **แอปบน Google Play ใช้ได้ทุกร้าน (ticket 29b)** — ใส่ที่อยู่เซิร์ฟเวอร์ร้านหรือสแกน QR ตอนเปิดครั้งแรก และกดลองโหมดสาธิต
   ได้โดยไม่มีเซิร์ฟเวอร์ ฟรีเหมือนเดิม ทำหลัง ticket 25 — App Store ตามมาเมื่อมีร้านขอ ส่วนเซิร์ฟเวอร์ยังติดตั้งในร้าน

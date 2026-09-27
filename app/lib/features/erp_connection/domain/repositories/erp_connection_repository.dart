@@ -21,6 +21,10 @@ abstract class ErpConnectionRepository {
 
   Future<Result<ErpPullOutcome>> pullNow();
 
+  /// "สร้างสาขานี้ในเครื่อง" สำหรับสาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี (admin) — backend ดึงข้อมูลก่อนเสมอ
+  /// และตอบ 409 ถ้ามีรหัสนี้ในเครื่องแล้ว (เช่น ERP เพิ่งย้ายสาขาเดิมมาใช้รหัสนี้) คืนสถานะหลังสร้าง
+  Future<Result<ErpConnectionStatus>> createServedBranch(String code);
+
   /// แก้รหัสสาขาในเครื่อง (ใช้งานเดี่ยวเท่านั้น — โหมดเชื่อมต่อ backend ตอบ 409)
   Future<Result<void>> updateBranchCode(int branchId, String code);
 }

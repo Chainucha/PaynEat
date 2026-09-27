@@ -46,6 +46,7 @@ class AuditLogAction {
   // โหมดเชื่อมต่อ PaynEat ERP (ticket 25)
   static const String erpConnect = 'erp.connect';
   static const String erpDisconnect = 'erp.disconnect';
+  static const String erpBranchCreate = 'erp.branch_create';
 
   static const List<String> all = [
     orderCreate,
@@ -80,6 +81,7 @@ class AuditLogAction {
     receivableDocumentEmail,
     erpConnect,
     erpDisconnect,
+    erpBranchCreate,
   ];
 
   static const Map<String, String> _keys = {
@@ -115,6 +117,7 @@ class AuditLogAction {
     receivableDocumentEmail: 'audit_log_action_receivable_document_email',
     erpConnect: 'audit_log_action_erp_connect',
     erpDisconnect: 'audit_log_action_erp_disconnect',
+    erpBranchCreate: 'audit_log_action_erp_branch_create',
   };
 
   static String translationKey(String action) => _keys[action] ?? action;

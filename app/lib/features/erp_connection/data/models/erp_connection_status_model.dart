@@ -43,6 +43,7 @@ class ErpConnectionStatusModel {
               at: error['at'] as String?,
             ),
       credentialRejected: json['credentialRejected'] as bool? ?? false,
+      pullStopped: json['pullStopped'] as bool? ?? false,
       retryAfter: json['retryAfter'] as String?,
     );
   }

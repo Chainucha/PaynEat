@@ -58,6 +58,9 @@ const count = (sql, ...params) =>
 
 /** บรรทัด log ของโมดูล ERP (ไม่นับ http.request.completed ของ API POS เอง) */
 const erpLines = (from = 0) => logs.slice(from).filter((line) => /PaynEat ERP/.test(line.message));
+/** บรรทัดของการดึงที่ล้มเหลว (event ตามสัญญา telemetry v1.2) */
+const pullFailures = (from = 0) =>
+  logs.slice(from).filter((line) => line.labels.event === 'master_data.pull.failed');
 
 test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่ใช้งานเดี่ยวจนออกจากโหมด', async (t) => {
   const admin = await login('admin', 'admin123');
@@ -203,12 +206,19 @@ test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่�
       assert.equal(unreachable.body.error.code, 'ERP_UNREACHABLE');
 
       assert.equal((await get('/api/v1/erp/mode', admin.token)).body.data.mode, 'standalone');
-      // ยังไม่รู้ว่าเป็น instance ไหน จึงไม่มี pos_instance (สัญญาห้ามเดา) แต่บอก reason ที่ ERP ส่งมา
-      const failed = erpLines(logFrom);
+      // ยังไม่รู้ว่าเป็น instance ไหน จึงไม่มี pos_instance (สัญญาห้ามเดา) แต่บอก reason ตามสัญญา telemetry v1.2
+      // ERROR = ต้องมีคนมาจัดการ (credential/สัญญา), WARNING = ลองใหม่ได้เอง (เน็ต)
+      const failed = pullFailures(logFrom);
       assert.equal(failed.length, 3);
       assert.ok(failed.every((line) => line.labels.pos_instance === undefined));
-      assert.equal(failed[0].labels.reason, 'credential_unknown');
-      assert.equal(failed[0].severity, 'WARNING');
+      assert.deepEqual(
+        failed.map((line) => [line.labels.reason, line.severity]),
+        [
+          ['credential_unknown', 'ERROR'],
+          ['contract_unsupported', 'ERROR'],
+          ['erp_unreachable', 'WARNING'],
+        ],
+      );
     },
   );
 
@@ -416,18 +426,22 @@ test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่�
       assert.equal(status.appliedVersion, 11);
       assert.equal(status.lastError.kind, 'unavailable');
       assert.equal(status.lastError.status, 503);
+      assert.equal(status.lastError.reason, 'rate_limited', '503 ที่มี Retry-After = rate_limited');
       assert.ok(status.retryAfter);
+      assert.equal(status.pullStopped, false, 'รอตาม Retry-After แล้วดึงต่อเองได้');
       assert.equal(
         count("SELECT COUNT(*) AS c FROM erp_items WHERE item_code IN ('SUGAR', 'FLOUR')"),
         2,
       );
 
-      const line = erpLines(logFrom).find((l) => l.severity === 'WARNING');
+      const [line] = pullFailures(logFrom);
       assert.equal(
         line.labels.pos_instance,
         'POS-SUKHUMVIT-1',
         'บรรทัดที่ล้มเหลวก็มี pos_instance',
       );
+      assert.equal(line.severity, 'WARNING');
+      assert.equal(line.labels.reason, 'rate_limited');
       assert.equal(line.error.type, 'unavailable');
 
       // ตามรอบเวลา: ยังไม่ถึงเวลาที่ ERP ขอให้รอ ไม่เรียก ERP เลย
@@ -473,6 +487,156 @@ test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่�
     },
   );
 
+  await t.test('สร้างสาขานี้ในเครื่อง: ไม่ใช่ admin ได้ 403 และไม่เรียก ERP', async () => {
+    stub.state.instance = instanceBody({
+      branches: [
+        ...instanceBody().branches,
+        { code: 'SILOM', nameTh: 'สาขาสีลม', nameEn: 'Silom', active: true },
+      ],
+    });
+    const from = stub.state.requests.length;
+    const branches = count('SELECT COUNT(*) AS c FROM branches');
+    const res = await post('/api/v1/erp/branches', manager.token, { code: 'SILOM' });
+    assert.equal(res.status, 403);
+    assert.equal(stub.state.requests.length, from);
+    assert.equal(count('SELECT COUNT(*) AS c FROM branches'), branches);
+  });
+
+  await t.test(
+    'สร้างสาขานี้ในเครื่อง: ดึงข้อมูลก่อน แล้วสร้างด้วยรหัสและชื่อไทยจาก ERP พร้อมวัตถุดิบ mirror และ audit log',
+    async () => {
+      // ERP เพิ่งให้เครื่องนี้ดูแลสีลมด้วย และเปลี่ยนชื่อสีลมไว้ในเวอร์ชันที่ยังไม่ได้ดึง
+      stub.state.changes.push(locationChange(16, 'SILOM', { nameTh: 'สาขาสีลม คอมเพล็กซ์' }));
+      const from = stub.state.requests.length;
+      const logFrom = logs.length;
+      const res = await post('/api/v1/erp/branches', admin.token, { code: 'SILOM' });
+      assert.equal(res.status, 201);
+      assert.equal(
+        stub.requestsTo('/api/v1/master-data/changes', from)[0].query.since,
+        '15',
+        'ดึงก่อนสร้าง',
+      );
+
+      const { branchId, status } = res.body.data;
+      const silom = getDb().prepare('SELECT * FROM branches WHERE id = ?').get(branchId);
+      assert.deepEqual(
+        [silom.code, silom.name, silom.is_active],
+        ['SILOM', 'สาขาสีลม คอมเพล็กซ์', 1],
+        'ชื่อไทยล่าสุดของ ERP ไม่ใช่ชื่อในรายการสาขาที่ค้างไว้',
+      );
+      assert.equal(status.connection.appliedVersion, 16);
+      assert.equal(status.servedBranches.find((b) => b.code === 'SILOM').localBranchId, branchId);
+
+      // วัตถุดิบ mirror ของทุกรายการสินค้าที่ดึงมาแล้ว ยอดในเครื่องเริ่มที่ 0
+      assert.equal(
+        count('SELECT COUNT(*) AS c FROM ingredients WHERE branch_id = ?', branchId),
+        count('SELECT COUNT(*) AS c FROM erp_items'),
+      );
+      assert.equal(
+        count(
+          'SELECT COUNT(*) AS c FROM ingredients WHERE branch_id = ? AND (item_code IS NULL OR current_stock <> 0)',
+          branchId,
+        ),
+        0,
+      );
+
+      const audit = await get('/api/v1/audit-logs?action=erp.branch_create', admin.token);
+      const entry = audit.body.data.find((row) => row.action === 'erp.branch_create');
+      assert.equal(entry.entityType, 'branch');
+      assert.equal(entry.entityId, branchId);
+      assert.equal(entry.summary, 'สร้างสาขา "สาขาสีลม คอมเพล็กซ์" (SILOM) จาก PaynEat ERP');
+      const line = erpLines(logFrom).find((l) => /Created local branch/.test(l.message));
+      assert.equal(line.labels.pos_instance, 'POS-SUKHUMVIT-1');
+      assert.equal(line.labels.location_code, 'SILOM');
+
+      // กดซ้ำ = 409 พร้อมเหตุผล; รหัสที่ ERP ไม่ได้ให้ดูแล = 409 เช่นกัน ไม่สร้างอะไรเลย
+      const branches = count('SELECT COUNT(*) AS c FROM branches');
+      const again = await post('/api/v1/erp/branches', admin.token, { code: 'SILOM' });
+      assert.equal(again.status, 409);
+      assert.equal(again.body.error.code, 'BRANCH_ALREADY_LOCAL');
+      const notServed = await post('/api/v1/erp/branches', admin.token, { code: 'CHIANGMAI' });
+      assert.equal(notServed.status, 409);
+      assert.equal(notServed.body.error.code, 'BRANCH_NOT_SERVED');
+      const english = await post('/api/v1/erp/branches', admin.token, {
+        code: 'CHIANGMAI',
+      }).set('Accept-Language', 'en');
+      assert.match(english.body.error.message, /doesn't assign/);
+      assert.equal(count('SELECT COUNT(*) AS c FROM branches'), branches);
+      // การสร้างสาขาเองยังถูกปิดในโหมดเชื่อมต่อ
+      const manual = await post('/api/v1/branches', admin.token, { name: 'สาขาเอง', code: 'MINE' });
+      assert.equal(manual.body.error.code, 'MANAGED_BY_ERP');
+    },
+  );
+
+  await t.test(
+    'สร้างสาขานี้ในเครื่อง: ERP เพิ่งเปลี่ยนรหัสสาขาที่มีอยู่แล้ว — ใช้การเปลี่ยนรหัสก่อน ไม่ได้สาขาซ้ำ',
+    async () => {
+      // หน้าตั้งค่ายังแสดงข้อมูลก่อนดึงรอบนี้: ERP ให้ดูแล SILOM-CX (รหัสใหม่ของสีลม) ซึ่งในเครื่องยังไม่มี
+      const silom = getDb().prepare("SELECT * FROM branches WHERE code = 'SILOM'").get();
+      stub.state.instance = instanceBody({
+        branches: [
+          ...instanceBody().branches,
+          {
+            code: 'SILOM-CX',
+            nameTh: 'สาขาสีลม คอมเพล็กซ์',
+            nameEn: 'Silom Complex',
+            active: true,
+          },
+        ],
+      });
+      stub.state.changes.push(
+        locationChange(17, 'SILOM-CX', { action: 'created', nameTh: 'สาขาสีลม คอมเพล็กซ์' }),
+        locationChange(18, 'SILOM', {
+          active: false,
+          supersededBy: { id: '00000000-0000-4000-8000-000000009998', locationCode: 'SILOM-CX' },
+        }),
+      );
+      const branches = count('SELECT COUNT(*) AS c FROM branches');
+      const res = await post('/api/v1/erp/branches', admin.token, { code: 'SILOM-CX' });
+      assert.equal(res.status, 409);
+      assert.equal(res.body.error.code, 'BRANCH_ALREADY_LOCAL');
+      assert.equal(res.body.error.details.branchId, silom.id);
+      assert.equal(count('SELECT COUNT(*) AS c FROM branches'), branches, 'ไม่มีสาขาซ้ำ');
+      const moved = getDb().prepare('SELECT * FROM branches WHERE id = ?').get(silom.id);
+      assert.equal(moved.code, 'SILOM-CX', 'สาขาเดิม (id เดิม) ย้ายไปใช้รหัสใหม่');
+      assert.equal(count("SELECT COUNT(*) AS c FROM branches WHERE code = 'SILOM'"), 0);
+    },
+  );
+
+  await t.test(
+    'คำตอบผิดสัญญา: ERROR unexpected_response หยุดดึงตามรอบเวลา กดดึงเองแล้วกลับมาดึงตามรอบ',
+    async () => {
+      stub.state.failures.push({
+        path: '/api/v1/pos/instance',
+        status: 200,
+        body: '<html>proxy login</html>',
+      });
+      const logFrom = logs.length;
+      const failed = await post('/api/v1/erp/pull', admin.token);
+      assert.equal(failed.status, 502);
+      assert.equal(failed.body.error.code, 'ERP_BAD_RESPONSE');
+      const [line] = pullFailures(logFrom);
+      assert.deepEqual(
+        [line.severity, line.labels.reason, line.labels.pos_instance],
+        ['ERROR', 'unexpected_response', 'POS-SUKHUMVIT-1'],
+      );
+      const stopped = (await get('/api/v1/erp/connection', admin.token)).body.data.connection;
+      assert.equal(stopped.pullStopped, true);
+      assert.equal(stopped.lastError.reason, 'unexpected_response');
+
+      const quietFrom = stub.state.requests.length;
+      assert.equal(await erpService.pull(), undefined, 'ตามรอบเวลา: หยุดรอคน');
+      assert.equal(stub.state.requests.length, quietFrom);
+
+      const resumed = await post('/api/v1/erp/pull', admin.token);
+      assert.equal(resumed.status, 200);
+      assert.equal(resumed.body.data.status.connection.pullStopped, false);
+      assert.equal(resumed.body.data.status.connection.lastError, null);
+      await erpService.pull();
+      assert.ok(stub.state.requests.length > quietFrom + 2, 'ตามรอบเวลากลับมาเรียก ERP');
+    },
+  );
+
   await t.test(
     'credential ถูกเพิกถอน: หยุดเรียก ERP จนกว่าจะบันทึก credential ใหม่ แล้วดึงต่อจากเดิม',
     async () => {
@@ -481,9 +645,10 @@ test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่�
       const rejected = await post('/api/v1/erp/pull', admin.token);
       assert.equal(rejected.status, 422);
       assert.equal(rejected.body.error.code, 'ERP_CREDENTIAL_REJECTED');
-      const line = erpLines(logFrom).find((l) => l.severity === 'WARNING');
+      const [line] = pullFailures(logFrom);
       assert.equal(line.labels.pos_instance, 'POS-SUKHUMVIT-1');
       assert.equal(line.labels.reason, 'credential_revoked');
+      assert.equal(line.severity, 'ERROR', 'หยุดจนกว่าจะมีคนมาจัดการ = ERROR');
 
       const quietFrom = stub.state.requests.length;
       assert.equal(await erpService.pull(), undefined, 'ตามรอบเวลา: ไม่เรียก ERP');
@@ -492,6 +657,7 @@ test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่�
       assert.equal(stub.state.requests.length, quietFrom, 'ไม่มีคำขอไปถึง ERP เลย');
       const status = (await get('/api/v1/erp/connection', admin.token)).body.data.connection;
       assert.equal(status.credentialRejected, true);
+      assert.equal(status.pullStopped, true);
 
       // ผู้ดูแล ERP ออก credential ใหม่ → บันทึก → ดึงต่อจากเวอร์ชันเดิม ไม่เริ่มใหม่จาก 0
       const fresh = `pnepos_${'N'.repeat(43)}`;
@@ -501,18 +667,28 @@ test('โหมดเชื่อมต่อ PaynEat ERP ตั้งแต่�
       const saved = await connect(admin.token, { credential: fresh });
       assert.equal(saved.status, 200);
       assert.equal(saved.body.data.connection.credentialRejected, false);
-      assert.equal(stub.requestsTo('/api/v1/master-data/changes', from)[0].query.since, '15');
+      assert.equal(saved.body.data.connection.pullStopped, false);
+      assert.equal(stub.requestsTo('/api/v1/master-data/changes', from)[0].query.since, '18');
     },
   );
 
   await t.test(
-    'ทุกบรรทัด log เรื่องการดึงหลังเชื่อมต่อมี pos_instance และไม่มี credential',
+    'ทุกบรรทัด log เรื่องการดึงหลังเชื่อมต่อใช้ event ของสัญญา มี pos_instance และไม่มี credential',
     async () => {
       const pulled = logs.filter((line) => /master data/.test(line.message));
       assert.ok(pulled.length >= 5);
       assert.ok(pulled.every((line) => line.labels.pos_instance === 'POS-SUKHUMVIT-1'));
       assert.ok(pulled.some((line) => /now at version 13/.test(line.message)));
-      assert.ok(pulled.every((line) => line.labels.event === 'app.log'));
+      // telemetry v1.2: สำเร็จ = master_data.pull.completed (INFO), ล้ม = master_data.pull.failed พร้อม reason
+      for (const line of pulled) {
+        if (line.labels.event === 'master_data.pull.completed') {
+          assert.equal(line.severity, 'INFO');
+        } else {
+          assert.equal(line.labels.event, 'master_data.pull.failed');
+          assert.ok(['WARNING', 'ERROR'].includes(line.severity));
+          assert.ok(line.labels.reason);
+        }
+      }
       const everything = JSON.stringify(logs);
       assert.ok(!everything.includes(CREDENTIAL) && !everything.includes('N'.repeat(43)));
     },

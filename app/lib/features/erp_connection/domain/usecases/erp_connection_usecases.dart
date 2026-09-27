@@ -63,6 +63,17 @@ class PullErpNowUseCase implements NoParamsUseCase<ErpPullOutcome> {
   Future<Result<ErpPullOutcome>> call() => _repository.pullNow();
 }
 
+class CreateServedBranchUseCase
+    implements UseCase<ErpConnectionStatus, String> {
+  const CreateServedBranchUseCase(this._repository);
+
+  final ErpConnectionRepository _repository;
+
+  @override
+  Future<Result<ErpConnectionStatus>> call(String code) =>
+      _repository.createServedBranch(code);
+}
+
 class UpdateBranchCodeParams {
   const UpdateBranchCodeParams({required this.branchId, required this.code});
 

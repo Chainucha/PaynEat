@@ -15,6 +15,7 @@ abstract class ErpConnectionRemoteDataSource {
   });
   Future<ErpConnectionStatus> disconnect();
   Future<ErpPullOutcome> pullNow();
+  Future<ErpConnectionStatus> createServedBranch(String code);
   Future<void> updateBranchCode(int branchId, String code);
 }
 
@@ -59,6 +60,17 @@ class ErpConnectionRemoteDataSourceImpl
   Future<ErpPullOutcome> pullNow() async {
     final result = await _client.post(ApiEndpoints.erpPull);
     return ErpConnectionStatusModel.pullFromJson(result.asMap);
+  }
+
+  @override
+  Future<ErpConnectionStatus> createServedBranch(String code) async {
+    final result = await _client.post(
+      ApiEndpoints.erpBranches,
+      body: {'code': code},
+    );
+    return ErpConnectionStatusModel.fromJson(
+      (result.asMap['status'] as Map?)?.cast<String, dynamic>() ?? const {},
+    );
   }
 
   @override

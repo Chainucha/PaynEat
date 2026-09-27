@@ -54,6 +54,7 @@ class ErpConnectionInfo {
     this.lastPullAt,
     this.lastError,
     this.credentialRejected = false,
+    this.pullStopped = false,
     this.retryAfter,
   });
 
@@ -67,6 +68,10 @@ class ErpConnectionInfo {
   final String? lastPullAt;
   final ErpPullError? lastError;
   final bool credentialRejected;
+
+  /// ดึงตามรอบเวลาหยุดไว้จนกว่าจะมีคนแก้ต้นเหตุ (ERP ตอบผิดสัญญา, สัญญา major อื่น, credential ใช้ไม่ได้)
+  /// — กด "ดึงทันที" ได้ ถ้าสำเร็จ backend กลับมาดึงตามรอบเอง
+  final bool pullStopped;
   final String? retryAfter;
 }
 

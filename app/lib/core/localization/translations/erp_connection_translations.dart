@@ -46,6 +46,14 @@ const Map<String, String> erpConnectionTranslationsTh = {
   'erp_branches_not_served_note':
       'ตรวจกับผู้ดูแล ERP ว่าลงทะเบียนสาขาให้ POS เครื่องนี้ครบหรือยัง',
   'erp_served_missing_title': 'สาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี',
+  'erp_served_missing_note':
+      'กด "สร้างในเครื่อง" เพื่อเพิ่มสาขาด้วยรหัสและชื่อจาก ERP แล้วกำหนดพนักงานให้สาขาที่หน้าพนักงาน',
+  'erp_branch_create_button': 'สร้างในเครื่อง',
+  'erp_branch_create_title': 'สร้างสาขานี้ในเครื่อง?',
+  'erp_branch_create_confirm':
+      'สร้างสาขา "@name" (@code) ด้วยรหัสและชื่อจาก PaynEat ERP — ระบบดึงข้อมูลล่าสุดก่อน ถ้า ERP เพิ่งเปลี่ยนรหัสสาขาเดิมเป็นรหัสนี้ สาขาเดิมจะย้ายมาใช้รหัสนี้แทนการสร้างสาขาซ้ำ',
+  'erp_branch_created_notice':
+      'สร้างสาขา @name (@code) แล้ว — กำหนดพนักงานให้สาขานี้ที่หน้าพนักงาน',
   'erp_branch_superseded':
       'ERP เปลี่ยนเป็นรหัส @code แต่ในเครื่องมีสาขารหัสนั้นอยู่แล้ว',
   'erp_stock_note':
@@ -71,6 +79,8 @@ const Map<String, String> erpConnectionTranslationsTh = {
       'ERP ใช้สัญญาเวอร์ชันที่ POS รุ่นนี้ไม่รองรับ — อัปเดต POS',
   'erp_last_error_refused': 'ERP ปฏิเสธคำขอ — ตรวจที่อยู่และ proxy',
   'erp_last_error_other': 'ดึงครั้งล่าสุดไม่สำเร็จ',
+  'erp_pull_stopped_note':
+      'หยุดดึงตามรอบเวลาไว้จนกว่าจะแก้ต้นเหตุ — แก้แล้วกด "ดึงทันที" ระบบจะกลับมาดึงตามรอบเอง',
   'erp_managed_badge': 'จัดการใน PaynEat ERP',
   'erp_managed_banner':
       'วัตถุดิบจัดการใน PaynEat ERP — แก้ที่ ERP แล้วดึงข้อมูลใหม่ ยอดคงเหลือดูที่ ERP',
@@ -137,6 +147,14 @@ const Map<String, String> erpConnectionTranslationsEn = {
       'Check with the ERP administrator that every branch is registered for this POS',
   'erp_served_missing_title':
       'Branches the ERP assigns to this POS that are not on this device',
+  'erp_served_missing_note':
+      'Tap "Create here" to add the branch with the code and name from the ERP, then assign staff to it on the staff page',
+  'erp_branch_create_button': 'Create here',
+  'erp_branch_create_title': 'Create this branch on this device?',
+  'erp_branch_create_confirm':
+      'Create branch "@name" (@code) with the code and name from PaynEat ERP — the latest data is pulled first; if the ERP just moved an existing branch to this code, that branch takes the code instead of a duplicate being created',
+  'erp_branch_created_notice':
+      'Created branch @name (@code) — assign staff to it on the staff page',
   'erp_branch_superseded':
       'The ERP moved this branch to code @code, but a branch with that code already exists here',
   'erp_stock_note':
@@ -164,6 +182,8 @@ const Map<String, String> erpConnectionTranslationsEn = {
   'erp_last_error_refused':
       'The ERP refused the request — check the address and any proxy',
   'erp_last_error_other': 'The last pull failed',
+  'erp_pull_stopped_note':
+      'Scheduled pulls are stopped until the cause is fixed — fix it, then tap "Pull now" and scheduled pulls resume',
   'erp_managed_badge': 'Managed in PaynEat ERP',
   'erp_managed_banner':
       'Ingredients are managed in PaynEat ERP — change them there, then pull again. Stock on hand is in the ERP',
@@ -223,6 +243,13 @@ const Map<String, String> erpConnectionTranslationsKo = {
   'erp_branches_not_served_title': 'ERP가 이 POS에 맡기지 않은 이 기기의 지점',
   'erp_branches_not_served_note': 'ERP 관리자에게 이 POS의 지점이 모두 등록되었는지 확인하세요',
   'erp_served_missing_title': 'ERP가 맡겼지만 이 기기에 없는 지점',
+  'erp_served_missing_note':
+      '"이 기기에 만들기"를 눌러 ERP의 코드와 이름으로 지점을 추가한 뒤 직원 화면에서 직원을 배정하세요',
+  'erp_branch_create_button': '이 기기에 만들기',
+  'erp_branch_create_title': '이 지점을 이 기기에 만들까요?',
+  'erp_branch_create_confirm':
+      'PaynEat ERP의 코드와 이름으로 "@name"(@code) 지점을 만듭니다 — 먼저 최신 데이터를 가져오며, ERP가 기존 지점을 방금 이 코드로 옮겼다면 중복 지점을 만들지 않고 기존 지점이 이 코드를 씁니다',
+  'erp_branch_created_notice': '@name(@code) 지점을 만들었습니다 — 직원 화면에서 직원을 배정하세요',
   'erp_branch_superseded': 'ERP가 코드를 @code(으)로 바꿨지만 이 기기에 그 코드의 지점이 이미 있습니다',
   'erp_stock_note':
       '재고는 ERP가 관리합니다 — 이 기기의 재고로 메뉴가 자동 판매 중지되지 않으니 메뉴 화면에서 직접 중지하세요',
@@ -246,6 +273,8 @@ const Map<String, String> erpConnectionTranslationsKo = {
       'ERP가 이 POS 버전이 지원하지 않는 규약을 사용합니다 — POS를 업데이트하세요',
   'erp_last_error_refused': 'ERP가 요청을 거부했습니다 — 주소와 프록시를 확인하세요',
   'erp_last_error_other': '마지막 가져오기에 실패했습니다',
+  'erp_pull_stopped_note':
+      '원인을 고칠 때까지 주기적 가져오기를 멈췄습니다 — 고친 뒤 "지금 가져오기"를 누르면 주기적 가져오기가 다시 시작됩니다',
   'erp_managed_badge': 'PaynEat ERP에서 관리',
   'erp_managed_banner':
       '재료는 PaynEat ERP에서 관리합니다 — ERP에서 수정한 뒤 다시 가져오세요. 재고는 ERP에서 확인하세요',

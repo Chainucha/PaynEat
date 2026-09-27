@@ -6,7 +6,13 @@ import { env } from '../../config/env.js';
 import { getDb } from '../../db/index.js';
 import { writeLog } from '../../core/telemetry/logger.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
-import { erpClient, ErpCallError } from './erp.client.js';
+import {
+  erpClient,
+  ErpCallError,
+  failureSeverity,
+  integrationReason,
+  stopsUntilActedOn,
+} from './erp.client.js';
 import { LOCATION_CODE_PATTERN } from './erp.contract.js';
 import { erpRepository } from './erp.repository.js';
 
@@ -21,11 +27,28 @@ import { erpRepository } from './erp.repository.js';
 
 // ------------------------------------------------------------------------------------------ log
 
-/** บรรทัด log เรื่องการคุยกับ ERP — มี `pos_instance` เสมอเมื่อรู้ค่า (สัญญา telemetry v1.2) และไม่มี credential */
-const logErp = ({ severity, message, instanceCode, requestId, reason, error }) =>
+/**
+ * บรรทัด log เรื่องการคุยกับ ERP — มี `pos_instance` เสมอเมื่อรู้ค่า (สัญญา telemetry v1.2) และไม่มี credential
+ * บรรทัดเรื่องการดึงใช้ event ของสัญญา (`PULL_COMPLETED`/`PULL_FAILED`) ที่เหลือ (เชื่อมต่อ/ออก) เป็น `app.log`
+ */
+const PULL_COMPLETED = 'master_data.pull.completed';
+const PULL_FAILED = 'master_data.pull.failed';
+
+const logErp = ({
+  severity,
+  message,
+  event,
+  instanceCode,
+  requestId,
+  reason,
+  locationCode,
+  error,
+}) =>
   writeLog({
     severity,
     message,
+    event,
+    locationCode,
     labels: {
       ...(instanceCode ? { pos_instance: instanceCode } : {}),
       ...(reason ? { reason } : {}),
@@ -83,6 +106,8 @@ const toConnectionDto = (row) =>
         lastPullAt: row.last_pull_at,
         lastError: parseJson(row.last_error),
         credentialRejected: Boolean(row.credential_rejected),
+        // ดึงตามรอบเวลาหยุดไว้จนกว่าจะมีคนมาจัดการ (reason ใน lastError) — กด "ดึงทันที" เพื่อลองใหม่
+        pullStopped: Boolean(row.pull_stopped),
         retryAfter: row.retry_after,
         // บอกแค่ว่ามี credential บันทึกไว้ — ตัว credential ไม่เคยถูกส่งกลับหลังบันทึก
         credentialSaved: true,
@@ -102,7 +127,8 @@ const applyItem = (item) => {
 };
 
 /**
- * สาขาจับคู่ด้วยรหัสสถานที่กลาง — ERP ไม่สร้างสาขาใหม่ใน POS เอง (สาขาที่ยังไม่มีในเครื่องบอกไว้บนหน้าตั้งค่า)
+ * สาขาจับคู่ด้วยรหัสสถานที่กลาง — การดึงไม่สร้างสาขาใหม่ใน POS เอง (สาขาที่ยังไม่มีในเครื่องบอกไว้บนหน้าตั้งค่า
+ * และ admin กด "สร้างสาขานี้ในเครื่อง" ได้ — `createServedBranch`)
  * สาขาที่ถูกแทนด้วยรหัสใหม่ (`supersededBy`) ย้ายไปใช้รหัสใหม่ทั้งแถว id เดิม ประวัติการขายจึงตามไปด้วย
  */
 const applyLocation = (location) => {
@@ -219,6 +245,7 @@ const runPull = async () => {
     const version = erpRepository.find().applied_version;
     logErp({
       severity: 'INFO',
+      event: PULL_COMPLETED,
       message: `Pulled master data from PaynEat ERP: ${applied} changes applied, ${skipped} of unknown type skipped, in ${pages} pages; now at version ${version}`,
       instanceCode,
       requestId,
@@ -226,22 +253,26 @@ const runPull = async () => {
     return { applied, skipped, appliedVersion: version };
   } catch (error) {
     const kind = error instanceof ErpCallError ? error.kind : 'internal';
+    const reason = integrationReason(error);
+    const stopped = stopsUntilActedOn(error);
     erpRepository.recordPullFailure({
       error: {
         kind,
         status: error.status ?? null,
-        reason: error.reason ?? null,
+        reason: reason ?? null,
         at: new Date().toISOString(),
       },
       credentialRejected: kind === 'credential_rejected',
+      stopped,
       retryAfter: error instanceof ErpCallError ? retryAfterFrom(error) : undefined,
     });
     logErp({
-      severity: kind === 'internal' ? 'ERROR' : 'WARNING',
-      message: `Pulling master data from PaynEat ERP failed after ${applied} changes: ${kind}`,
+      severity: failureSeverity(error),
+      event: PULL_FAILED,
+      message: `Pulling master data from PaynEat ERP failed after ${applied} changes: ${kind}${stopped ? '; scheduled pulls stopped until someone acts' : ''}`,
       instanceCode,
       requestId,
-      reason: error.reason,
+      reason,
       error: describeCall(error),
     });
     throw error;
@@ -364,11 +395,13 @@ export const erpService = {
     try {
       instance = await erpClient.getInstance({ baseUrl: erpUrl, credential });
     } catch (error) {
-      // ยังไม่รู้ว่า credential นี้เป็น instance ไหน จึงไม่มี pos_instance (สัญญาห้ามเดา)
+      // การดึงรอบแรกล้มตั้งแต่ถาม instance — ยังไม่รู้ว่า credential นี้เป็น instance ไหน จึงไม่มี pos_instance
+      // (สัญญาห้ามเดา) และไม่มีอะไรถูกบันทึก ผู้ดูแลเห็นเหตุผลบนหน้าจอทันที
       logErp({
-        severity: 'WARNING',
+        severity: failureSeverity(error),
+        event: PULL_FAILED,
         message: `Connecting to PaynEat ERP failed: ${error.kind ?? 'internal'}`,
-        reason: error.reason,
+        reason: integrationReason(error),
         error: describeCall(error),
       });
       throw toApiError(error);
@@ -445,6 +478,7 @@ export const erpService = {
   /**
    * ดึง master data หนึ่งรอบ (ตามรอบเวลา หรือเมื่อกด "ดึงทันที") — รอบที่กำลังดึงอยู่ถูกใช้ร่วมกัน ไม่ดึงซ้อนกัน
    * `manual`: ผู้ใช้กดเอง ได้เหตุผลกลับไปเป็น ApiError; ตามรอบเวลาข้ามเงียบ ๆ เมื่อยังไม่ถึงเวลาหรือต้องรอคน
+   * (`pull_stopped`: รอบก่อนล้มด้วยเหตุที่ลองใหม่เองไม่ช่วย — กดดึงเองได้ ถ้าสำเร็จรอบเวลากลับมาทำงาน)
    */
   async pull({ manual = false } = {}) {
     const row = erpRepository.find();
@@ -462,6 +496,7 @@ export const erpService = {
       }
       return undefined;
     }
+    if (!manual && row.pull_stopped) return undefined;
     if (!manual && row.retry_after && Date.parse(row.retry_after) > Date.now()) return undefined;
 
     inFlight ??= runPull().finally(() => {
@@ -472,6 +507,61 @@ export const erpService = {
     } catch (error) {
       throw toApiError(error);
     }
+  },
+
+  /**
+   * ปุ่ม "สร้างสาขานี้ในเครื่อง" (ข้อ 3 ที่ POS PO ตัดสินใน PR #121, DECISIONS #80) — สร้างสาขาที่ ERP ให้เครื่องนี้ดูแล
+   * แต่ในเครื่องยังไม่มี ด้วยรหัสและชื่อไทยของ ERP
+   *
+   * ดึง master data ให้ครบก่อนเสมอ: ถ้า ERP เพิ่งเปลี่ยนรหัสสาขาเดิมเป็นรหัสนี้ (`supersededBy`) การดึงย้ายสาขาเดิมไปใช้
+   * รหัสใหม่ก่อน แล้วค่อยเช็คว่ารหัสนี้มีในเครื่องหรือยัง จึงไม่ได้สาขาซ้ำที่ประวัติการขายแยกกันสองแถว
+   * สร้างได้เฉพาะรหัสที่ ERP ให้ instance นี้ดูแล — สาขาอื่นยังสร้างเองไม่ได้ (`MANAGED_BY_ERP`)
+   */
+  async createServedBranch({ code }, actingUser) {
+    await this.pull({ manual: true });
+
+    const served = erpRepository.findInstanceBranches().find((b) => b.location_code === code);
+    if (!served) {
+      throw new ApiError(409, 'PaynEat ERP ไม่ได้ให้เครื่องนี้ดูแลสาขารหัสนี้', {
+        code: 'BRANCH_NOT_SERVED',
+      });
+    }
+    const existing = erpRepository.findBranchByCode(code);
+    if (existing) {
+      throw new ApiError(409, 'มีสาขารหัสนี้ในเครื่องแล้ว', {
+        code: 'BRANCH_ALREADY_LOCAL',
+        details: { branchId: existing.id, name: existing.name },
+      });
+    }
+
+    // ชื่อ/สถานะจาก change log ของสถานที่ถ้าดึงมาแล้ว (ใหม่กว่า) ไม่งั้นจากรายการสาขาของ instance
+    const location = erpRepository.findLocation(code);
+    const name = location?.name_th ?? served.name_th;
+    const isActive = Boolean(location ? location.is_active : served.is_active);
+    const instanceCode = erpRepository.find().instance_code;
+
+    let branchId;
+    let ingredients;
+    getDb().transaction(() => {
+      branchId = Number(erpRepository.createBranchFromErp({ code, name, isActive }));
+      ingredients = erpRepository.mirrorItemsIntoBranch(branchId);
+      auditLogService.log({
+        actorUser: actingUser,
+        action: 'erp.branch_create',
+        summaryArgs: { name, code },
+        entityType: 'branch',
+        entityId: branchId,
+        summary: `สร้างสาขา "${name}" (${code}) จาก PaynEat ERP`,
+        metadata: { instanceCode, code, name, isActive, mirroredIngredients: ingredients },
+      });
+    })();
+    logErp({
+      severity: 'INFO',
+      message: `Created local branch ${code} from PaynEat ERP with ${ingredients} mirrored ingredients`,
+      instanceCode,
+      locationCode: code,
+    });
+    return { branchId, status: this.status() };
   },
 };
 

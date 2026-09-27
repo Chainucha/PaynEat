@@ -35,6 +35,58 @@ export class ErpCallError extends Error {
   }
 }
 
+/**
+ * `reason` ของบรรทัด log เรื่องการคุยกับ ERP ฝั่ง POS ตามสัญญา telemetry v1.2 ("Additions to v1.2", PaynEat-ERP#57)
+ * ใช้ร่วมกันระหว่าง `master_data.pull.failed` (ticket 25) และ `outbox.delivery.failed` (ticket 26):
+ * - `details.reason` ที่ ERP ส่งมาเอง ถ้ามี (`credential_revoked`, `credential_unknown`, และค่าของ 422 ในยอดขาย)
+ * - `erp_unreachable` — เน็ตหลุด หมดเวลา หรือ 5xx
+ * - `rate_limited` — 429 หรือ 503 ที่มี `Retry-After`
+ * - `unexpected_response` — สถานะอื่น (รวม 401 ที่ body ไม่บอกเหตุผล) หรือ 2xx ที่ body ไม่ตรงสัญญา
+ * - `contract_unsupported` — ERP ใช้สัญญา major ที่ POS รุ่นนี้ไม่รองรับ
+ * error ที่ไม่ใช่ ErpCallError (บั๊กของ POS เอง) ไม่มี reason — ไม่เดา
+ */
+export const integrationReason = (error) => {
+  if (!(error instanceof ErpCallError)) return undefined;
+  if (error.reason) return error.reason;
+  switch (error.kind) {
+    case 'network':
+      return 'erp_unreachable';
+    case 'unavailable':
+      return error.status === 503 && error.retryAfterSeconds !== undefined
+        ? 'rate_limited'
+        : 'erp_unreachable';
+    case 'rate_limited':
+      return 'rate_limited';
+    case 'unsupported_contract':
+      return 'contract_unsupported';
+    default:
+      return 'unexpected_response';
+  }
+};
+
+/**
+ * reason ที่ทำให้ POS หยุดเรียก ERP เองจนกว่าจะมีคนมาจัดการ (สัญญา telemetry v1.2) — เรียกซ้ำไม่ช่วย:
+ * credential ใช้ไม่ได้ต้องบันทึกใหม่, คำตอบผิดสัญญาต้องมีคนดูว่าที่อยู่หรือ ERP ถูกไหม, สัญญา major ใหม่ต้องอัปเดต POS
+ */
+export const STOPPING_REASONS = new Set([
+  'credential_revoked',
+  'credential_unknown',
+  'unexpected_response',
+  'contract_unsupported',
+]);
+
+/**
+ * POS หยุดเรียกเองจนกว่าจะมีคนมาจัดการไหม: reason ในรายการข้างบน, 401 ทุกแบบ (รวม reason ที่ ERP เพิ่มใน 1.x
+ * ภายหลัง), หรือ error ที่ไม่ใช่ ErpCallError (บั๊กของ POS — หน้าเดิมจะล้มซ้ำทุกรอบ)
+ */
+export const stopsUntilActedOn = (error) =>
+  !(error instanceof ErpCallError) ||
+  error.kind === 'credential_rejected' ||
+  STOPPING_REASONS.has(integrationReason(error));
+
+/** severity ของบรรทัดที่ล้มเหลวตามสัญญา: หยุดรอคน = `ERROR`, ลองใหม่เองได้ = `WARNING` */
+export const failureSeverity = (error) => (stopsUntilActedOn(error) ? 'ERROR' : 'WARNING');
+
 /** `Retry-After` เป็นวินาทีหรือวันที่ HTTP → วินาที (ไม่ติดลบ) หรือ undefined */
 export const parseRetryAfter = (header, now = Date.now()) => {
   if (header === null || header === undefined || header === '') return undefined;

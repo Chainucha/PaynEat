@@ -148,6 +148,7 @@ class ApiEndpoints {
   static const String erpMode = '/erp/mode';
   static const String erpConnection = '/erp/connection';
   static const String erpPull = '/erp/pull';
+  static const String erpBranches = '/erp/branches';
 
   // AI assistant
   static const String aiAssistantAsk = '/ai/ask';

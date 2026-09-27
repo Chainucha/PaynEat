@@ -31,6 +31,10 @@ class ErpConnectionRepositoryImpl implements ErpConnectionRepository {
   Future<Result<ErpPullOutcome>> pullNow() => guard(_remote.pullNow);
 
   @override
+  Future<Result<ErpConnectionStatus>> createServedBranch(String code) =>
+      guard(() => _remote.createServedBranch(code));
+
+  @override
   Future<Result<void>> updateBranchCode(int branchId, String code) =>
       guard(() => _remote.updateBranchCode(branchId, code));
 }

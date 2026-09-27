@@ -45,6 +45,10 @@ class DemoErpConnectionDataSource implements ErpConnectionRemoteDataSource {
   Future<ErpPullOutcome> pullNow() => _delayed(_notInDemo);
 
   @override
+  Future<ErpConnectionStatus> createServedBranch(String code) =>
+      _delayed(_notInDemo);
+
+  @override
   Future<void> updateBranchCode(int branchId, String code) =>
       _delayed(_notInDemo);
 }

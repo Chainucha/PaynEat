@@ -5,7 +5,7 @@ import { Router } from 'express';
 import { authenticate, authorize } from '../../middlewares/auth.js';
 import { validate } from '../../middlewares/validate.js';
 import { erpController } from './erp.controller.js';
-import { connectErpSchema } from './erp.schema.js';
+import { connectErpSchema, createServedBranchSchema } from './erp.schema.js';
 
 const router = Router();
 const admin = authorize('admin');
@@ -24,5 +24,14 @@ router.put(
 );
 router.delete('/connection', authenticate, admin, erpController.disconnect);
 router.post('/pull', authenticate, admin, erpController.pull);
+
+// "สร้างสาขานี้ในเครื่อง" สำหรับสาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี — admin เท่านั้น ดึงข้อมูลก่อนสร้างเสมอ
+router.post(
+  '/branches',
+  authenticate,
+  admin,
+  validate({ body: createServedBranchSchema }),
+  erpController.createBranch,
+);
 
 export default router;

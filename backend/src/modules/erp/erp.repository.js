@@ -9,7 +9,7 @@ import { getDb } from '../../db/index.js';
  */
 const PUBLIC_COLUMNS = `
   base_url, instance_code, instance_name, contract_version, connected_at, applied_version,
-  latest_version, last_pull_at, last_error, credential_rejected, retry_after`;
+  latest_version, last_pull_at, last_error, credential_rejected, pull_stopped, retry_after`;
 
 export const erpRepository = {
   find() {
@@ -40,6 +40,7 @@ export const erpRepository = {
            connected_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
            last_error = NULL,
            credential_rejected = 0,
+           pull_stopped = 0,
            retry_after = NULL`,
       )
       .run(baseUrl, credential, instanceCode, instanceName, contractVersion, appliedVersion);
@@ -84,22 +85,23 @@ export const erpRepository = {
       .prepare(
         `UPDATE erp_connection
             SET last_pull_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), last_error = NULL,
-                retry_after = NULL
+                pull_stopped = 0, retry_after = NULL
           WHERE id = 1`,
       )
       .run();
   },
 
-  recordPullFailure({ error, credentialRejected, retryAfter }) {
+  recordPullFailure({ error, credentialRejected, stopped, retryAfter }) {
     getDb()
       .prepare(
         `UPDATE erp_connection
             SET last_error = ?,
                 credential_rejected = MAX(credential_rejected, ?),
+                pull_stopped = MAX(pull_stopped, ?),
                 retry_after = ?
           WHERE id = 1`,
       )
-      .run(JSON.stringify(error), credentialRejected ? 1 : 0, retryAfter ?? null);
+      .run(JSON.stringify(error), credentialRejected ? 1 : 0, stopped ? 1 : 0, retryAfter ?? null);
   },
 
   upsertItem(item) {
@@ -195,6 +197,23 @@ export const erpRepository = {
       const { changes } = update.run(name, unit, branch.id, itemCode);
       if (changes === 0) insert.run(name, unit, branch.id, itemCode);
     }
+  },
+
+  /** สร้างสาขาในเครื่องจากสาขาที่ ERP ให้ดูแล (ปุ่ม "สร้างสาขานี้ในเครื่อง") คืน id ของสาขาใหม่ */
+  createBranchFromErp({ code, name, isActive }) {
+    return getDb()
+      .prepare('INSERT INTO branches (name, code, is_active) VALUES (?, ?, ?)')
+      .run(name, code, isActive ? 1 : 0).lastInsertRowid;
+  },
+
+  /** วัตถุดิบ mirror ของทุกรายการสินค้าที่ดึงมาแล้วให้สาขาใหม่ — กติกาเดียวกับ upsertIngredientForAllBranches */
+  mirrorItemsIntoBranch(branchId) {
+    return getDb()
+      .prepare(
+        `INSERT OR IGNORE INTO ingredients (name, unit, branch_id, item_code)
+         SELECT name_th, base_unit_code, ?, item_code FROM erp_items`,
+      )
+      .run(branchId).changes;
   },
 
   /** เมนูที่ระบบสต๊อกปิดขายอัตโนมัติ → เปิดขายคืน (เข้าโหมดเชื่อมต่อ: ยอดในเครื่องไม่ใช่ความจริงแล้ว) */

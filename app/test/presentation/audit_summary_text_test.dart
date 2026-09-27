@@ -91,6 +91,26 @@ void main() {
     );
   });
 
+  test('สร้างสาขาจาก PaynEat ERP — ภาษาไทยตรงกับประโยคที่ backend บันทึก', () {
+    // backend: `สร้างสาขา "${name}" (${code}) จาก PaynEat ERP` (erp.service.js createServedBranch)
+    final created = log('erp.branch_create', {
+      'name': 'สาขาสีลม คอมเพล็กซ์',
+      'code': 'SILOM',
+    });
+    expect(
+      AuditSummaryText.render(created, lookup('th_TH')),
+      'สร้างสาขา "สาขาสีลม คอมเพล็กซ์" (SILOM) จาก PaynEat ERP',
+    );
+    expect(
+      AuditSummaryText.render(created, lookup('en_US')),
+      'Created branch "สาขาสีลม คอมเพล็กซ์" (SILOM) from PaynEat ERP',
+    );
+    expect(
+      AuditSummaryText.render(created, lookup('ko_KR')),
+      'PaynEat ERP에서 "สาขาสีลม คอมเพล็กซ์"(SILOM) 지점을 만듦',
+    );
+  });
+
   test(
     'log เก่าที่ไม่มี summaryArgs และ action ที่ไม่รู้จัก ถอยกลับไปใช้ประโยคที่บันทึกไว้',
     () {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { asyncHandler } from '../../core/asyncHandler.js';
-import { ok } from '../../core/response.js';
+import { created, ok } from '../../core/response.js';
 import { erpService } from './erp.service.js';
 
 export const erpController = {
@@ -18,6 +18,10 @@ export const erpController = {
     const result = await erpService.pull({ manual: true });
     return ok(res, { result, status: erpService.status() });
   }),
+
+  createBranch: asyncHandler(async (req, res) =>
+    created(res, await erpService.createServedBranch(req.body, req.user)),
+  ),
 };
 
 export default erpController;

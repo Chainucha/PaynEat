@@ -26,10 +26,14 @@ class _FakeErpRepository implements ErpConnectionRepository {
     ErpPullOutcome(applied: 4, skipped: 1, status: _connected),
   );
   Result<void> branchCodeResult = const Result.success(null);
+  Result<ErpConnectionStatus> createBranchResult = const Result.success(
+    _withSilom,
+  );
 
   int statusCalls = 0;
   final connectCalls = <(String, String)>[];
   final branchCodeCalls = <(int, String)>[];
+  final createBranchCalls = <String>[];
 
   @override
   Future<Result<ErpConnectionStatus>> getStatus() async {
@@ -53,6 +57,12 @@ class _FakeErpRepository implements ErpConnectionRepository {
 
   @override
   Future<Result<ErpPullOutcome>> pullNow() async => pullResult;
+
+  @override
+  Future<Result<ErpConnectionStatus>> createServedBranch(String code) async {
+    createBranchCalls.add(code);
+    return createBranchResult;
+  }
 
   @override
   Future<Result<void>> updateBranchCode(int branchId, String code) async {
@@ -88,6 +98,34 @@ const _connected = ErpConnectionStatus(
   ),
 );
 
+const _silom = ErpServedBranch(
+  code: 'SILOM',
+  nameTh: 'สาขาสีลม',
+  nameEn: 'Silom',
+  isActive: true,
+);
+
+/// หลังสร้างสาขา: ชื่อตามที่ ERP เพิ่งเปลี่ยน (ดึงก่อนสร้าง) ไม่ใช่ชื่อในรายการที่แอปถืออยู่
+const _withSilom = ErpConnectionStatus(
+  mode: ErpMode.connected,
+  connection: ErpConnectionInfo(
+    erpUrl: 'https://erp.example.com',
+    instanceCode: 'POS-SUKHUMVIT-1',
+    instanceName: 'Front counter',
+    contractVersion: '1.0.0',
+    appliedVersion: 16,
+  ),
+  branches: [
+    ErpBranchCheck(
+      id: 7,
+      name: 'สาขาสีลม คอมเพล็กซ์',
+      code: 'SILOM',
+      isActive: true,
+      servedByErp: true,
+    ),
+  ],
+);
+
 const _credential = 'pnepos_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefg';
 
 ErpConnectionController _controllerFor(ErpConnectionRepository repository) =>
@@ -97,6 +135,7 @@ ErpConnectionController _controllerFor(ErpConnectionRepository repository) =>
       disconnect: DisconnectErpUseCase(repository),
       pullNow: PullErpNowUseCase(repository),
       updateBranchCode: UpdateBranchCodeUseCase(repository),
+      createServedBranch: CreateServedBranchUseCase(repository),
     );
 
 void main() {
@@ -307,6 +346,91 @@ void main() {
         expect(controller.lastPullProblem, 'erp_last_error_credential'.tr);
       },
     );
+
+    test(
+      'ดึงตามรอบเวลาหยุดรอคน: บอกให้แก้แล้วกดดึงเอง (credential ที่ถูกปฏิเสธมีข้อความของตัวเอง)',
+      () {
+        ErpConnectionStatus stopped({bool rejected = false}) =>
+            ErpConnectionStatus(
+              mode: ErpMode.connected,
+              connection: ErpConnectionInfo(
+                erpUrl: 'https://erp.example.com',
+                instanceCode: 'POS-1',
+                instanceName: 'POS',
+                contractVersion: '1.0.0',
+                appliedVersion: 3,
+                lastError: const ErpPullError(
+                  kind: 'invalid_response',
+                  reason: 'unexpected_response',
+                ),
+                credentialRejected: rejected,
+                pullStopped: true,
+              ),
+            );
+
+        controller.status.value = stopped();
+        expect(controller.pullStopped, isTrue);
+        expect(
+          controller.lastPullProblem,
+          'erp_last_error_invalid_response'.tr,
+        );
+        controller.status.value = stopped(rejected: true);
+        expect(controller.pullStopped, isFalse);
+        controller.status.value = _connected;
+        expect(controller.pullStopped, isFalse);
+      },
+    );
+  });
+
+  group('สร้างสาขานี้ในเครื่อง', () {
+    test(
+      'สร้างได้: ส่งรหัสของ ERP ใช้สถานะหลังสร้าง และบอกชื่อที่สร้างจริง',
+      () async {
+        expect(await controller.createBranch(_silom), isTrue);
+
+        expect(repository.createBranchCalls, ['SILOM']);
+        expect(controller.status.value.connection!.appliedVersion, 16);
+        expect(
+          controller.actionNotice.value,
+          'erp_branch_created_notice'.trParams({
+            'name': 'สาขาสีลม คอมเพล็กซ์',
+            'code': 'SILOM',
+          }),
+        );
+        expect(controller.actionError.value, isNull);
+        expect(controller.isBusy.value, isFalse);
+      },
+    );
+
+    test(
+      'มีรหัสนี้ในเครื่องแล้ว (409): บอกเหตุผลจาก backend และโหลดรายการใหม่',
+      () async {
+        repository.createBranchResult = const Result.failure(
+          ServerFailure(
+            'มีสาขารหัสนี้ในเครื่องแล้ว',
+            statusCode: 409,
+            code: 'BRANCH_ALREADY_LOCAL',
+          ),
+        );
+        repository.statusResults.add(const Result.success(_withSilom));
+
+        expect(await controller.createBranch(_silom), isFalse);
+
+        expect(controller.actionError.value, 'มีสาขารหัสนี้ในเครื่องแล้ว');
+        expect(controller.actionNotice.value, isNull);
+        expect(repository.statusCalls, 1, reason: 'โหลดรายการใหม่หลังล้ม');
+        expect(controller.status.value.branches.single.code, 'SILOM');
+      },
+    );
+
+    test('โหมดสาธิตสร้างสาขาจาก ERP ไม่ได้', () async {
+      final demo = _controllerFor(
+        const ErpConnectionRepositoryImpl(DemoErpConnectionDataSource()),
+      );
+      addTearDown(demo.onClose);
+      expect(await demo.createBranch(_silom), isFalse);
+      expect(demo.actionError.value, 'erp_error_demo_mode'.tr);
+    });
   });
 
   group('โหมดสาธิต', () {
@@ -351,6 +475,7 @@ void main() {
               'at': '2026-09-27T05:00:00.000Z',
             },
             'credentialRejected': false,
+            'pullStopped': true,
             'retryAfter': null,
             'credentialSaved': true,
           },
@@ -404,6 +529,7 @@ void main() {
         expect(status.isConnected, isTrue);
         expect(status.connection!.appliedVersion, 15);
         expect(status.connection!.lastError!.status, 503);
+        expect(status.connection!.pullStopped, isTrue);
         expect(
           status.branchesToFix,
           isEmpty,

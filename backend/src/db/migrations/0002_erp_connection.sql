@@ -23,6 +23,9 @@ CREATE TABLE erp_connection (
   last_error           TEXT,
   -- ERP ตอบ 401: หยุดเรียก ERP จนกว่าจะบันทึก credential ใหม่ (สัญญา POS v1)
   credential_rejected  INTEGER NOT NULL DEFAULT 0 CHECK (credential_rejected IN (0, 1)),
+  -- หยุดดึงตามรอบเวลาจนกว่าคนจะจัดการ (credential ถูกปฏิเสธ, คำตอบผิดสัญญา, สัญญา major อื่น — telemetry v1.2)
+  -- กด "ดึงทันที" ได้ (ยกเว้น credential ถูกปฏิเสธ) บันทึกการเชื่อมต่อใหม่หรือดึงสำเร็จแล้วกลับมาดึงตามรอบ
+  pull_stopped         INTEGER NOT NULL DEFAULT 0 CHECK (pull_stopped IN (0, 1)),
   -- ERP ตอบ 429/503 พร้อม Retry-After: ไม่เรียกก่อนเวลานี้
   retry_after          TEXT
 );

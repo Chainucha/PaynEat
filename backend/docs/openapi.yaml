@@ -217,9 +217,20 @@ components:
                   type: string
                   enum: [credential_rejected, rate_limited, unavailable, network, unsupported_contract, invalid_response, refused, internal]
                 status: { type: integer, nullable: true }
-                reason: { type: string, nullable: true, description: details.reason ที่ ERP ส่งมา เช่น credential_revoked }
+                reason:
+                  type: string
+                  nullable: true
+                  description: >-
+                    reason ตามสัญญา telemetry v1.2 (ค่าเดียวกับ label reason ของ master_data.pull.failed) — details.reason ที่ ERP ส่งมา
+                    (credential_revoked, credential_unknown, …) ถ้ามี ไม่งั้น erp_unreachable, rate_limited, unexpected_response หรือ
+                    contract_unsupported; null = บั๊กของ POS เอง (kind internal)
                 at: { type: string, format: date-time }
             credentialRejected: { type: boolean, description: true = หยุดเรียก ERP จนกว่าจะบันทึก credential ใหม่ }
+            pullStopped:
+              type: boolean
+              description: >-
+                true = ดึงตามรอบเวลาหยุดไว้จนกว่าจะมีคนมาจัดการ (reason credential_revoked, credential_unknown, unexpected_response,
+                contract_unsupported หรือบั๊กของ POS — บรรทัด log เป็น ERROR) กดดึงทันทีได้ ดึงสำเร็จหรือบันทึกการเชื่อมต่อใหม่แล้วกลับมาดึงตามรอบ
             retryAfter: { type: string, format: date-time, nullable: true }
             credentialSaved: { type: boolean }
         branches:
@@ -2350,6 +2361,44 @@ paths:
         '409': { description: ยังไม่ได้เชื่อมต่อ หรือ ERP ไม่รับ credential แล้ว (บันทึกใหม่ก่อน) }
         '422': { description: ERP เพิ่งปฏิเสธ credential (ERP_CREDENTIAL_REJECTED) }
         '502': { description: ติดต่อ ERP ไม่ได้/ERP ตอบผิดสัญญา — หน้าที่ดึงแล้วยังอยู่ ดึงต่อได้ }
+  /erp/branches:
+    post:
+      tags: [Erp]
+      summary: >-
+        สร้างสาขานี้ในเครื่อง (admin) — สำหรับสาขาที่ ERP ให้ instance นี้ดูแลแต่ในเครื่องยังไม่มี (servedBranches ที่ localBranchId
+        เป็น null) ดึง master data ให้ครบก่อนเสมอ (ถ้า ERP เพิ่งเปลี่ยนรหัสสาขาเดิมเป็นรหัสนี้ สาขาเดิมย้ายไปรหัสใหม่ก่อน จึงไม่ได้สาขาซ้ำ)
+        แล้วสร้างด้วยรหัสและชื่อไทยจาก ERP พร้อมวัตถุดิบ mirror ของทุกรายการสินค้า (ยอดเริ่ม 0) และ audit log erp.branch_create
+        การสร้างสาขาเองผ่าน POST /branches ยังถูกปิดในโหมดเชื่อมต่อ (MANAGED_BY_ERP)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, example: SILOM, description: 'รหัสสถานที่ของ ERP (A-Z, 0-9, - ยาว 2-32)' }
+      responses:
+        '201':
+          description: สร้างแล้ว
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      branchId: { type: integer }
+                      status: { $ref: '#/components/schemas/ErpStatus' }
+        '403': { description: ไม่ใช่ admin }
+        '409':
+          description: >-
+            BRANCH_ALREADY_LOCAL = มีสาขารหัสนี้ในเครื่องแล้ว (details.branchId) · BRANCH_NOT_SERVED = ERP ไม่ได้ให้เครื่องนี้ดูแลรหัสนี้ ·
+            ยังไม่ได้เชื่อมต่อ หรือ ERP ไม่รับ credential แล้ว
+        '422': { description: รหัสผิดรูปแบบ หรือ ERP เพิ่งปฏิเสธ credential (ERP_CREDENTIAL_REJECTED) }
+        '502': { description: ดึงข้อมูลจาก ERP ไม่สำเร็จ — ยังไม่สร้างอะไร }
   /ai/ask:
     post:
       tags: [AiAssistant]

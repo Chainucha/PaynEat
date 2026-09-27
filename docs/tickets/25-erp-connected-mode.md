@@ -57,6 +57,8 @@
 - [x] เข้าและออกจากโหมดเชื่อมต่อได้ credential ไม่โผล่ใน log, response หรือไฟล์ export
 - [x] ดึง master data ตามเวอร์ชันได้ ดึงซ้ำไม่ได้ข้อมูลซ้ำ ต่อจากเน็ตหลุดได้โดยไม่พลาดรายการ
 - [x] สาขาที่รหัสไม่ตรงรูปแบบถูกบอกชัดว่าต้องแก้อะไรก่อนเชื่อมต่อ
+- [x] สาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี admin สร้างได้จากหน้าตั้งค่า โดยไม่ได้สาขาซ้ำเมื่อ ERP เพิ่งเปลี่ยนรหัส (รีวิว #121)
+- [x] log การดึงใช้ชื่อ event และ `reason` ตามสัญญา telemetry v1.2 (รีวิว #121)
 - [x] โหมดเชื่อมต่อ: แก้วัตถุดิบ/สาขาไม่ได้ทั้งทางหน้าจอและ API (409) และไม่มีการปิดขายอัตโนมัติจากสต๊อกในเครื่อง
 - [x] contract test ผ่านกับไฟล์สัญญา v1
 - [x] README (ไทย/อังกฤษ), `docs/DECISIONS.md`, `docs/FEATURE-GAP-ANALYSIS.md` อัปเดตตาม `CLAUDE.md`
@@ -80,3 +82,12 @@ backend: stub server ของ ERP ในเทสต์ (ไม่ต้อง�
   ฟอร์มวัตถุดิบมีช่องรหัสสินค้า (ตั้งไว้ก่อนเชื่อมต่อได้) โหมดสาธิตขึ้น "ใช้งานเดี่ยว" เสมอ
 - **เทสต์** — `tests/erp-connection.test.js` (ERP ปลอม `tests/helpers/erpStub.js`) และ `tests/erp-contract.test.js`;
   แอป `test/presentation/erp_connection_controller_test.dart` และ `ingredients_controller_test.dart`
+- **แก้ตามรีวิว PR #121 (POS PO + ERP PO)**
+  - ปุ่ม "สร้างในเครื่อง" ข้างสาขาที่ ERP ให้ดูแลแต่ในเครื่องยังไม่มี (`POST /api/v1/erp/branches`, admin เท่านั้น) แทนทางอ้อม
+    "ออกจากโหมดแล้วเชื่อมต่อใหม่": ดึง master data ให้ครบก่อนเสมอ แล้วสร้างเฉพาะเมื่อรหัสนั้นยังไม่มีในเครื่อง (มีแล้ว = 409
+    `BRANCH_ALREADY_LOCAL`, ERP ไม่ได้ให้ดูแล = 409 `BRANCH_NOT_SERVED`) ด้วยรหัสและชื่อไทยของ ERP พร้อมวัตถุดิบ mirror และ
+    audit log `erp.branch_create` — เทสต์ 3 เคส: สร้างได้, supersede ที่ค้างอยู่ถูกใช้ก่อนจึงไม่ได้สาขาซ้ำ, ไม่ใช่ admin ได้ 403
+  - log ของการดึงเปลี่ยนจาก `app.log` เป็น `master_data.pull.completed` (INFO) และ `master_data.pull.failed` พร้อม `reason`
+    ตามสัญญา telemetry v1.2 ("Additions to v1.2", PaynEat-ERP#57) — `ERROR` เมื่อ POS หยุดดึงตามรอบเวลาจนกว่าจะมีคนมาจัดการ
+    (`pull_stopped` ในสถานะ; กด "ดึงทันที" ได้) ฟังก์ชันแปลง `reason`/severity อยู่ใน `erp.client.js` ให้ ticket 26 ใช้ต่อ และ
+    `tests/erp-contract.test.js` ครอบทุก reason

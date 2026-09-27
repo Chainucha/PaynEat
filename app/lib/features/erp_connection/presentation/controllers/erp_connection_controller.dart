@@ -19,17 +19,20 @@ class ErpConnectionController extends GetxController {
     required DisconnectErpUseCase disconnect,
     required PullErpNowUseCase pullNow,
     required UpdateBranchCodeUseCase updateBranchCode,
+    required CreateServedBranchUseCase createServedBranch,
   }) : _getStatus = getStatus,
        _connect = connect,
        _disconnect = disconnect,
        _pullNow = pullNow,
-       _updateBranchCode = updateBranchCode;
+       _updateBranchCode = updateBranchCode,
+       _createServedBranch = createServedBranch;
 
   final GetErpStatusUseCase _getStatus;
   final ConnectErpUseCase _connect;
   final DisconnectErpUseCase _disconnect;
   final PullErpNowUseCase _pullNow;
   final UpdateBranchCodeUseCase _updateBranchCode;
+  final CreateServedBranchUseCase _createServedBranch;
 
   final Rx<ErpConnectionStatus> status = ErpConnectionStatus.standalone.obs;
   final RxBool isLoading = true.obs;
@@ -193,6 +196,37 @@ class ErpConnectionController extends GetxController {
     }
     await load();
     return true;
+  }
+
+  /// "สร้างสาขานี้ในเครื่อง" — backend ดึงข้อมูลจาก ERP ก่อนแล้วสร้างด้วยรหัสและชื่อไทยของ ERP
+  /// ถ้า ERP เพิ่งย้ายสาขาเดิมมาใช้รหัสนี้ backend ตอบ 409 พร้อมเหตุผล และรายการโหลดใหม่ให้เห็นว่าสาขาเดิมย้ายแล้ว
+  Future<bool> createBranch(ErpServedBranch branch) async {
+    _clearMessages();
+    isBusy.value = true;
+    final result = await _createServedBranch(branch.code);
+    isBusy.value = false;
+    final failure = result.failureOrNull;
+    if (failure != null) {
+      actionError.value = _messageOf(failure);
+      await _refresh();
+      return false;
+    }
+    final next = result.dataOrNull!;
+    _apply(next);
+    final created = next.branches.where((b) => b.code == branch.code);
+    actionNotice.value = 'erp_branch_created_notice'.trParams({
+      'name': created.isEmpty ? branch.nameTh : created.first.name,
+      'code': branch.code,
+    });
+    return true;
+  }
+
+  /// ดึงตามรอบเวลาหยุดรอคนแก้ต้นเหตุ (credential ที่ถูกปฏิเสธมีข้อความของตัวเองอยู่แล้ว)
+  bool get pullStopped {
+    final connection = status.value.connection;
+    return connection != null &&
+        connection.pullStopped &&
+        !connection.credentialRejected;
   }
 
   /// เหตุผลของการดึงครั้งล่าสุดที่ล้มเหลว เป็นประโยคตามภาษาของแอป (null = ครั้งล่าสุดสำเร็จ)

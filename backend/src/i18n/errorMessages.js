@@ -825,6 +825,16 @@ export const ERROR_MESSAGES = [
     en: 'Not connected to PaynEat ERP',
     ko: 'PaynEat ERP에 연결되어 있지 않습니다',
   },
+  {
+    th: 'PaynEat ERP ไม่ได้ให้เครื่องนี้ดูแลสาขารหัสนี้',
+    en: "PaynEat ERP doesn't assign the branch with this code to this POS",
+    ko: 'PaynEat ERP가 이 코드의 지점을 이 POS에 맡기지 않았습니다',
+  },
+  {
+    th: 'มีสาขารหัสนี้ในเครื่องแล้ว',
+    en: 'A branch with this code already exists on this POS',
+    ko: '이 코드의 지점이 이미 이 POS에 있습니다',
+  },
 ];
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

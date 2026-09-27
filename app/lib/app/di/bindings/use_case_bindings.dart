@@ -523,4 +523,8 @@ void bindUseCases() {
     () => UpdateBranchCodeUseCase(Get.find<ErpConnectionRepository>()),
     fenix: true,
   );
+  Get.lazyPut(
+    () => CreateServedBranchUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
 }

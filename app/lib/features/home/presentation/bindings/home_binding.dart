@@ -154,6 +154,7 @@ class HomeBinding extends Bindings {
         disconnect: Get.find<DisconnectErpUseCase>(),
         pullNow: Get.find<PullErpNowUseCase>(),
         updateBranchCode: Get.find<UpdateBranchCodeUseCase>(),
+        createServedBranch: Get.find<CreateServedBranchUseCase>(),
       ),
       fenix: true,
     );

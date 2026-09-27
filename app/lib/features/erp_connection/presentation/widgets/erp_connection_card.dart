@@ -279,6 +279,10 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
           const SizedBox(height: 8),
           _Message(text: problem, isError: true),
         ],
+        if (controller.pullStopped) ...[
+          const SizedBox(height: 4),
+          _Message(text: 'erp_pull_stopped_note'.tr, isError: true),
+        ],
         const SizedBox(height: 8),
         _Message(text: 'erp_stock_note'.tr),
         if (notServed.isNotEmpty) ...[
@@ -297,11 +301,27 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
           const SizedBox(height: 12),
           _ListBox(
             title: 'erp_served_missing_title'.tr,
+            note: 'erp_served_missing_note'.tr,
             color: AppColors.infoInk,
             children: [
               for (final branch in missing)
-                Text(
-                  '• ${Get.locale?.languageCode == 'th' ? branch.nameTh : branch.nameEn} (${branch.code})',
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text('• ${_servedName(branch)} (${branch.code})'),
+                    ),
+                    Obx(
+                      () => TextButton.icon(
+                        onPressed:
+                            controller.isBusy.value ||
+                                connection.credentialRejected
+                            ? null
+                            : () => _confirmCreate(branch),
+                        icon: const Icon(Icons.add_business_rounded, size: 18),
+                        label: Text('erp_branch_create_button'.tr),
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -365,6 +385,21 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
         ),
       ],
     );
+  }
+
+  String _servedName(ErpServedBranch branch) =>
+      Get.locale?.languageCode == 'th' ? branch.nameTh : branch.nameEn;
+
+  Future<void> _confirmCreate(ErpServedBranch branch) async {
+    final confirmed = await AppDialogs.confirm(
+      title: 'erp_branch_create_title'.tr,
+      message: 'erp_branch_create_confirm'.trParams({
+        'name': _servedName(branch),
+        'code': branch.code,
+      }),
+      confirmLabel: 'erp_branch_create_button'.tr,
+    );
+    if (confirmed) await controller.createBranch(branch);
   }
 
   Future<void> _confirmDisconnect() async {

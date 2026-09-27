@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-929%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-936%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) talking to a
 Node.js REST + WebSocket backend. Covers the complete floor-to-cash workflow: table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 929 automated tests.
+control and 936 automated tests.
 
 > 👤 **สร้างและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — ถ้าคุณ fork หรือต่อยอดโปรเจกต์นี้
 > ยินดีมากๆ แค่ขอให้คงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 ทักทาย/พูดคุยได้ที่
@@ -34,7 +34,7 @@ control and 929 automated tests.
 
 ## 🍽 เมนูแก้ปัญหาร้านอาหาร
 
-ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 929 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
+ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 936 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
 
 | # | ปัญหาของร้าน | ชุดที่แก้ | ได้อะไร |
 |---|---|---|---|
@@ -707,7 +707,7 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ตอน�
 ### 🧪 อยากรันเทสต์ดู
 
 ```bash
-cd backend && npm test      # 388 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
+cd backend && npm test      # 395 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
 cd app && flutter test      # 492 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
@@ -961,6 +961,10 @@ cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุ
   Android 13+) · [หน้านโยบายความเป็นส่วนตัว](https://suruchboss.github.io/PaynEat/privacy.html) สามภาษา บอกตรงๆ ว่าตัวสแกน
   บาร์โค้ด (Google ML Kit) ส่งข้อมูลวินิจฉัยให้ Google · คำตอบ Data safety ข้อความและภาพหน้า store สองภาษาใน `docs/store/`
   (ดู `docs/tickets/29-android-google-play.md`, `docs/DECISIONS.md` #75)
+- **อัปเดตเวอร์ชันแล้วข้อมูลร้านอยู่ครบ** — schema ของฐานข้อมูลเป็น migration มีเลขลำดับ (`backend/src/db/migrations/`) ฐานข้อมูลจดไว้ว่า
+  รันเลขไหนไปแล้ว (`schema_migrations`) แต่ละตัวรันครั้งเดียวใน transaction ของตัวเอง ถ้าล้มกลางทางจะ rollback ทั้งตัว ไม่เหลือ schema
+  ครึ่งทาง ฐานข้อมูลที่สร้างก่อนหน้านี้อัปเกรดได้โดยข้อมูลไม่หาย · ถ้ามีคนแก้ migration ที่รันไปแล้ว หรือถอยแอปไปเวอร์ชันที่เก่ากว่าฐานข้อมูล
+  เซิร์ฟเวอร์จะไม่ยอมเปิดและบอกเหตุผล (ดู `docs/DECISIONS.md` #79, วิธีเพิ่ม migration ใน `CONTRIBUTING.md`)
 
 ---
 
@@ -1107,7 +1111,7 @@ PaynEat/
 ├── backend/                          # Node.js API
 │   ├── src/
 │   │   ├── config/  core/  middlewares/  realtime/
-│   │   ├── db/                       # schema.sql, migrate, seed
+│   │   ├── db/                       # migrations/ (มีเวอร์ชัน), migrate, seed
 │   │   ├── modules/                  # แยกตาม domain
 │   │   │   └── orders/
 │   │   │       ├── order.routes.js
@@ -1269,13 +1273,13 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 ## 🧪 การทดสอบ
 
 ```bash
-cd backend && npm test      # 388 เคส
+cd backend && npm test      # 395 เคส
 cd app && flutter test      # 492 เคส
 cd app && flutter test test_e2e   # 49 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
-badge นับเทสต์ของ backend และแอป (388 + 492 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเทสต์ของ backend และแอป (395 + 492 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ `versionCode` ที่เพิ่มขึ้นเสมอ
 และ tag ผิดรูป/เกินช่วงหยุดพร้อมเหตุผล — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปจริงคุยกับ backend จริง (49 เคส)** — `app/test_e2e/` เปิด backend ตัวจริง
@@ -1318,7 +1322,7 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 ให้ API ตอบ `/health`, ล็อกอินได้, ตาชั่งจำลองเปิดอยู่ และเว็บตอบ 200 — ผ่านแล้วถึงอัปโหลดเป็น release `demo` ของทางเลือก D
 (ก่อนหน้านี้ไม่มี job ไหน build image จริง Dockerfile เว็บจึงพังเงียบอยู่นาน ดู `docs/DECISIONS.md` #63, #65)
 
-**Backend (388 เคส)** — `node:test` + `supertest` ยิงผ่าน HTTP จริงบนฐานข้อมูลแยกต่างหาก
+**Backend (395 เคส)** — `node:test` + `supertest` ยิงผ่าน HTTP จริงบนฐานข้อมูลแยกต่างหาก
 เทสต์เด่นคือ `tests/order-flow.test.js` ที่ไล่เส้นทางทั้งร้านตั้งแต่ต้นจนจบใน 17 ขั้น:
 
 > เลือกโต๊ะ → เปิดออเดอร์พร้อมตัวเลือกเสริม → ตรวจว่ายอดคิดถูก → โต๊ะเปลี่ยนเป็นไม่ว่าง →
@@ -1458,7 +1462,12 @@ token เก่าใช้ต่อไม่ได้ทันทีแม้�
 ขายเชื่อ (วงเงิน/ไม่ผูกลูกค้า/พนักงานเสิร์ฟ/ใช้แต้มร่วม), รับชำระตัดบิลเก่าสุดก่อน/เกินยอดค้างไม่ได้, เงินสด
 นับเข้ากะ, ยกเลิกใบเสร็จเงินสดหลังปิดกะไม่ได้, ใบวางบิล (ออกซ้ำ/ยกเลิกแล้วออกใหม่/สถานะ paid), คืนเงินบิล
 ขายเชื่อไม่เกินยอดค้าง, อายุหนี้ และ RBAC — `migrate-credit.test.js` (1 เคส) สร้างฐานข้อมูลรุ่นก่อน ticket 20
-จริงแล้ว migrate ยืนยันว่าข้อมูลเงิน/refund ที่อ้างถึง/index อยู่ครบ (ดู `docs/DECISIONS.md` #48–#51)
+จริงแล้ว migrate ยืนยันว่าข้อมูลเงิน/refund ที่อ้างถึง/index อยู่ครบ (ดู `docs/DECISIONS.md` #48–#51) —
+`migrations.test.js` (7 เคส) migration แบบมีเวอร์ชัน (T01 #80): รันครั้งเดียวแม้ boot ซ้ำ, ล้มกลางทางแล้ว rollback ทั้งตัว
+(ตาราง/คอลัมน์ที่สร้างกลางทางหายหมดและไม่ถูกบันทึกว่ารันแล้ว), migration ที่ปิด foreign key ต้องผ่าน `foreign_key_check`
+ก่อน commit, แก้ migration ที่รันแล้วหรือถอยเวอร์ชันแอปทำให้เซิร์ฟเวอร์ไม่ยอมเปิด, ไฟล์ migration ตรงกับ `checksums.json`
+(CRLF บน Windows ได้ checksum เดียวกัน) และฐานข้อมูลที่สร้างก่อน T01 พร้อมข้อมูล seed/ยอดขาย/คืนเงินอัปเกรดได้โดยจำนวนแถวทุกตาราง
+เท่าเดิม (ดู `docs/DECISIONS.md` #79)
 
 `late-fees-credit-notes.test.js` (7 เคส) เพดานอัตราดอกเบี้ย 15%/แคชเชียร์ตั้งไม่ได้/เปลี่ยนอัตราถูก audit, ยังไม่ตั้ง
 อัตราไม่คิด, คิดเฉพาะบิลที่เลยวันผ่อนผันนับถึงวันนี้และกดซ้ำวันเดิมไม่ได้ดอกเบี้ยซ้ำ, รอบถัดไปคิดต่อจากวันที่คิด
@@ -1723,6 +1732,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
 - [ ] **แก้ผล QA รอบ ก.ย. 2026 (#79)** — ปิดทางที่เงินหาย (void บิลที่จ่ายแล้ว, แยกจ่ายไม่หักโปร, ปิดกะนับแต้มเป็นเงินสด),
   รายงานใช้วันของร้าน และแยกสาขาครบทุก endpoint ใน 3 รอบ ตาม ticket T01–T32 (#80–#110, #117) PO ตอบ 12 ข้อที่มีทางเลือกไว้แล้ว
   เช่น คืนเงินบางส่วนของบิลที่ใช้แต้มคืนตามสัดส่วน และสต๊อกไม่พอห้ามส่งครัวเว้นผู้จัดการยืนยัน (ดู `docs/DECISIONS.md` #77)
+  — เสร็จแล้ว: T01 migration แบบมีเวอร์ชัน (#80, `docs/DECISIONS.md` #79)
 - [ ] **ภาพแชร์ลิงก์และไอคอนเว็บแอปตรงของจริง** — ภาพตอนแชร์ลิงก์ไม่มีตัวเลขเก่า และไอคอนตอนติดตั้งเว็บแอปเป็นโลโก้ PaynEat (ดู ticket 31)
 - [x] **log/metric ตามสัญญา telemetry ของระบบนิเวศ** — ทำแล้ว: log แบบ JSON ตามสัญญา v1.1 (ค่าเริ่มต้นไม่มีชื่อ vendor,
   `LOG_FORMAT=gcp` สำหรับ Google Cloud), `x-request-id` ไปกลับครบและแอปแสดงรหัสคำขอตอน error, `/metrics` ตาม route

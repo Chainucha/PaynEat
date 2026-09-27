@@ -1,238 +1,101 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
 import { getDb } from './index.js';
+import { MIGRATIONS } from './migrations/index.js';
 import { env } from '../config/env.js';
 import { logger } from '../core/telemetry/logger.js';
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-
 /**
- * เพิ่มคอลัมน์ให้ตารางที่มีอยู่แล้ว (schema.sql ใช้ CREATE TABLE IF NOT EXISTS
- * จึงไม่แก้ตารางเดิมที่มีอยู่แล้วให้อัตโนมัติ) — เรียกซ้ำได้ปลอดภัยเพราะเช็คก่อนว่ามีคอลัมน์อยู่แล้วหรือยัง
- * ต้องเรียก *หลัง* `db.exec(sql)` เสมอ เพราะบางคอลัมน์ (เช่น auto_disabled_by_stock) ไม่ได้อยู่ใน
- * CREATE TABLE ของ schema.sql เลย ตั้งใจพึ่ง ALTER TABLE นี้อย่างเดียวเพื่อให้ตารางถูกสร้างขึ้นก่อน
- */
-const addColumnIfMissing = (db, table, column, definition) => {
-  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
-  if (columns.some((row) => row.name === column)) return;
-  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
-};
-
-const BRANCH_SCOPED_TABLES = ['dining_tables', 'menu_items', 'orders', 'ingredients'];
-
-/**
- * รองรับฐานข้อมูลเดี่ยวสาขาเดิม (ก่อน ticket 11) ที่เพิ่งได้คอลัมน์ branch_id ใหม่จาก
- * addColumnIfMissing ด้านบน — ทุกแถวเดิมจะเป็น branch_id = NULL ต้องมีสาขาให้ข้อมูลเดิมอยู่ ไม่งั้น
- * query ที่ scope ด้วย branch_id จะมองไม่เห็นข้อมูลเดิมเลย จึงสร้างสาขา fallback ("สาขาหลัก") ให้
- * อัตโนมัติเฉพาะตอนพบข้อมูลเก่าที่ยัง branch_id เป็น NULL อยู่จริงเท่านั้น (ดู docs/DECISIONS.md #36)
- * — ฐานข้อมูลใหม่ล้วน (ตารางทั้ง 4 ยังว่างเปล่า) จะไม่สร้างสาขานี้ขึ้นมาเลย ปล่อยให้ seed.js
- * เป็นคนสร้างสาขาจริงเอง 2 สาขาแทน
- */
-const backfillDefaultBranch = (db) => {
-  const hasUnscopedRows = BRANCH_SCOPED_TABLES.some((table) =>
-    db.prepare(`SELECT 1 FROM ${table} WHERE branch_id IS NULL LIMIT 1`).get(),
-  );
-  if (!hasUnscopedRows) return;
-
-  let defaultBranch = db.prepare('SELECT id FROM branches ORDER BY id LIMIT 1').get();
-  if (!defaultBranch) {
-    const info = db
-      .prepare('INSERT INTO branches (name, code) VALUES (?, ?)')
-      .run('สาขาหลัก', 'MAIN');
-    defaultBranch = { id: info.lastInsertRowid };
-  }
-
-  for (const table of BRANCH_SCOPED_TABLES) {
-    db.prepare(`UPDATE ${table} SET branch_id = ? WHERE branch_id IS NULL`).run(defaultBranch.id);
-  }
-
-  // ให้ผู้ใช้เดิมทุกคนเข้าสาขา fallback นี้ได้ทันที ไม่งั้นจะล็อกอินไม่ได้เลยหลังอัปเกรด (admin ไม่
-  // จำเป็นต้องมีแถวนี้ก็เข้าได้ทุกสาขาอยู่แล้ว แต่ใส่ให้ด้วยเพื่อความสม่ำเสมอของข้อมูล ไม่มีผลเสีย)
-  const insertMembership = db.prepare(
-    'INSERT OR IGNORE INTO user_branches (user_id, branch_id) VALUES (?, ?)',
-  );
-  for (const user of db.prepare('SELECT id FROM users').all()) {
-    insertMembership.run(user.id, defaultBranch.id);
-  }
-};
-
-/**
- * ticket 17 (QR สั่งอาหารเอง) — โต๊ะที่สร้างก่อนทิกเก็ตนี้ยังไม่มี qr_token (คอลัมน์เพิ่งถูกเพิ่มจาก
- * addColumnIfMissing ด้านล่าง ทุกแถวเดิมจึงเป็น NULL) เติมให้ครบทุกแถว ไม่งั้นโต๊ะเก่าจะไม่มี QR ให้
- * สแกนเลย — โต๊ะที่สร้างใหม่หลังจากนี้ได้ token ตั้งแต่ตอน insert อยู่แล้ว (ดู
- * table.repository.js#create) จึงไม่มีทาง NULL อีก ปลอดภัยที่จะสร้าง UNIQUE INDEX ต่อจากนี้ทันที
- */
-const backfillTableQrTokens = (db) => {
-  const rows = db.prepare('SELECT id FROM dining_tables WHERE qr_token IS NULL').all();
-  const update = db.prepare('UPDATE dining_tables SET qr_token = ? WHERE id = ?');
-  for (const row of rows) update.run(randomUUID(), row.id);
-};
-
-/**
- * ticket 20 (ขายเชื่อ) — payments.method มี CHECK ที่ไม่รู้จัก 'credit' ในฐานข้อมูลที่สร้างก่อน
- * ทิกเก็ตนี้ และ SQLite แก้ CHECK ของตารางที่มีอยู่แล้วไม่ได้ จึงต้องสร้างตารางใหม่แล้วย้ายข้อมูล
- * (วิธีที่เอกสาร SQLite แนะนำ: สร้าง → คัดลอก → ลบเก่า → เปลี่ยนชื่อ ขณะปิด foreign_keys)
+ * Migration แบบมีเวอร์ชัน (T01 #80, docs/DECISIONS.md #79)
  *
- * นิยามตารางใหม่อ่านจากบล็อก CREATE TABLE payments ใน schema.sql ตรง ๆ ไม่เขียนซ้ำไว้ที่นี่ ให้มี
- * แหล่งความจริงแหล่งเดียว — คอลัมน์ที่คัดลอกคือคอลัมน์ที่มีทั้งในตารางเดิมและตารางใหม่ (ตารางเดิมที่
- * ยังไม่มีคอลัมน์ใหม่อย่าง due_date จะได้ค่า default แทน) id เดิมถูกคงไว้ทุกแถว refunds/ar_allocations
- * ที่อ้าง payment_id จึงยังชี้ถูกแถว เรียกซ้ำได้: ตารางที่มี 'credit' แล้วจะถูกข้ามทันที
+ * - แต่ละ migration รันครั้งเดียว: เวอร์ชันที่รันแล้วถูกบันทึกในตาราง `schema_migrations` พร้อม checksum
+ * - แต่ละ migration อยู่ใน transaction ของตัวเอง ถ้าล้มกลางทาง rollback ทั้งตัว ไม่เหลือ schema ครึ่ง ๆ กลาง ๆ
+ *   และไม่ถูกบันทึกว่ารันแล้ว — การบันทึกอยู่ใน transaction เดียวกับตัว migration
+ * - migration ที่รันแล้วแต่ไฟล์ไม่ตรงกับตอนรัน (ถูกแก้ภายหลัง) หรือฐานข้อมูลที่เคยรัน migration ที่ build นี้
+ *   ไม่รู้จัก (ถอยเวอร์ชันแอป) ทำให้เซิร์ฟเวอร์ไม่ยอมเปิด พร้อมบอกเหตุผล ดีกว่าเปิดขึ้นมากับ schema ที่ไม่ตรงกับโค้ด
  */
-const rebuildPaymentsForCreditMethod = (db, schemaSql) => {
-  const current = db
-    .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'payments'")
-    .get();
-  // ดูเฉพาะรายการใน CHECK (method IN (...)) ไม่ใช่ทั้งข้อความ — คอมเมนต์ในนิยามตารางที่เอ่ยถึง
-  // 'credit' ต้องไม่ทำให้ข้ามการย้ายไปทั้งที่ CHECK จริงยังไม่รับ
-  const allowed = current?.sql.match(/CHECK\s*\(\s*method\s+IN\s*\(([^)]*)\)\s*\)/i)?.[1] ?? '';
-  if (!current || allowed.includes("'credit'")) return;
 
-  const block = schemaSql.match(/CREATE TABLE IF NOT EXISTS payments \(([\s\S]*?)\n\);/);
-  if (!block) throw new Error('หานิยามตาราง payments ใน schema.sql ไม่เจอ');
+const TRACKING_TABLE = `
+  CREATE TABLE IF NOT EXISTS schema_migrations (
+    version    INTEGER PRIMARY KEY,
+    name       TEXT    NOT NULL,
+    checksum   TEXT    NOT NULL,
+    applied_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  )`;
 
-  const oldColumns = db
-    .prepare('PRAGMA table_info(payments)')
-    .all()
-    .map((row) => row.name);
-  db.pragma('foreign_keys = OFF');
+const label = (migration) => `${String(migration.version).padStart(4, '0')}_${migration.name}`;
+
+const apply = (db, migration) => {
+  // PRAGMA foreign_keys ใช้ไม่ได้ภายใน transaction จึงต้องปิดก่อนเปิด transaction แล้วตรวจเองก่อน commit
+  const withoutForeignKeys = migration.foreignKeys === false;
+  if (withoutForeignKeys) db.pragma('foreign_keys = OFF');
   try {
     db.transaction(() => {
-      db.exec(`CREATE TABLE payments_rebuild (${block[1]}\n)`);
-      const newColumns = db
-        .prepare('PRAGMA table_info(payments_rebuild)')
-        .all()
-        .map((row) => row.name);
-      const shared = newColumns.filter((column) => oldColumns.includes(column)).join(', ');
-      db.exec(`INSERT INTO payments_rebuild (${shared}) SELECT ${shared} FROM payments`);
-      db.exec('DROP TABLE payments');
-      db.exec('ALTER TABLE payments_rebuild RENAME TO payments');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id)');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_payments_shift ON payments(shift_id)');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_payments_created ON payments(created_at)');
-      const broken = db.pragma('foreign_key_check');
-      if (broken.length) {
-        throw new Error(`ย้ายตาราง payments แล้ว foreign key เสีย: ${JSON.stringify(broken)}`);
+      migration.up(db);
+      if (withoutForeignKeys) {
+        const broken = db.pragma('foreign_key_check');
+        if (broken.length) {
+          throw new Error(
+            `Migration ${label(migration)} broke foreign keys: ${JSON.stringify(broken)}`,
+          );
+        }
       }
+      db.prepare('INSERT INTO schema_migrations (version, name, checksum) VALUES (?, ?, ?)').run(
+        migration.version,
+        migration.name,
+        migration.checksum,
+      );
     })();
   } finally {
-    db.pragma('foreign_keys = ON');
+    if (withoutForeignKeys) db.pragma('foreign_keys = ON');
   }
 };
 
-export const migrate = () => {
-  const db = getDb();
-  const sql = fs.readFileSync(path.join(here, 'schema.sql'), 'utf8');
-  db.exec(sql);
-
-  addColumnIfMissing(db, 'order_items', 'is_paid', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(
-    db,
-    'payments',
-    'shift_id',
-    'INTEGER REFERENCES shifts(id) ON DELETE SET NULL',
-  );
-  // เงินสดที่คืนลูกค้าออกจากลิ้นชักของกะที่เปิดอยู่ตอนคืน (docs/DECISIONS.md #44) — สร้าง index ที่นี่
-  // ไม่ใช่ใน schema.sql เพราะ schema.sql รันก่อน addColumnIfMissing เสมอ ฐานข้อมูลเดิมที่ยังไม่มี
-  // คอลัมน์นี้จะพังตั้งแต่บรรทัด CREATE INDEX ก่อนจะได้เพิ่มคอลัมน์ รีฟันด์เก่าจะเป็น NULL ซึ่งถูกต้อง:
-  // ก่อนหน้านี้ไม่เคยถูกหักจากลิ้นชักกะไหนอยู่แล้ว กะที่ปิดไปแล้วก็ไม่ควรถูกคำนวณใหม่ย้อนหลัง
-  addColumnIfMissing(db, 'refunds', 'shift_id', 'INTEGER REFERENCES shifts(id) ON DELETE SET NULL');
-  db.exec('CREATE INDEX IF NOT EXISTS idx_refunds_shift ON refunds(shift_id)');
-  addColumnIfMissing(
-    db,
-    'orders',
-    'promotion_id',
-    'INTEGER REFERENCES promotions(id) ON DELETE SET NULL',
-  );
-  addColumnIfMissing(db, 'orders', 'promotion_name_snapshot', 'TEXT');
-  addColumnIfMissing(db, 'orders', 'promotion_code_snapshot', 'TEXT');
-  addColumnIfMissing(db, 'orders', 'promotion_discount_amount', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(db, 'order_items', 'stock_deducted', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(db, 'menu_items', 'auto_disabled_by_stock', 'INTEGER NOT NULL DEFAULT 0');
-  // ticket 09 (ลูกค้า/แต้มสะสม) ลืมเพิ่มรายการเหล่านี้ไว้ตอนนั้น — เติมให้ครบตอนนี้เพื่อไม่ให้
-  // ฐานข้อมูลที่มีอยู่แล้วตั้งแต่ก่อนทิกเก็ต 09 พังตอนอัปเกรด (คอลัมน์เหล่านี้อยู่ใน schema.sql
-  // อยู่แล้วสำหรับฐานข้อมูลใหม่ แต่ CREATE TABLE IF NOT EXISTS ไม่แก้ตารางเดิมที่มีอยู่แล้ว)
-  addColumnIfMissing(
-    db,
-    'orders',
-    'customer_id',
-    'INTEGER REFERENCES customers(id) ON DELETE SET NULL',
-  );
-  addColumnIfMissing(db, 'orders', 'points_earned', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(db, 'payments', 'points_redeemed', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(db, 'payments', 'points_redeemed_value', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(db, 'orders', 'queue_number', 'INTEGER');
-
-  // Ticket 11 (multi-branch) — branch_id ผูกแค่ 4 entity นี้ (ดู docs/DECISIONS.md #36)
-  addColumnIfMissing(
-    db,
-    'dining_tables',
-    'branch_id',
-    'INTEGER REFERENCES branches(id) ON DELETE SET NULL',
-  );
-  addColumnIfMissing(
-    db,
-    'menu_items',
-    'branch_id',
-    'INTEGER REFERENCES branches(id) ON DELETE SET NULL',
-  );
-  addColumnIfMissing(
-    db,
-    'orders',
-    'branch_id',
-    'INTEGER REFERENCES branches(id) ON DELETE SET NULL',
-  );
-  addColumnIfMissing(
-    db,
-    'ingredients',
-    'branch_id',
-    'INTEGER REFERENCES branches(id) ON DELETE SET NULL',
-  );
-  backfillDefaultBranch(db);
-
-  // Ticket 17 (QR สั่งอาหารเอง) — token สุ่มไม่ซ้ำต่อโต๊ะ ใช้แทนการเดา table id ตรงๆ ใน URL สาธารณะ
-  // (กัน enumeration attack) เปลี่ยนใหม่ได้ถ้า QR หลุด (ดู table.service.js#regenerateQrToken)
-  addColumnIfMissing(db, 'dining_tables', 'qr_token', 'TEXT');
-  backfillTableQrTokens(db);
-  db.exec(
-    'CREATE UNIQUE INDEX IF NOT EXISTS idx_dining_tables_qr_token ON dining_tables(qr_token)',
+/**
+ * รัน migration ที่ยังไม่เคยรันตามลำดับเวอร์ชัน คืนรายการที่รันในครั้งนี้ — แยกจาก migrate() ให้เทสต์ส่ง
+ * รายการ migration ของตัวเองเข้ามาได้
+ */
+export const runMigrations = (db, migrations = MIGRATIONS) => {
+  const ordered = [...migrations].sort((a, b) => a.version - b.version);
+  db.exec(TRACKING_TABLE);
+  const applied = new Map(
+    db
+      .prepare('SELECT version, name, checksum FROM schema_migrations')
+      .all()
+      .map((row) => [row.version, row]),
   );
 
-  // Ticket 18 (ขายตามน้ำหนัก) + 19 (บาร์โค้ด/ฉลากตาชั่ง) — เมนูเดิมทั้งหมดเป็นขายเป็นชิ้น ไม่มีบาร์โค้ด
-  addColumnIfMissing(db, 'menu_items', 'sold_by_weight', 'INTEGER NOT NULL DEFAULT 0');
-  addColumnIfMissing(db, 'menu_items', 'barcode', 'TEXT');
-  addColumnIfMissing(db, 'menu_items', 'scale_plu', 'TEXT');
-  db.exec('CREATE INDEX IF NOT EXISTS idx_menu_items_barcode ON menu_items(barcode)');
-  db.exec('CREATE INDEX IF NOT EXISTS idx_menu_items_scale_plu ON menu_items(scale_plu)');
-  addColumnIfMissing(
-    db,
-    'order_items',
-    'weight_grams',
-    'INTEGER CHECK (weight_grams IS NULL OR weight_grams > 0)',
-  );
+  const known = new Set(ordered.map((migration) => migration.version));
+  const unknown = [...applied.keys()].filter((version) => !known.has(version));
+  if (unknown.length) {
+    throw new Error(
+      `This database was migrated by a newer PaynEat (migration ${unknown.join(', ')}). ` +
+        'Run that version or newer against it.',
+    );
+  }
 
-  // Ticket 20 (ขายเชื่อ/ลูกหนี้) — ลูกค้าเดิมทั้งหมดไม่มีวงเงินเครดิต (0) จนกว่าผู้จัดการจะตั้งให้
-  addColumnIfMissing(
-    db,
-    'customers',
-    'credit_limit',
-    'INTEGER NOT NULL DEFAULT 0 CHECK (credit_limit >= 0)',
-  );
-  addColumnIfMissing(
-    db,
-    'customers',
-    'credit_term_days',
-    'INTEGER NOT NULL DEFAULT 30 CHECK (credit_term_days >= 0)',
-  );
-  addColumnIfMissing(db, 'customers', 'tax_id', 'TEXT');
-  addColumnIfMissing(db, 'customers', 'address', 'TEXT');
-  addColumnIfMissing(db, 'payments', 'due_date', 'TEXT');
-  rebuildPaymentsForCreditMethod(db, sql);
+  const ran = [];
+  for (const migration of ordered) {
+    const done = applied.get(migration.version);
+    if (done) {
+      if (done.checksum !== migration.checksum) {
+        throw new Error(
+          `Migration ${label(migration)} was changed after it ran on this database. ` +
+            'An applied migration must never change: add a new migration instead.',
+        );
+      }
+      continue;
+    }
+    apply(db, migration);
+    ran.push(label(migration));
+    logger.info(`Applied database migration ${label(migration)}`);
+  }
+  return ran;
+};
 
+/** ค่าตั้งต้นของร้านจาก env — ไม่ใช่ schema จึงไม่อยู่ใน migration ใส่เฉพาะคีย์ที่ยังไม่มี ทุกครั้งที่ boot */
+const ensureDefaultSettings = (db) => {
   const defaults = {
     store_name: env.store.name,
     currency: env.store.currency,
@@ -244,7 +107,12 @@ export const migrate = () => {
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO NOTHING',
   );
   for (const [key, value] of Object.entries(defaults)) upsert.run(key, value);
+};
 
+export const migrate = () => {
+  const db = getDb();
+  runMigrations(db);
+  ensureDefaultSettings(db);
   return db;
 };
 

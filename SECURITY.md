@@ -21,7 +21,7 @@ branch `main` ซึ่งเป็นเวอร์ชันเดียวท
 
 ### แนวปฏิบัติในการเปิดเผยข้อมูล
 
-อ้างอิง `docs/DECISIONS.md` #81 ซึ่งใช้แนวทางเดียวกับ [PaynEat ERP ADR-0022](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/)
+อ้างอิง `docs/DECISIONS.md` #81 ซึ่งใช้แนวทางเดียวกับ [PaynEat ERP ADR-0022](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0022-vulnerability-disclosure-across-the-ecosystem.md)
 
 - **ช่องโหว่ที่ยังไม่ได้แก้ไขต้องไม่ปรากฏในที่สาธารณะใดๆ** ได้แก่ Issue, Pull Request, commit message, คอมเมนต์ในโค้ด,
   `docs/DECISIONS.md`, README และเอกสารอื่น ไม่ว่าช่องโหว่นั้นจะอยู่ใน repository นี้หรือในโปรเจกต์อื่นของระบบนิเวศ PaynEat

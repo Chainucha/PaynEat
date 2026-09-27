@@ -22,7 +22,7 @@ const USERS = [
 ];
 
 // ชื่อ env var รหัสผ่านต่อบัญชีเดโม 1 ตัว — ใช้เฉพาะตอน NODE_ENV=production (ดู resolveSeedPassword
-// ด้านล่าง และ SECURITY.md หัวข้อ "ข้อควรระวังสำหรับผู้ที่จะ deploy ใช้งานจริง")
+// ด้านล่าง และ SECURITY.md หัวข้อ "ข้อกำหนดก่อนนำไปใช้งานจริง")
 const SEED_PASSWORD_ENV_KEYS = {
   admin: 'SEED_ADMIN_PASSWORD',
   manager: 'SEED_MANAGER_PASSWORD',

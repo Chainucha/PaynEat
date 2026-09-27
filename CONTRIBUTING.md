@@ -58,6 +58,25 @@ CI (`.github/workflows/ci.yml`) รันชุดเดียวกันนี
   (ดูตัวอย่างและเหตุผลในหัวข้อ 6.2 ของ `docs/CODING_STANDARDS.md`)
 - แก้ไฟล์ในชั้น domain/data → รันคำสั่งตรวจ layer violation ในหัวข้อ 4.3 ของ CODING_STANDARDS.md ด้วย
 
+### เปลี่ยน schema ฐานข้อมูล — เพิ่ม migration ใหม่เท่านั้น
+
+schema ของ backend อยู่ใน [`backend/src/db/migrations/`](backend/src/db/migrations/) เป็น migration มีเลขลำดับ
+(T01 #80, [`docs/DECISIONS.md`](docs/DECISIONS.md) #79) ทุกฐานข้อมูลจดไว้ในตาราง `schema_migrations` ว่ารันเลขไหนไปแล้ว
+พร้อม checksum ของไฟล์ แต่ละ migration รันครั้งเดียวใน transaction ของตัวเอง ถ้าล้มกลางทางจะ rollback ทั้งตัว
+
+1. สร้าง `NNNN_ชื่อ.js` (และ `NNNN_ชื่อ.sql` ถ้าเขียน SQL แยก) ด้วยเลขถัดไป ใส่ header ลิขสิทธิ์เอง
+   (สคริปต์ `license-headers.mjs` ข้ามโฟลเดอร์นี้) แล้ว export default `{ version, name, files, up(db) }`
+   ดูตัวอย่างจาก `0001_baseline.js` ใส่ `foreignKeys: false` เฉพาะเมื่อต้องสร้างตารางใหม่แทนตารางเดิม
+   ตัวรันจะตรวจ foreign key ให้ก่อน commit
+2. เพิ่มในรายการ `DEFINITIONS` ใน `migrations/index.js`
+3. รัน `npm test` แล้วเทสต์ `tests/migrations.test.js` จะแสดง checksum ที่ต้องใส่ใน `migrations/checksums.json`
+   ให้คัดลอกค่านั้นไปใส่ ควรรัน `npm run format` ก่อน เพราะ Prettier เปลี่ยนเนื้อไฟล์ และ checksum ก็เปลี่ยนตาม
+4. เขียนเทสต์ว่าฐานข้อมูลที่มีข้อมูลอยู่แล้วอัปเกรดได้โดยข้อมูลไม่หาย
+
+**ห้ามแก้ migration ที่อยู่ใน `main` แล้ว** แม้แต่คอมเมนต์หรือการจัดรูปแบบ เซิร์ฟเวอร์ของร้านที่รันไปแล้วจะไม่ยอมเปิด
+เพราะ checksum ไม่ตรง ถ้าต้องแก้ ให้เพิ่ม migration ใหม่แทน migration ใช้ได้แค่กับ schema และการย้ายข้อมูล
+ค่าตั้งต้นของร้านจาก env อยู่ใน `ensureDefaultSettings` ของ `migrate.js` ซึ่งรันทุกครั้งที่ boot
+
 ## รายงานบั๊ก / เสนอฟีเจอร์
 
 เปิด [Issue](https://github.com/SuruchBoss/PaynEat/issues) พร้อมข้อมูล:
@@ -144,7 +163,8 @@ Every source file starts with its copyright and license identifier, for example:
 ```
 
 `node scripts/license-headers.mjs --fix` adds it to new files; CI fails a file without it.
-Applied database migrations are exempt, because editing one changes its recorded checksum.
+The script skips database migrations (`backend/src/db/migrations/`): every database records each applied
+migration's checksum, so the script must never edit one. Write the header yourself when you create a migration.
 
 ## License
 

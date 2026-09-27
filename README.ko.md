@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-929%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-936%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -107,7 +107,7 @@
 
 ## 🍽 문제 해결 메뉴
 
-대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 929개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
+대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 936개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
 
 | # | 가게의 문제 | 해결하는 세트 | 얻는 것 |
 |---|---|---|---|
@@ -394,6 +394,9 @@ POS는 매출과 고객 정보를 동시에 들고 있습니다. 보안은 나�
 - **코드에 예비 JWT 비밀키가 없습니다**
 - **지울 수 없는 변경 이력** — 주문 취소, 할인, 권한 변경, 환불, 메뉴 가격 수정
 - **데이터는 매장 안에 있습니다** — 매장의 서버나 PC에서 직접 돌아갑니다
+- **업데이트해도 매장 데이터가 그대로입니다** — 데이터베이스 구조 변경은 번호가 붙은 마이그레이션으로만 합니다. 각각 한 번만,
+  자체 트랜잭션 안에서 실행되므로 중간에 실패하면 통째로 되돌려집니다. 이미 실행된 마이그레이션이 수정되었거나 앱을
+  데이터베이스보다 오래된 버전으로 되돌리면 서버가 이유를 알려 주고 켜지지 않습니다 (`docs/DECISIONS.md` #79)
 - **로그에 고객 정보가 남지 않습니다** — 이름·전화번호·이메일·사업자 번호·주소·비밀번호·토큰·테이블 QR 토큰, 요청
   본문과 쿼리 문자열은 로그에 기록되지 않습니다 (테스트로 확인). 로그는 PaynEat 생태계 텔레메트리 규약에 따른 JSON이고
   모든 요청에 `x-request-id`가 붙습니다 — 실제 백엔드에 연결하면 오류 메시지 끝에 **요청 ID**가 표시되어, 매장에서 그
@@ -450,13 +453,13 @@ Developer Certificate of Origin(DCO)에 따라 서명(sign-off)해야 합니다 
 
 ## 테스트
 
-공개 전 **929건**의 자동화 테스트를 통과합니다.
+공개 전 **936건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 388건 — 매장 전체 흐름 17단계 테스트 포함
+cd backend && npm test      # 395건 — 매장 전체 흐름 17단계 테스트 포함
 cd app && flutter test      # 492건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (929건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (936건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 49건은 실제 백엔드(`node src/server.js`)를 매번 새 임시 DB로 띄우고, 앱의

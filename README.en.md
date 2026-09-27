@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-929%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-936%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) talking to a
 Node.js REST + WebSocket backend. Covers the complete floor-to-cash workflow: table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 929 automated tests.
+control and 936 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivatives are very
 > welcome, just keep the [`NOTICE`](NOTICE) file as required by the Apache License 2.0. Say hi on
@@ -36,7 +36,7 @@ control and 929 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 929 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 936 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -773,7 +773,7 @@ The login page (demo mode) has a demo-account chip for every role — **one tap 
 ### 🧪 Want to run the tests?
 
 ```bash
-cd backend && npm test      # 388 cases — including a 17-step end-to-end walkthrough
+cd backend && npm test      # 395 cases — including a 17-step end-to-end walkthrough
 cd app && flutter test      # 492 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
@@ -1080,6 +1080,11 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   · a [privacy policy page](https://suruchboss.github.io/PaynEat/privacy.en.html) in three languages that says plainly
   the barcode scanner (Google ML Kit) sends diagnostic data to Google · Data safety answers and store text and images
   in two languages under `docs/store/` (see `docs/tickets/29-android-google-play.md`, `docs/DECISIONS.md` #75)
+- **Upgrades keep the shop's data** — the database schema is a set of numbered migrations (`backend/src/db/migrations/`);
+  the database records which ones have run (`schema_migrations`), and each runs once in its own transaction, so one that
+  fails midway rolls back whole and leaves no half-built schema. A database created before this change upgrades with its
+  data intact · if someone edits a migration that has already run, or rolls the app back to a version older than the
+  database, the server refuses to start and says why (see `docs/DECISIONS.md` #79; how to add a migration is in `CONTRIBUTING.md`)
 
 ---
 
@@ -1230,7 +1235,7 @@ PaynEat/
 ├── backend/                          # Node.js API
 │   ├── src/
 │   │   ├── config/  core/  middlewares/  realtime/
-│   │   ├── db/                       # schema.sql, migrate, seed
+│   │   ├── db/                       # migrations/ (versioned), migrate, seed
 │   │   ├── modules/                  # Split by domain
 │   │   │   └── orders/
 │   │   │       ├── order.routes.js
@@ -1399,13 +1404,13 @@ Every endpoint shares the same response shape:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 388 cases
+cd backend && npm test      # 395 cases
 cd app && flutter test      # 492 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (388 + 492 + 49). The `android-version.mjs` script tests check that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (395 + 492 + 49). The `android-version.mjs` script tests check that a `vX.Y.Z` tag always
 gives a higher `versionCode` and that a malformed or out-of-range tag stops with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1460,7 +1465,7 @@ images from the real Dockerfiles every time `main` changes (and on every PR touc
 and the web app answers 200 — only then does it upload them as the `demo` release for Option D (no job built the images
 before, which is how the web Dockerfile stayed broken unnoticed — see `docs/DECISIONS.md` #63, #65)
 
-**Backend (388 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (395 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The centerpiece is `tests/order-flow.test.js`, which walks the entire floor-to-cash path in 17 steps:
 
 > Pick a table → open an order with modifiers → verify the total is correct → the table becomes occupied →
@@ -1621,7 +1626,13 @@ oldest first and never above what's owed, cash counted into the shift, no voidin
 its shift closed, billing notes (no duplicates/void and reissue/paid status), refunding a credit bill
 capped at what's still owed, debt aging, and RBAC — `migrate-credit.test.js` (1 case) builds a real
 pre-ticket-20 database and migrates it, proving the money data, the refunds pointing at it, and the
-indexes all survive (see `docs/DECISIONS.md` #48–#51)
+indexes all survive (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (7 cases) covers versioned
+migrations (T01 #80): each runs once however often the server boots; one that fails halfway rolls back whole
+(tables and columns it made are gone, and it is not recorded as applied); one that runs without foreign keys must
+pass `foreign_key_check` before it commits; an edited applied migration, or an app older than its database, stops
+the server from starting; the migration files match `checksums.json` (a Windows CRLF checkout gives the same
+checksum); and a database created before T01, with seed data, a sale and a refund, upgrades with every table's row
+count unchanged (see `docs/DECISIONS.md` #79)
 
 `late-fees-credit-notes.test.js` (7 cases) the 15% rate cap / cashiers can't set it / rate changes are
 audited, no rate = no interest, only bills past their grace period are charged through today and a second
@@ -1925,7 +1936,8 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   payments that skip promotions, shift close counting points as cash), put reports on the shop's own day, and scope
   every endpoint to its branch, in three rounds through tickets T01–T32 (#80–#110, #117). The PO has answered the 12
   open choices, e.g. a partial refund on a bill paid partly in points is returned in proportion, and short stock
-  blocks sending to the kitchen unless a manager confirms (see `docs/DECISIONS.md` #77)
+  blocks sending to the kitchen unless a manager confirms (see `docs/DECISIONS.md` #77) — done so far: T01
+  versioned migrations (#80, `docs/DECISIONS.md` #79)
 - [ ] **Link previews and web-app icons that match the real thing** — no stale figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — done: JSON logs per contract v1.1 (no vendor

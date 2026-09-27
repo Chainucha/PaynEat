@@ -2,11 +2,16 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- =============================================================
--- PaynEat POS — Database schema (SQLite)
+-- PaynEat POS — Database schema (SQLite), migration 0001: baseline
 -- Original project by SuruchBoss — https://github.com/SuruchBoss/PaynEat
 -- Licensed under Apache License 2.0 — see LICENSE and NOTICE at repo root
 -- หมายเหตุ: จำนวนเงินทุกคอลัมน์เก็บเป็น "สตางค์" (integer)
 --          เช่น 120.50 บาท = 12050 เพื่อเลี่ยงปัญหา floating point
+--
+-- ไฟล์นี้คือ schema ทั้งหมดก่อน T01 (#80, docs/DECISIONS.md #79) ถูกแช่แข็งแล้ว: ห้ามแก้ แม้แต่คอมเมนต์
+-- เพราะ checksum ของไฟล์ถูกบันทึกในทุกฐานข้อมูลที่รันไปแล้ว — เปลี่ยน schema ให้เพิ่ม migration เลขถัดไป
+-- ในโฟลเดอร์นี้แทน (ดู migrations/index.js) คอลัมน์และ index ที่คอมเมนต์ด้านล่างบอกว่า "สร้างใน
+-- migrate.js" ตอนนี้อยู่ใน 0001_baseline.js
 -- =============================================================
 
 PRAGMA foreign_keys = ON;

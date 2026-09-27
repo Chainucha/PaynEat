@@ -1920,6 +1920,11 @@ What's not done yet, and why — so it's clear these are known gaps, not oversig
   `docs/DECISIONS.md` #69)
 - [ ] **A faster web app for anyone not using Korean** — the full Korean font (3.2MB) loads only when needed, and Korean
   data still never shows as empty boxes, even in a shop with no internet (see ticket 30)
+- [ ] **Fix the September 2026 QA findings (#79)** — close the ways money goes missing (voiding paid bills, split
+  payments that skip promotions, shift close counting points as cash), put reports on the shop's own day, and scope
+  every endpoint to its branch, in three rounds through tickets T01–T32 (#80–#110, #117). The PO has answered the 12
+  open choices, e.g. a partial refund on a bill paid partly in points is returned in proportion, and short stock
+  blocks sending to the kitchen unless a manager confirms (see `docs/DECISIONS.md` #77)
 - [ ] **Link previews and web-app icons that match the real thing** — no stale figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — done: JSON logs per contract v1.1 (no vendor

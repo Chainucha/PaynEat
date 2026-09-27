@@ -1,6 +1,7 @@
 # Ticket: อ่านน้ำหนักสดจากตาชั่งผ่านสาย + สแกนด้วยกล้องมือถือ
 
 **Priority:** 🟠 High
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #54)
 **Ref:** `docs/tickets/18-sell-by-weight.md`, `docs/tickets/19-barcode-scale.md` (ขอบเขตที่ตั้งใจไม่ทำ) —
 ผู้ใช้ขอให้ทำต่อ 2026-09-23
 

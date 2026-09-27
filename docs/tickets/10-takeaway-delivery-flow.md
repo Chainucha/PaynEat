@@ -1,6 +1,7 @@
 # Ticket: Takeaway/Delivery Flow เต็มรูปแบบ
 
 **Priority:** 🟡 Medium
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T17 [#108](https://github.com/SuruchBoss/PaynEat/issues/108)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #10
 
 ## ปัญหา

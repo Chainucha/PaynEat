@@ -1,6 +1,7 @@
 # Ticket: ลูกค้า/สมาชิก/แต้มสะสม (Customer & Loyalty)
 
 **Priority:** 🟡 Medium
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #59) — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T11 [#101](https://github.com/SuruchBoss/PaynEat/issues/101), T15 [#84](https://github.com/SuruchBoss/PaynEat/issues/84)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #9
 
 ## ปัญหา

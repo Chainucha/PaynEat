@@ -1,6 +1,7 @@
 # Ticket: PromptPay QR จริง (Real PromptPay QR Code)
 
 **Priority:** 🔴 Critical
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #16
 
 ## ปัญหา

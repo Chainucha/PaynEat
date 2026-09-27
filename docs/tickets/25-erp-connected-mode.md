@@ -1,11 +1,12 @@
 # Ticket: โหมดเชื่อมต่อ PaynEat ERP — ลงทะเบียน, ดึง master data ตามเวอร์ชัน, หน้าจัดการเป็นอ่านอย่างเดียว
 
 **Priority:** 🟠 High — สัปดาห์ที่ 4 ของแผน PaynEat ERP v1
+**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — สัญญา POS v1 1.0.0 merge แล้วใน PaynEat-ERP#9 (PR PaynEat-ERP#55 พร้อมข้อแก้ของ POS PO ครบ 4 ข้อ) เหลือรอ T01 [#80](https://github.com/SuruchBoss/PaynEat/issues/80) ซึ่งอยู่ระหว่างรีวิวใน PR [#119](https://github.com/SuruchBoss/PaynEat/pull/119)
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [ERP ADR-0011](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0011-ecosystem-and-sherwhyve.md),
 [สเปก ERP #1](https://github.com/SuruchBoss/PaynEat-ERP/issues/1), `docs/DECISIONS.md` #66
 **Blocked by:** [#80](https://github.com/SuruchBoss/PaynEat/issues/80) (T01 migration แบบมีเวอร์ชัน — ตาราง mirror ต้องเข้าผ่านทางนี้, `docs/DECISIONS.md` #77),
-[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9) (สัญญาเชื่อมต่อ v1 ต้อง merge แล้ว),
+~~[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9)~~ ✅ (สัญญาเชื่อมต่อ v1 merge แล้ว 2026-09-27),
 `24-telemetry-contract.md`
 
 ## ปัญหา
@@ -18,7 +19,7 @@
 ## ขอบเขตงาน
 - **ค่าเริ่มต้นคือโหมดใช้งานเดี่ยว** ทำงานเหมือนเดิมทุกประการ ไม่มีอะไรเปลี่ยนสำหรับร้านที่ไม่มี ERP
 - **เข้าโหมดเชื่อมต่อ**: admin ใส่ URL ของ ERP และ machine credential (`pnepos_…`) ที่ได้ตอนลงทะเบียน POS instance ใน ERP
-  - ตอนบันทึกให้เรียก `GET /api/v1/pos/instance` ตามสัญญา POS v1 **1.0.0** (PaynEat-ERP#55) เพื่อยืนยัน credential และรับรหัส
+  - ตอนบันทึกให้เรียก `GET /api/v1/pos/instance` ตามสัญญา POS v1 **1.0.0** (PaynEat-ERP#55, merge แล้ว) เพื่อยืนยัน credential และรับรหัส
     instance, `contractVersion` และสาขาที่ ERP ให้ instance นี้ดูแล — สาขาใน POS ที่ไม่อยู่ในรายการ ให้บอกชัดบนหน้าจอ
   - ถ้า `contractVersion` เป็น major ที่ POS ไม่รู้จัก ให้ปฏิเสธการเชื่อมต่อพร้อมเหตุผล
   - โครงหน้าตั้งค่า: หัวข้อ "การเชื่อมต่อ" ของ admin หลัง login — ส่วนบนเว้นไว้ให้เซิร์ฟเวอร์ร้านของ ticket 29b ส่วนล่างเป็น ERP

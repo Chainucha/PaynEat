@@ -1,6 +1,7 @@
 # Ticket: แอป PaynEat POS บน Google Play — ใส่ที่อยู่เซิร์ฟเวอร์ได้เอง และลองโหมดสาธิตได้โดยไม่มีเซิร์ฟเวอร์
 
 **Priority:** 🟠 High — ช่องทางแรกที่ร้านติดตั้งเองได้จาก store (`docs/DECISIONS.md` #69)
+**สถานะ (2026-09-27):** 🟡 ครึ่งหนึ่ง — 29a ✅ (#75, applicationId `suruch.boss.payneat` ตาม #78) · ก่อนอัปโหลด Play ครั้งแรกต้องทำ Flutter ขั้น 1–2 [#111](https://github.com/SuruchBoss/PaynEat/issues/111) และเจ้าของเปิดบัญชี Play Console · 29b รอ 25
 **Ref:** `docs/DECISIONS.md` #67 (POS ฟรีทั้งหมด), #69 (การแจกจ่าย POS)
 **Blocked by:** 29a ไม่มี — 29b รอ `25-erp-connected-mode.md` (ดู "ลำดับงาน") · การขึ้น production รอเจ้าของเปิดบัญชี
 Google Play Console และผ่านการทดสอบแบบปิด

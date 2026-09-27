@@ -1,6 +1,7 @@
 # Ticket: ขายเชื่อ / วางบิล / รับชำระหนี้ (ลูกค้าขายส่ง B2B)
 
 **Priority:** 🟠 High
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว (`docs/DECISIONS.md` #50) — QA รอบ ก.ย. 2026 (#79) พบกฎที่ยังไม่ป้องกัน แก้ใน T29 [#92](https://github.com/SuruchBoss/PaynEat/issues/92)
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` — หมายเหตุการอัปเดต #48–#51 (ร้านเนื้อ/ขายส่ง)
 
 ## ปัญหา

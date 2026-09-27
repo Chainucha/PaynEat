@@ -1,6 +1,7 @@
 # Ticket: พิมพ์ใบเสร็จจริง (Thermal/ESC-POS Printer)
 
 **Priority:** 🔴 Critical
+**สถานะ (2026-09-27):** ✅ เสร็จแล้ว
 **Ref:** `docs/FEATURE-GAP-ANALYSIS.md` #3
 
 ## ปัญหา

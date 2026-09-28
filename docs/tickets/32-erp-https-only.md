@@ -1,7 +1,7 @@
 # Ticket: ส่ง credential ให้ PaynEat ERP ผ่าน HTTPS เท่านั้น
 
 **Priority:** 🟠 High — ต้องเสร็จก่อนร้านจริงร้านแรกใช้โหมดเชื่อมต่อ ERP
-**สถานะ (2026-09-28):** ⏳ ยังไม่เริ่ม — เริ่มได้
+**สถานะ (2026-09-28):** ⏳ ยังไม่เริ่ม — เริ่มได้ (กติกาอยู่ในสัญญาแล้ว: PaynEat-ERP#61)
 **Ref:** `docs/DECISIONS.md` #82, #80 (ticket 25), [PaynEat-ERP#60](https://github.com/SuruchBoss/PaynEat-ERP/issues/60) (HTTPS ฝั่ง ERP),
 สัญญา POS v1 1.0 (`backend/contracts/erp-pos/`)
 **Blocked by:** ไม่มี — งานเล็กที่ปิดช่องทางส่ง credential โดยไม่เข้ารหัส จึงไม่ต้องรอ QA รอบ 1 (#77) แต่ต้องเสร็จก่อน ticket 26 และ 28
@@ -27,6 +27,9 @@ PaynEat-ERP#60 และเสนอกติกาในสัญญาว่�
     เพราะแคตตาล็อก v1.2 ไม่มีค่าเฉพาะสำหรับกรณีนี้ ถ้า ERP PO เพิ่มค่าใหม่ให้ ค่อยเปลี่ยนตาม
 - **HTTPS ต้องตรวจใบรับรองเสมอ** ห้ามมีค่าตั้งค่าที่ปิดการตรวจ (เช่น `NODE_TLS_REJECT_UNAUTHORIZED=0`)
   ถ้าเชนใช้ CA ภายในของตัวเอง ให้ใช้ `NODE_EXTRA_CA_CERTS` ชี้ไปที่ไฟล์ CA ของเชน
+- **สำเนาสัญญาใน `backend/contracts/erp-pos/`**: ERP เพิ่มหัวข้อ "Transport" ใน `contracts/README.md` แล้ว
+  (PaynEat-ERP#61, EN และ TH) เนื้อหาตรงกับ #82 รวมข้อยกเว้น `ERP_ALLOW_INSECURE_HTTP` และสัญญายังเป็น 1.0.0 ให้คัดลอก
+  ไฟล์ที่เปลี่ยน (`README.md` และ `CHANGELOG.md` ถ้ามีการแก้) จาก `main` ของ ERP มาทั้งไฟล์โดยไม่แก้ แล้วอัปเดต `checksums.json` เพราะสำเนาต้องตรงกับต้นทางทุกไบต์ (#80)
 - **เอกสาร:**
   - `backend/.env.example`: เพิ่ม `ERP_ALLOW_INSECURE_HTTP` และ `NODE_EXTRA_CA_CERTS` พร้อมคำอธิบาย
   - คู่มือติดตั้ง (`install*.html` ทั้ง 3 ภาษา): ถ้า ERP ของเชนใช้ใบรับรองจาก CA ภายใน เครื่อง POS ต้องเชื่อ CA นั้นผ่าน

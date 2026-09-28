@@ -5,6 +5,7 @@
 #
 # ตั้งค่าเป็นเดโมทั้งหมด: บัญชีเดโม (admin/admin123 ฯลฯ), ตาชั่งจำลอง, อีเมลสร้างครบแต่ไม่ส่งออกจริง
 # ห้ามใช้ไฟล์นี้กับร้านจริง — ตาชั่งจำลองคือน้ำหนักปลอม และ JWT_SECRET เป็นค่าที่เผยแพร่อยู่
+# พอร์ตเปิดเฉพาะเครื่องนี้ (127.0.0.1) ตามที่คู่มือติดตั้งบอก — ใช้หลายเครื่องในร้านให้ใช้ docker-compose.yml ที่รากแทน
 name: payneat
 
 services:
@@ -21,7 +22,7 @@ services:
       SCALE_DRIVER: simulator
       MAIL_TRANSPORT: json
     ports:
-      - '3000:3000'
+      - '127.0.0.1:3000:3000'
     volumes:
       - payneat-data:/app/data
     # เปิด Docker Desktop ใหม่หลังรีสตาร์ตเครื่อง ระบบขึ้นเองโดยไม่ต้องสั่งซ้ำ
@@ -31,7 +32,7 @@ services:
     image: payneat-web:demo
     container_name: payneat-web
     ports:
-      - '8080:80'
+      - '127.0.0.1:8080:80'
     depends_on:
       - api
     restart: unless-stopped

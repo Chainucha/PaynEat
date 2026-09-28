@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'node:crypto';
 
 // ไฟล์นี้ตั้งใจไม่ใช้ ./helpers/testApp.js เพราะต้อง toggle NODE_ENV=production เอง และต้องการ
 // ตาราง users ว่างสนิทตอนเริ่ม (testApp.js seed บัญชีเดโมไว้แล้วตั้งแต่ import) — node:test รัน
@@ -14,7 +15,8 @@ import bcrypt from 'bcryptjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dbFile = path.join(root, `data/test-seed-prod-${process.pid}-${Date.now()}.sqlite`);
 
-process.env.JWT_SECRET = 'test-secret';
+// production ต้องใช้ secret ที่ไม่ใช่ค่าตัวอย่างและยาวอย่างน้อย 32 ตัว (T19) — สุ่มใหม่ทุกครั้งที่รัน
+process.env.JWT_SECRET = randomBytes(32).toString('hex');
 process.env.DATABASE_FILE = dbFile;
 
 after(() => {

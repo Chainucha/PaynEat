@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1003%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1017%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1003 automated tests.
+control and 1017 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -34,7 +34,7 @@ control and 1003 automated tests.
 
 ## 🍽 เมนูแก้ปัญหาร้านอาหาร
 
-ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 1,003 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
+ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 1,017 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
 
 | # | ปัญหาของร้าน | ชุดที่แก้ | ได้อะไร |
 |---|---|---|---|
@@ -386,9 +386,15 @@ flutter run                  # เลือกอุปกรณ์ที่เ�
 
 **สิ่งที่ต้องมี:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) เท่านั้น
 
+ตั้งรหัสลับของเซิร์ฟเวอร์ (`JWT_SECRET`) ในไฟล์ `.env` ข้าง `docker-compose.yml` ก่อน — `docker-compose.yml` ไม่มีค่าสำรองให้
+หากไม่ได้ตั้งค่า `docker compose` จะหยุดพร้อมวิธีตั้งค่า แล้วจึงเริ่มระบบ:
+
 ```bash
+echo "JWT_SECRET=$(openssl rand -hex 32)" > .env   # Windows PowerShell: ดูคำสั่งด้านล่าง
 docker compose up --build
 ```
+
+Windows PowerShell สร้างไฟล์ `.env` ด้วย `("JWT_SECRET=" + [guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")) | Out-File -Encoding ascii .env`
 
 การ build ครั้งแรกใช้เวลาประมาณ 5–10 นาที (ต้องดาวน์โหลด Flutter SDK เพื่อ build เว็บ) ครั้งถัดไปจะเร็วขึ้นมาก
 
@@ -400,8 +406,8 @@ docker compose up --build
 | http://localhost:3000/docs | เอกสาร API ที่ทดลองเรียกใช้ได้ (Swagger UI) |
 | http://localhost:3000/health | ตรวจสอบว่า API ทำงานอยู่ |
 
-**การเปิดตาชั่งอ่านสดและการส่งอีเมล (ทัวร์ข้อ 27–28) ใน Docker** — ค่าเริ่มต้นปิดทั้งสองอย่าง ให้สร้างไฟล์ `.env` ไว้**ข้าง
-`docker-compose.yml`** (ไม่ใช่ `backend/.env`) ใส่ 2 บรรทัดต่อไปนี้ แล้วรัน `docker compose up --build` ใหม่:
+**การเปิดตาชั่งอ่านสดและการส่งอีเมล (ทัวร์ข้อ 27–28) ใน Docker** — ค่าเริ่มต้นปิดทั้งสองอย่าง ให้เพิ่ม 2 บรรทัดต่อไปนี้ในไฟล์ `.env`
+ข้าง **`docker-compose.yml`** (ไม่ใช่ `backend/.env`) แล้วรัน `docker compose up --build` ใหม่:
 
 ```bash
 SCALE_DRIVER=simulator
@@ -624,6 +630,8 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 
 - เข้าสู่ระบบเป็น `admin` → **จัดการพนักงาน** → แถวบัญชีของตนเองไม่มีปุ่ม ⋮ มีเพียงป้าย **"คุณ"** (ลดสิทธิ์ ปิด หรือลบบัญชีของตนเอง
   ไม่ได้ — การเรียก API โดยตรงได้รับ 400) ส่วนแถวของผู้ใช้อื่นเปลี่ยนบทบาทหรือปิดการใช้งานได้ แต่ต้องยืนยันในกล่องที่แสดงผลลัพธ์ก่อนทุกครั้ง
+  — ลบบัญชี `cashier` (ซึ่งเคยเปิดกะแล้ว) → ระบบไม่ลบ และแจ้งให้ปิดการใช้งานบัญชีแทน เพื่อให้ประวัติการเงินยังระบุได้ว่าใครทำ
+  (การเรียก API โดยตรงได้รับ 409)
 - เปิดออเดอร์ → ⋮ → **ยกเลิกออเดอร์** → ปุ่มยืนยันจะกดไม่ได้จนกว่าจะกรอกเหตุผล — เมื่อมีรายการในตะกร้าแล้วกดย้อนกลับ
   → ระบบถามยืนยันก่อนทิ้งรายการ, **รวมบิล** → หลังเลือกออเดอร์ต้องยืนยันอีกครั้ง (รวมแล้วย้อนกลับไม่ได้)
 - หน้าเก็บเงิน: แก้ยอด "รับเงินมา" ให้น้อยกว่ายอดบิล → ปุ่มรับเงินเป็นสีเทา **พร้อมแสดงยอดที่ยังขาดใต้ปุ่ม**
@@ -715,8 +723,8 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 ### 🧪 การรันเทสต์
 
 ```bash
-cd backend && npm test      # 439 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 515 เคส — domain / controller / widget
+cd backend && npm test      # 452 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
+cd app && flutter test      # 516 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -872,7 +880,8 @@ cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุ
 - **จัดการเมนู** เพิ่ม/แก้ไข/ลบ และสร้างกลุ่มตัวเลือกเสริมเองได้ — ตั้งเป็น **ขายตามน้ำหนัก** (ราคาต่อ
   กก.) และระบุ **บาร์โค้ด/รหัสบนตาชั่ง (PLU)** ได้ รหัสที่ซ้ำกับเมนูอื่นในสาขาเดียวกันจะถูกปฏิเสธ
 - **จัดการพนักงาน** เพิ่มบัญชี เปลี่ยนบทบาท ปิดการใช้งาน — การเปลี่ยนบทบาทหรือปิดบัญชีต้องยืนยันก่อน และไม่สามารถลดสิทธิ์หรือปิด
-  บัญชีของตนเองได้ (ป้องกันการล็อกตนเองออกจากระบบโดยไม่ตั้งใจ ดู `docs/DECISIONS.md` #62)
+  บัญชีของตนเองได้ (ป้องกันการล็อกตนเองออกจากระบบโดยไม่ตั้งใจ ดู `docs/DECISIONS.md` #62) บัญชีที่มีประวัติกะหรือธุรกรรมแล้ว
+  ลบไม่ได้ ให้ปิดการใช้งานแทน ประวัติการเงินจึงยังระบุผู้ทำรายการได้เสมอ (`docs/DECISIONS.md` #83)
 - **ตั้งค่าร้าน** ชื่อร้าน, VAT, Service Charge, โหมดราคารวม VAT, เลขประจำตัวผู้เสียภาษี/ที่อยู่/
   สาขา (สำหรับออกใบกำกับภาษี — ไม่บังคับกรอกหากร้านไม่ได้จดทะเบียน VAT), อัตราแลกแต้มสะสม (ยอดชำระกี่บาท
   ได้ 1 แต้ม / มูลค่า 1 แต้มเมื่อใช้แลก), **เลขพร้อมเพย์** (เบอร์โทร/เลขบัตรประชาชน/เลขผู้เสียภาษี —
@@ -1296,13 +1305,13 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 ## 🧪 การทดสอบ
 
 ```bash
-cd backend && npm test      # 439 เคส
-cd app && flutter test      # 515 เคส
+cd backend && npm test      # 452 เคส
+cd app && flutter test      # 516 เคส
 cd app && flutter test test_e2e   # 49 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
-badge นับเฉพาะเทสต์ของ backend และแอป (439 + 515 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (452 + 516 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (49 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1345,7 +1354,7 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 เพื่อยืนยันว่า API ตอบ `/health`, เข้าสู่ระบบได้, ตาชั่งจำลองทำงานอยู่ และเว็บตอบ 200 — เมื่อผ่านแล้วจึงอัปโหลดเป็น release `demo` ของทางเลือก D
 (job นี้ป้องกันไม่ให้ Dockerfile ที่ build ไม่ผ่านหลุดรอดโดยไม่มีการแจ้งเตือน ดู `docs/DECISIONS.md` #63, #65)
 
-**Backend (439 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
+**Backend (452 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
 เทสต์หลักคือ `tests/order-flow.test.js` ซึ่งครอบคลุมเส้นทางการทำงานของร้านตั้งแต่ต้นจนจบใน 17 ขั้น:
 
 > เลือกโต๊ะ → เปิดออเดอร์พร้อมตัวเลือกเสริม → ตรวจว่ายอดคำนวณถูกต้อง → โต๊ะเปลี่ยนเป็นไม่ว่าง →
@@ -1393,6 +1402,14 @@ sync เมนูเช่นเดียวกัน → การแก้จ�
 script/style) — `seed-production-safety.test.js` (2 เคส) ยืนยันว่า `NODE_ENV=production`
 ปฏิเสธการ seed บัญชีด้วยรหัสผ่านเดโมที่เปิดเผยอยู่แล้ว (`admin123` ฯลฯ) ต้องตั้ง `SEED_*_PASSWORD` เองก่อน
 เสมอ (ดู `docs/DECISIONS.md` #20)
+
+`production-defaults.test.js` (13 เคส) ตรวจค่าเริ่มต้นสำหรับ production (T19, `docs/DECISIONS.md` #83):
+- `NODE_ENV=production` ไม่ยอมเริ่มเมื่อ `JWT_SECRET` เป็นค่าตัวอย่างใน repository หรือสั้นกว่า 32 ตัวอักษร แต่เริ่มได้เมื่อเป็นค่าสุ่มยาวพอ
+  และตอนพัฒนายังใช้ค่าเดโมได้;
+- `/metrics` ฟังเฉพาะ `127.0.0.1` เป็นค่าเริ่มต้น;
+- คำตอบของ error 500 ไม่แนบ stack เว้นแต่ตั้ง `EXPOSE_ERROR_STACK=true` นอก production;
+- ลบบัญชีที่เคยเปิดกะได้ 409 โดยไม่มีอะไรถูกลบหรือบันทึก และปิดการใช้งานแทนได้;
+- `docker-compose.yml` ไม่มีค่าสำรองของ `JWT_SECRET` และไม่เปิดพอร์ต metrics ส่วน compose เดโมเปิดพอร์ตเฉพาะ `127.0.0.1`
 
 `audit-logs.test.js` (16 เคส) ทดสอบว่าทุก action ที่มีความเสี่ยงถูกบันทึกถูกต้อง: ยกเลิกออเดอร์
 (พร้อมเหตุผล/ผู้ทำ), void รายการอาหารเฉพาะหลังครัวทำแล้ว (การยกเลิกขณะยัง pending ต้องไม่ถูกบันทึก),
@@ -1548,7 +1565,7 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 เบอร์ อีเมล เลขผู้เสียภาษี ที่อยู่ รหัสผ่าน หรือ token ลงใน log, JSON ที่ไม่ถูกต้องซึ่งมีรหัสผ่านได้รับ 400 (เดิม 500) โดยเนื้อหา body ไม่ถูกบันทึก
 และ QR token ของโต๊ะไม่ปรากฏใน log (ดู `docs/DECISIONS.md` #68)
 
-**Flutter (515 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (516 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|
@@ -1783,7 +1800,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   รายงานใช้วันทำการของร้าน และแก้ข้อค้นพบด้านความปลอดภัยเรื่องค่าเริ่มต้น สิทธิ์ และการแยกสาขา (T19–T24, T32 — ไม่เผยแพร่
   รายละเอียดตาม `docs/DECISIONS.md` #81) ภายใน 3 รอบ ตาม ticket T01–T32 (#80–#110, #117) โดยมีข้อตัดสินใจ 12 ข้อที่กำหนดทางเลือกไว้แล้ว
   เช่น การคืนเงินบางส่วนของบิลที่ใช้แต้มให้คืนตามสัดส่วน และห้ามส่งครัวเมื่อสต๊อกไม่พอเว้นแต่ผู้จัดการยืนยัน (ดู `docs/DECISIONS.md` #77)
-  — เสร็จแล้ว: T01 migration แบบมีเวอร์ชัน (#80, `docs/DECISIONS.md` #79)
+  — เสร็จแล้ว: T01 migration แบบมีเวอร์ชัน (#80, `docs/DECISIONS.md` #79) และ T19 ค่าเริ่มต้นสำหรับ production (`docs/DECISIONS.md` #83)
 - [ ] **ภาพแชร์ลิงก์และไอคอนเว็บแอปตรงกับระบบจริง** — ภาพตัวอย่างเมื่อแชร์ลิงก์ไม่มีตัวเลขที่ล้าสมัย และไอคอนเมื่อติดตั้งเว็บแอปเป็นโลโก้ PaynEat (ดู ticket 31)
 - [ ] **เชื่อมต่อ PaynEat ERP ผ่าน HTTPS เท่านั้น** — ที่อยู่ ERP ต้องเป็น `https://` ยกเว้น `localhost` หรือเครือข่ายปิดที่ผู้ดูแลเซิร์ฟเวอร์อนุญาตเอง
   และรองรับใบรับรองจาก CA ภายในของเชน (ดู ticket 32 และ `docs/DECISIONS.md` #82)

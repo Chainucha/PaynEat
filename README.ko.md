@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1003%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1017%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -104,7 +104,7 @@
 
 ## 🍽 문제 해결 메뉴
 
-대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,003개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
+대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,017개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
 
 | # | 가게의 문제 | 해결하는 세트 | 얻는 것 |
 |---|---|---|---|
@@ -414,7 +414,8 @@ POS는 매출 데이터와 고객 정보를 함께 다루므로, 보안은 사�
 
 이 프로젝트는 포트폴리오 프로젝트로 시작되었기 때문에 일부 기본값은 운영 환경에 그대로 사용하기에
 안전하지 않습니다. **이러한 기본값은 숨기지 않고 코드에서 차단합니다.** 운영 모드
-(`NODE_ENV=production`)에서 데모 비밀번호로 계정을 생성하려고 하면 서버가 시작되지 않습니다.
+(`NODE_ENV=production`)에서 데모 비밀번호로 계정을 생성하려고 하거나, `JWT_SECRET`이 예시 값이거나 32자보다 짧으면
+서버가 시작되지 않습니다. 소스에서 Docker로 실행하는 경우(`docker-compose.yml`)에도 `JWT_SECRET`을 직접 설정해야 합니다.
 
 전체 체크리스트는 [SECURITY.md](SECURITY.md)를 참고하십시오.
 보안 취약점은 저장소의 **Security** 탭을 통해 비공개로 신고해 주십시오.
@@ -459,13 +460,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1003건**의 자동화 테스트를 통과합니다.
+공개 전 **1017건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 439건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 515건 — domain / controller / widget
+cd backend && npm test      # 452건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 516건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1003건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1017건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 49건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

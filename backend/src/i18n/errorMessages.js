@@ -733,6 +733,11 @@ export const ERROR_MESSAGES = [
     en: "You can't delete your own account",
     ko: '본인 계정은 삭제할 수 없습니다',
   },
+  {
+    th: 'บัญชีนี้มีประวัติการทำรายการแล้วจึงลบไม่ได้ ให้ปิดการใช้งานบัญชีแทน',
+    en: 'This account has transaction history and cannot be deleted — deactivate it instead',
+    ko: '이 계정은 거래 이력이 있어 삭제할 수 없습니다 — 대신 계정을 비활성화하십시오',
+  },
 
   // ---------------------------------------------------------------- เชื่อมต่อ PaynEat ERP (ticket 25)
   {

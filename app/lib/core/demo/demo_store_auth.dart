@@ -147,6 +147,17 @@ extension DemoStoreAuth on DemoStore {
 
   void deleteStaff(int id, {int? actorId}) {
     final user = _findUser(id);
+    // เหมือน backend (T19): บัญชีที่มีประวัติกะหรือคืนเงินลบไม่ได้ ประวัติการเงินต้องบอกได้ว่าใครทำ — ปิดการใช้งานแทน
+    final hasHistory =
+        shifts.any((row) => row['openedBy'] == id || row['closedBy'] == id) ||
+        refunds.any((row) => row['refundedBy'] == id);
+    if (hasHistory) {
+      throw ApiException(
+        message: 'auth_user_has_history'.tr,
+        statusCode: 409,
+        code: 'USER_HAS_HISTORY',
+      );
+    }
     users.removeWhere((row) => row['id'] == id);
     _logAudit(
       actorId: actorId,

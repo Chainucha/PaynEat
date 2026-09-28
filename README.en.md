@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1003%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1017%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1003 automated tests.
+control and 1017 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1003 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,003 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,017 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -398,9 +398,15 @@ Suitable for evaluating the complete system without installing a development too
 
 **Requirement:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
+First set the server secret (`JWT_SECRET`) in a `.env` file next to `docker-compose.yml`. `docker-compose.yml` has no
+fallback value, so `docker compose` stops and explains how to set it if it is missing. Then start the system:
+
 ```bash
+echo "JWT_SECRET=$(openssl rand -hex 32)" > .env   # Windows PowerShell: see the command below
 docker compose up --build
 ```
+
+In Windows PowerShell, create the `.env` file with `("JWT_SECRET=" + [guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")) | Out-File -Encoding ascii .env`.
 
 The first run takes about 5–10 minutes because it downloads the Flutter SDK to build the web app. Subsequent runs
 are considerably faster.
@@ -414,8 +420,8 @@ When both `payneat-web` and `payneat-api` have started, open the following in a 
 | http://localhost:3000/health | Health check for the API |
 
 **Live scale and document e-mail in Docker (tour steps 27–28).** Both features are disabled by default. To enable
-them, create a `.env` file **next to `docker-compose.yml`** (not `backend/.env`) containing the following two lines,
-then run `docker compose up --build` again:
+them, add the following two lines to the `.env` file **next to `docker-compose.yml`** (not `backend/.env`), then run
+`docker compose up --build` again:
 
 ```bash
 SCALE_DRIVER=simulator
@@ -667,7 +673,9 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 
 - Log in as `admin` → **Staff** → the signed-in user's own row has no ⋮ menu, only a **"You"** badge (users cannot
   demote, deactivate, or delete their own account; a direct API call returns 400). Other rows allow role changes and
-  deactivation, but only after a confirmation dialog that describes the effect
+  deactivation, but only after a confirmation dialog that describes the effect. Deleting `cashier` (which has already
+  opened a shift) is refused with a request to deactivate the account instead, so financial history still shows who
+  performed each action (a direct API call returns 409)
 - Open an order → ⋮ → **Cancel order** → the confirm button remains disabled until a reason is entered. Add items
   to the cart and press back → a confirmation is required before the items are discarded. **Merge bills** → after
   the other order is selected, one further confirmation is required (a merge cannot be undone)
@@ -783,8 +791,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 439 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 515 cases — domain / controller / widget
+cd backend && npm test      # 452 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 516 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -974,7 +982,9 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   item in the same branch is rejected)
 - **Staff management** — add accounts, change roles, and deactivate accounts; role changes and deactivation
   require confirmation, and users cannot demote or deactivate their own account (so a single mistaken tap
-  cannot cause a lockout — see `docs/DECISIONS.md` #62)
+  cannot cause a lockout — see `docs/DECISIONS.md` #62). An account with shift or transaction history cannot be
+  deleted and is deactivated instead, so financial history always identifies who performed each action
+  (`docs/DECISIONS.md` #83)
 - **Store settings** — store name, VAT, Service Charge, VAT-inclusive pricing mode, tax ID/address/
   branch (for issuing tax invoices — optional if the store is not VAT-registered), the loyalty
   points exchange rate (baht spent per point earned / point value when redeemed), the **PromptPay
@@ -1430,13 +1440,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 439 cases
-cd app && flutter test      # 515 cases
+cd backend && npm test      # 452 cases
+cd app && flutter test      # 516 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (439 + 515 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (452 + 516 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1491,7 +1501,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (439 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (452 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1543,6 +1553,16 @@ expire), and an admin cannot demote or deactivate their own account (#62). `secu
 except `/docs` (Swagger UI requires inline script/style). `seed-production-safety.test.js` (2 cases)
 confirms that `NODE_ENV=production` refuses to seed accounts with the known demo passwords (`admin123` etc.);
 each account's password must first be set explicitly via `SEED_*_PASSWORD` (see `docs/DECISIONS.md` #20).
+
+`production-defaults.test.js` (13 cases) checks the production defaults (T19, `docs/DECISIONS.md` #83):
+- with `NODE_ENV=production`, the server refuses to start when `JWT_SECRET` is a sample value from the repository or
+  shorter than 32 characters, starts with a long random value, and development still accepts the demo value;
+- `/metrics` listens on `127.0.0.1` by default;
+- a 500 response carries no stack unless `EXPOSE_ERROR_STACK=true` is set outside production;
+- deleting an account that has opened a shift returns 409 with nothing deleted or logged, and the account can be
+  deactivated instead;
+- `docker-compose.yml` has no fallback `JWT_SECRET` and does not publish the metrics port, and the demo compose file
+  binds its ports to `127.0.0.1` only.
 
 `audit-logs.test.js` (16 cases) tests that every risky action is logged correctly: cancelling an
 order (with reason/actor), voiding an order item only after it has been sent to the kitchen (cancelling
@@ -1728,7 +1748,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (515 cases)** — organized into 3 levels:
+**Flutter (516 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1995,7 +2015,8 @@ Completed work, planned work, and known limitations, with the reasoning for each
   are not published, per `docs/DECISIONS.md` #81), in three rounds through tickets T01–T32 (#80–#110, #117).
   The 12 open decisions have been made; for example, a partial refund on a bill paid partly in points is returned in
   proportion, and insufficient stock blocks sending to the kitchen unless a manager confirms (see
-  `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79)
+  `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79) and T19 production defaults
+  (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [ ] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed

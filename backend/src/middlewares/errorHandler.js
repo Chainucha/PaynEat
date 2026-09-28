@@ -74,8 +74,7 @@ export const errorHandler = (err, req, res, _next) => {
       details,
       // รหัสเดียวกับ header x-request-id — ร้านแจ้งรหัสนี้แล้วค้น log ของคำขอนี้ได้ตรงตัว
       requestId: req.requestId,
-      stack:
-        env.nodeEnv === 'development' && statusCode >= 500 && !isApiError ? err.stack : undefined,
+      stack: env.exposeErrorStack && statusCode >= 500 && !isApiError ? err.stack : undefined,
     },
   });
 };

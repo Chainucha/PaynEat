@@ -11,7 +11,7 @@
 # - {tests} ถูกแทนด้วย TESTS ตอนสร้าง — อัปเดตพร้อม badge ใน README ทุกครั้งที่จำนวนเทสต์เปลี่ยน
 
 # backend `npm test` + app `flutter test` + app `flutter test test_e2e` (นับจริงตอนแก้ล่าสุด)
-TESTS = 439 + 515 + 49
+TESTS = 452 + 516 + 49
 
 REPO = 'https://github.com/SuruchBoss/PaynEat'
 ERP = 'https://suruchboss.github.io/PaynEat-ERP/'

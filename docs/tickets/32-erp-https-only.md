@@ -29,7 +29,7 @@ PaynEat-ERP#60 และเสนอกติกาในสัญญาว่�
   ถ้าเชนใช้ CA ภายในของตัวเอง ให้ใช้ `NODE_EXTRA_CA_CERTS` ชี้ไปที่ไฟล์ CA ของเชน
 - **สำเนาสัญญาใน `backend/contracts/erp-pos/`**: ERP เพิ่มหัวข้อ "Transport" ใน `contracts/README.md` แล้ว
   (PaynEat-ERP#61, EN และ TH) เนื้อหาตรงกับ #82 รวมข้อยกเว้น `ERP_ALLOW_INSECURE_HTTP` และสัญญายังเป็น 1.0.0 ให้คัดลอก
-  ไฟล์ที่เปลี่ยน (`README.md` และ `CHANGELOG.md` ถ้ามีการแก้) จาก `main` ของ ERP มาทั้งไฟล์โดยไม่แก้ แล้วอัปเดต `checksums.json` เพราะสำเนาต้องตรงกับต้นทางทุกไบต์ (#80)
+  ไฟล์ที่เปลี่ยน (`README.md` และ `CHANGELOG.md` ถ้ามีการแก้) จาก `main` ของ ERP มาทั้งไฟล์โดยไม่แก้ และอัปเดต `checksums.json` สำหรับไฟล์ที่อยู่ในรายการ (ตอนนี้ `README.md` ไม่อยู่ในรายการ แต่ `CHANGELOG.md` อยู่) เพราะสำเนาต้องตรงกับต้นทางทุกไบต์ (#80)
 - **เอกสาร:**
   - `backend/.env.example`: เพิ่ม `ERP_ALLOW_INSECURE_HTTP` และ `NODE_EXTRA_CA_CERTS` พร้อมคำอธิบาย
   - คู่มือติดตั้ง (`install*.html` ทั้ง 3 ภาษา): ถ้า ERP ของเชนใช้ใบรับรองจาก CA ภายใน เครื่อง POS ต้องเชื่อ CA นั้นผ่าน

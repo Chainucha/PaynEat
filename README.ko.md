@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1092%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1106%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -104,7 +104,7 @@
 
 ## 🍽 문제 해결 메뉴
 
-대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,092개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
+대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,106개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
 
 | # | 가게의 문제 | 해결하는 세트 | 얻는 것 |
 |---|---|---|---|
@@ -334,7 +334,9 @@
   (`docs/DECISIONS.md` #86)
 
 ### 캐셔
-- 분할 결제, 테이블 이동, 합산 결제 — 음식값·할인·서비스 차지·부가가치세를 비율대로 자동 배분
+- 분할 결제, 테이블 이동, 합산 결제 — 음식값·할인·서비스 차지·부가가치세를 비율대로 자동 배분. 항목별로 나눠 낼 때 프로모션 할인도
+  비율대로 나누고, "가격에 부가가치세 포함" 모드에서는 부가가치세를 두 번 더하지 않으며, 누적 반올림으로 누가 먼저 내든 모두의
+  몫을 합하면 계산서 금액과 정확히 같습니다 (`docs/DECISIONS.md` #88)
 - 현금, 신용카드, 계좌이체, **프롬프트페이 QR** 결제 — 신용 한도가 설정된 거래처는 **외상** 결제도 가능
   (한도 초과 시 결제 버튼 비활성화, 만기일 자동 계산)
 - ESC/POS 영수증 프린터 출력 (58mm·80mm)
@@ -475,13 +477,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1092건**의 자동화 테스트를 통과합니다.
+공개 전 **1106건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 497건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 546건 — domain / controller / widget
+cd backend && npm test      # 503건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 554건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1092건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1106건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 49건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

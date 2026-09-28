@@ -37,7 +37,11 @@ const assertItemsSelectable = (items, itemIds) => {
   }
 };
 
-/** คำนวณยอดที่ต้องจ่ายจากรายการที่เลือก — บังคับให้เท่ายอดคงเหลือพอดีถ้าเป็นรอบสุดท้าย กันเศษสตางค์ตกหล่น */
+/**
+ * คำนวณยอดที่ต้องจ่ายจากรายการที่เลือก — ปันส่วนลดมือ ส่วนลดโปรโมชัน Service Charge และ VAT ตามโหมดของร้าน
+ * (T10 #83, DECISIONS #88) บังคับให้เท่ายอดคงเหลือพอดีถ้าเป็นรอบสุดท้าย ส่วนต่างจากส่วนแบ่งที่คำนวณได้ (บิลเคยรับเงินแบบ
+ * ระบุยอด ถูกคืนเงิน หรือเปลี่ยนหลังแยกจ่ายไปแล้ว) ส่งกลับเป็น `adjustment` ให้ preview รวมกันได้เท่ายอดที่เก็บจริง
+ */
 const computeItemsAmount = (order, items, itemIds, remaining) => {
   const settings = settingsService.get();
   const share = calculateItemsShare({
@@ -45,6 +49,7 @@ const computeItemsAmount = (order, items, itemIds, remaining) => {
     selectedIds: itemIds,
     discountType: order.discount_type,
     discountValue: order.discount_value,
+    promotionDiscountAmount: order.promotion_discount_amount ?? 0,
     vatRate: settings.vatRate,
     serviceChargeRate: settings.serviceChargeRate,
     vatIncluded: settings.vatIncluded,
@@ -101,6 +106,10 @@ export const paymentService = {
       discountAmount: toBaht(share.discountAmount),
       serviceCharge: toBaht(share.serviceCharge),
       vat: toBaht(share.vat),
+      // โหมด VAT รวมในราคา VAT อยู่ในยอดแล้ว แอปแสดงเป็น "รวมในราคา" ไม่นับซ้ำ (T10 #83)
+      vatIncluded: share.vatIncluded,
+      // ยอดที่เก็บจริงต่างจากส่วนแบ่ง (รอบสุดท้ายรับยอดคงเหลือจริง) — subtotal − ส่วนลด + SC (+ VAT) + adjustment = total
+      adjustment: toBaht(amount - share.total),
       total: toBaht(amount),
       remaining: toBaht(remaining),
       isLastBatch: share.isLastBatch,

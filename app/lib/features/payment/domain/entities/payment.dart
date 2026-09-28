@@ -108,16 +108,27 @@ class SplitPreview {
     required this.total,
     required this.remaining,
     required this.isLastBatch,
+    this.vatIncluded = false,
+    this.adjustment = 0,
   });
 
   final int orderId;
   final List<int> itemIds;
   final double subtotal;
+
+  /// ส่วนลดมือ + ส่วนลดโปรโมชันที่ปันมาให้รายการที่เลือก (T10 #83)
   final double discountAmount;
   final double serviceCharge;
   final double vat;
   final double total;
   final double remaining;
+
+  /// ร้านตั้งราคารวม VAT — [vat] อยู่ใน [total] แล้ว แสดงเพื่อให้รู้เท่านั้น ไม่บวกซ้ำ
+  final bool vatIncluded;
+
+  /// ส่วนต่างระหว่างยอดที่เก็บจริงกับส่วนแบ่งที่คำนวณได้ เช่นบิลเคยรับเงินแบบระบุยอดไปก่อน — ตัวเลขใน preview
+  /// รวมกันได้ [total] เสมอ: subtotal − discount + serviceCharge (+ vat) + adjustment
+  final double adjustment;
 
   /// รายการที่เลือกครอบคลุมทุกรายการที่ยังไม่จ่ายแล้วหรือไม่ — ถ้าใช่ ยอด [total]
   /// จะถูกบังคับให้เท่ากับ [remaining] พอดี กันเศษสตางค์ตกหล่นจากการปัดเศษหลายรอบ

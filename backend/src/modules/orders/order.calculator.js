@@ -92,11 +92,16 @@ export const calculateBill = ({
 
 /**
  * คำนวณส่วนแบ่งบิลของ "บางรายการ" ในออเดอร์ — ใช้กับฟีเจอร์แยกบิลรายคน (itemized split)
+ * (T10 #83, docs/DECISIONS.md #88)
  *
- * หลักการ: คิดสัดส่วนตาม subtotal ของรายการที่เลือกเทียบกับ subtotal รวมของรายการที่ยังไม่ถูกยกเลิก
- * แล้วเฉลี่ยส่วนลด/Service Charge/VAT ตามสัดส่วนนั้น (ปัดเศษแยกกันในแต่ละองค์ประกอบ
- * จึงอาจมีเศษสตางค์คลาดเคลื่อนได้เล็กน้อยเมื่อรวมหลายรอบ — ผู้เรียกควรบังคับยอดรอบสุดท้าย
- * ให้เท่ากับยอดคงเหลือจริงเสมอ ดู `isLastBatch`)
+ * หลักการ: ส่วนลด (มือ + โปรโมชัน), Service Charge และ VAT ของทั้งบิลปันตามสัดส่วน subtotal ของรายการ
+ * ปัดเศษแบบสะสม: ส่วนของรอบนี้ = ปัด(ยอดทั้งบิล × (จ่ายแล้ว + รอบนี้) / ทั้งบิล) − ปัด(ยอดทั้งบิล × จ่ายแล้ว / ทั้งบิล)
+ * "จ่ายแล้ว" คือ subtotal ของรายการที่แยกจ่ายไปก่อนหน้า ผลรวมของทุกรอบจึงเท่ายอดทั้งบิลพอดีไม่ว่าจะแบ่งกี่คน
+ * หรือเลือกลำดับไหน และรอบสุดท้าย (เลือกรายการที่ยังไม่จ่ายครบทุกรายการ) ได้เศษที่เหลือโดยอัตโนมัติ
+ *
+ * ยอดของรอบนี้ = subtotal − ส่วนลด + Service Charge (+ VAT เฉพาะโหมด VAT แยก — โหมด VAT รวมในราคา VAT อยู่ในยอดแล้ว
+ * แสดงเพื่อให้รู้เท่านั้น) ผู้เรียกยังต้องบังคับยอดรอบสุดท้ายให้เท่ายอดคงเหลือจริงเสมอ (`isLastBatch`) เผื่อบิลเคยรับเงิน
+ * แบบระบุยอด ถูกคืนเงิน หรือเปลี่ยนหลังแยกจ่ายไปแล้ว
  */
 export const calculateItemsShare = ({
   items = [],
@@ -111,6 +116,7 @@ export const calculateItemsShare = ({
   const active = items.filter((item) => item.status !== 'cancelled');
   const unpaidActive = active.filter((item) => !item.is_paid);
   const selected = active.filter((item) => selectedIds.includes(item.id));
+  const paidBefore = active.filter((item) => item.is_paid && !selectedIds.includes(item.id));
 
   const full = calculateBill({
     items: active,
@@ -122,18 +128,19 @@ export const calculateItemsShare = ({
     vatIncluded,
   });
 
-  const selectedSubtotal = selected.reduce(
-    (acc, item) => acc + Number(item.line_total ?? item.lineTotal ?? 0),
-    0,
-  );
-  const share = full.subtotal > 0 ? selectedSubtotal / full.subtotal : 0;
+  const selectedSubtotal = sumActiveSubtotal(selected);
+  const before = sumActiveSubtotal(paidBefore);
+  const after = before + selectedSubtotal;
+  // ส่วนของยอด `amount` ทั้งบิลที่ตกกับรายการรอบนี้ ปัดแบบสะสมให้ผลรวมทุกรอบไม่คลาดแม้แต่สตางค์เดียว
+  const portion = (amount) =>
+    full.subtotal > 0
+      ? Math.round((amount * after) / full.subtotal) - Math.round((amount * before) / full.subtotal)
+      : 0;
 
-  // ส่วนแบ่งนี้รวมส่วนลดมือ + โปรโมชันไว้ในตัวเลขเดียว (discountAmount) เพราะฝั่งแยกบิล
-  // สนใจแค่ "ยอดที่คนนี้ต้องจ่าย" ไม่ต้องแยกที่มาของส่วนลดเหมือนใบเสร็จเต็มบิล
-  const discountAmount = Math.round((full.discountAmount + full.promotionDiscountAmount) * share);
-  const serviceCharge = Math.round(full.serviceCharge * share);
-  const vat = Math.round(full.vat * share);
-  const total = selectedSubtotal - discountAmount + serviceCharge + vat;
+  const discountAmount = portion(full.discountAmount + full.promotionDiscountAmount);
+  const serviceCharge = portion(full.serviceCharge);
+  const vat = portion(full.vat);
+  const total = selectedSubtotal - discountAmount + serviceCharge + (vatIncluded ? 0 : vat);
 
   const isLastBatch =
     unpaidActive.length > 0 && unpaidActive.every((item) => selectedIds.includes(item.id));
@@ -143,6 +150,7 @@ export const calculateItemsShare = ({
     discountAmount,
     serviceCharge,
     vat,
+    vatIncluded,
     total,
     isLastBatch,
     fullTotal: full.total,

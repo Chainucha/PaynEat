@@ -112,6 +112,8 @@ class SplitPreviewModel extends SplitPreview {
     required super.total,
     required super.remaining,
     required super.isLastBatch,
+    super.vatIncluded,
+    super.adjustment,
   });
 
   factory SplitPreviewModel.fromJson(Map<String, dynamic> json) =>
@@ -127,5 +129,7 @@ class SplitPreviewModel extends SplitPreview {
         total: (json['total'] as num?)?.toDouble() ?? 0,
         remaining: (json['remaining'] as num?)?.toDouble() ?? 0,
         isLastBatch: json['isLastBatch'] as bool? ?? false,
+        vatIncluded: json['vatIncluded'] as bool? ?? false,
+        adjustment: (json['adjustment'] as num?)?.toDouble() ?? 0,
       );
 }

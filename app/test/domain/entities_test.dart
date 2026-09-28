@@ -219,4 +219,41 @@ void main() {
       expect(summary.refunds, isEmpty);
     });
   });
+
+  group('SplitPreview (T10 #83)', () {
+    test(
+      'อ่านโหมด VAT รวมในราคาและส่วนปรับจาก backend ตัวเลขรวมได้ยอดที่เก็บ',
+      () {
+        final preview = SplitPreviewModel.fromJson({
+          'orderId': 1,
+          'itemIds': [1, 2],
+          'subtotal': 480,
+          'discountAmount': 240,
+          'serviceCharge': 24,
+          'vat': 18.48,
+          'vatIncluded': false,
+          'adjustment': -100,
+          'total': 182.48,
+          'remaining': 182.48,
+          'isLastBatch': true,
+        });
+        expect(preview.vatIncluded, isFalse);
+        expect(preview.adjustment, -100);
+        expect(
+          preview.subtotal -
+              preview.discountAmount +
+              preview.serviceCharge +
+              preview.vat +
+              preview.adjustment,
+          closeTo(preview.total, 0.001),
+        );
+      },
+    );
+
+    test('backend รุ่นเก่าที่ยังไม่ส่งสองค่านี้ → VAT แยก ไม่มีส่วนปรับ', () {
+      final preview = SplitPreviewModel.fromJson({'orderId': 1, 'total': 10});
+      expect(preview.vatIncluded, isFalse);
+      expect(preview.adjustment, 0);
+    });
+  });
 }

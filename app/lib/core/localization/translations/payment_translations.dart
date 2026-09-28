@@ -45,6 +45,8 @@ const Map<String, String> paymentTranslationsTh = {
   'payment_discount_label': 'ส่วนลด',
   'payment_service_charge_label': 'Service Charge',
   'payment_vat_label': 'VAT',
+  'payment_vat_included_label': 'VAT (รวมในราคาแล้ว)',
+  'payment_split_adjustment_label': 'ปรับตามยอดที่ชำระไปแล้ว',
   'payment_amount_due_this_round_label': 'ยอดที่ต้องจ่ายรอบนี้',
 
   // receipt_page
@@ -184,6 +186,8 @@ const Map<String, String> paymentTranslationsEn = {
   'payment_discount_label': 'Discount',
   'payment_service_charge_label': 'Service Charge',
   'payment_vat_label': 'VAT',
+  'payment_vat_included_label': 'VAT (included in prices)',
+  'payment_split_adjustment_label': 'Adjusted for earlier payments',
   'payment_amount_due_this_round_label': 'Amount due this round',
 
   // receipt_page
@@ -319,6 +323,8 @@ const Map<String, String> paymentTranslationsKo = {
   'payment_discount_label': '할인',
   'payment_service_charge_label': '서비스 차지',
   'payment_vat_label': '부가가치세',
+  'payment_vat_included_label': '부가가치세 (가격에 포함)',
+  'payment_split_adjustment_label': '이전 결제분 조정',
   'payment_amount_due_this_round_label': '이번에 받을 금액',
   'payment_receipt_title': '영수증',
   'payment_print_receipt_tooltip': '영수증 출력',

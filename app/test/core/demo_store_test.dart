@@ -412,6 +412,129 @@ void main() {
     });
   });
 
+  group('DemoStore แยกจ่ายตามรายการปันโปรและ VAT รวมในราคา (T10 #83)', () {
+    Map<String, dynamic> menuPriced(double price) =>
+        store.menuList().firstWhere(
+          (item) =>
+              (item['price'] as num).toDouble() == price &&
+              item['soldByWeight'] != true &&
+              !(item['optionGroups'] as List? ?? const []).any(
+                (group) => (group as Map)['isRequired'] == true,
+              ),
+        );
+
+    Map<String, dynamic> openOrder(List<double> prices) {
+      final table = store.tableList().firstWhere(
+        (t) => t['status'] == 'available',
+      );
+      final order = store.createOrder(
+        type: 'dine_in',
+        tableId: table['id'] as int,
+        guestCount: prices.length,
+        items: [
+          for (final price in prices)
+            {
+              'menuItemId': menuPriced(price)['id'],
+              'quantity': 1,
+              'optionIds': [],
+            },
+        ],
+      );
+      return store.findOrder(order['id'] as int);
+    }
+
+    List<int> itemIds(Map<String, dynamic> order) => [
+      for (final item in order['items'] as List) item['id'] as int,
+    ];
+
+    double sumOf(Map<String, dynamic> preview) =>
+        (((preview['subtotal'] as double) -
+                    (preview['discountAmount'] as double) +
+                    (preview['serviceCharge'] as double) +
+                    (preview['vatIncluded'] == true
+                        ? 0
+                        : preview['vat'] as double) +
+                    (preview['adjustment'] as double)) *
+                100)
+            .round() /
+        100;
+
+    test('โปรลด 50% บน 160 + 320 → จ่าย 94.16 และ 188.32 ตรงกับ backend', () {
+      store.savePromotion({
+        'name': 'ลดครึ่งราคา',
+        'type': 'percent',
+        'value': 50.0,
+        'code': 'HALF',
+        'conditions': const {},
+        'isActive': true,
+      });
+      final order = openOrder([160, 320]);
+      final redeemed = store.redeemPromotionCode(order['id'] as int, 'HALF');
+      expect(redeemed['total'], 282.48);
+      final [cheap, dear] = itemIds(order);
+
+      final first = store.splitPreview(order['id'] as int, [cheap]);
+      expect(first['discountAmount'], 80);
+      expect(first['total'], 94.16);
+      expect(first['adjustment'], 0);
+      expect(sumOf(first), first['total']);
+      final paid = store.pay(
+        orderId: order['id'] as int,
+        method: 'card',
+        itemIds: [cheap],
+      );
+      expect((paid['payment'] as Map)['amount'], 94.16);
+
+      final last = store.pay(
+        orderId: order['id'] as int,
+        method: 'card',
+        itemIds: [dear],
+      );
+      expect((last['payment'] as Map)['amount'], 188.32);
+      expect(last['isFullyPaid'], isTrue);
+    });
+
+    test(
+      'โหมด VAT รวมในราคา 160 + 80 → จ่าย 176.00 และ 88.00 ไม่บวก VAT ซ้ำ',
+      () {
+        store.updateSettings({'vatIncluded': true});
+        final order = openOrder([160, 80]);
+        expect(order['total'], 264);
+        final [big, small] = itemIds(order);
+
+        final preview = store.splitPreview(order['id'] as int, [big]);
+        expect(preview['vatIncluded'], isTrue);
+        expect(preview['total'], 176);
+        expect(sumOf(preview), preview['total']);
+        store.pay(orderId: order['id'] as int, method: 'card', itemIds: [big]);
+        final last = store.pay(
+          orderId: order['id'] as int,
+          method: 'card',
+          itemIds: [small],
+        );
+        expect((last['payment'] as Map)['amount'], 88);
+      },
+    );
+
+    test(
+      'รับเงินแบบระบุยอดไปก่อน → preview รอบสุดท้ายแสดง adjustment และรวมเท่ายอดคงเหลือ',
+      () {
+        final order = openOrder([160, 320]);
+        store.pay(
+          orderId: order['id'] as int,
+          method: 'cash',
+          amount: 100,
+          received: 100,
+        );
+        final preview = store.splitPreview(order['id'] as int, itemIds(order));
+        expect(preview['isLastBatch'], isTrue);
+        expect(preview['adjustment'], -100);
+        expect(preview['total'], closeTo((order['total'] as num) - 100, 0.001));
+        expect(sumOf(preview), closeTo(preview['total'] as double, 0.001));
+      },
+    );
+  });
+
   group('DemoStore ยอดจ่ายแล้วหักยอดคืนเงิน (T06 #82)', () {
     const manager = 2;
 

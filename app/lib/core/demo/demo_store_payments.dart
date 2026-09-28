@@ -85,37 +85,41 @@ extension DemoStorePayments on DemoStore {
     final unpaidActive = active
         .where((item) => item['isPaid'] != true)
         .toList();
-    final selected = active.where((item) => itemIds.contains(item['id']));
-
-    final fullSubtotal = active.fold<double>(
+    double subtotalOf(Iterable<Map<String, dynamic>> rows) => rows.fold<double>(
       0,
       (sum, item) => sum + (item['lineTotal'] as num).toDouble(),
     );
-    final selectedSubtotal = selected.fold<double>(
-      0,
-      (sum, item) => sum + (item['lineTotal'] as num).toDouble(),
-    );
-    final share = fullSubtotal > 0 ? selectedSubtotal / fullSubtotal : 0.0;
 
-    final discountAmount = _roundMoney(
-      (order['discountAmount'] as num).toDouble() * share,
+    // ปันส่วนลดมือ + โปรโมชัน SC และ VAT ตามโหมดของร้าน — mirror ของ calculateItemsShare (T10 #83)
+    final share = splitShare(
+      billSubtotal: subtotalOf(active),
+      billDiscount:
+          (order['discountAmount'] as num).toDouble() +
+          ((order['promotionDiscountAmount'] as num?) ?? 0).toDouble(),
+      billServiceCharge: (order['serviceCharge'] as num).toDouble(),
+      billVat: (order['vat'] as num).toDouble(),
+      paidBeforeSubtotal: subtotalOf(
+        active.where(
+          (item) => item['isPaid'] == true && !itemIds.contains(item['id']),
+        ),
+      ),
+      selectedSubtotal: subtotalOf(
+        active.where((item) => itemIds.contains(item['id'])),
+      ),
+      vatIncluded: settings['vatIncluded'] == true,
     );
-    final serviceCharge = _roundMoney(
-      (order['serviceCharge'] as num).toDouble() * share,
-    );
-    final vat = _roundMoney((order['vat'] as num).toDouble() * share);
-    final total = selectedSubtotal - discountAmount + serviceCharge + vat;
 
     final isLastBatch =
         unpaidActive.isNotEmpty &&
         unpaidActive.every((item) => itemIds.contains(item['id']));
 
     return {
-      'subtotal': selectedSubtotal,
-      'discountAmount': discountAmount,
-      'serviceCharge': serviceCharge,
-      'vat': vat,
-      'total': total,
+      'subtotal': share.subtotal,
+      'discountAmount': share.discountAmount,
+      'serviceCharge': share.serviceCharge,
+      'vat': share.vat,
+      'vatIncluded': share.vatIncluded,
+      'total': share.total,
       'isLastBatch': isLastBatch,
     };
   }
@@ -141,7 +145,8 @@ extension DemoStorePayments on DemoStore {
 
     final total = (order['total'] as num).toDouble();
     final alreadyPaid = paidAmount(orderId);
-    final remaining = max<double>(0, total - alreadyPaid);
+    // ปัดเป็นสตางค์ กันเศษทศนิยมของ double (เช่น 188.32000000000002) หลุดไปเป็นยอดที่เก็บจริง
+    final remaining = _roundMoney(max<double>(0, total - alreadyPaid));
     final share = _itemsShare(order, itemIds);
     final amount = (share['isLastBatch'] as bool)
         ? remaining
@@ -154,6 +159,9 @@ extension DemoStorePayments on DemoStore {
       'discountAmount': share['discountAmount'],
       'serviceCharge': share['serviceCharge'],
       'vat': share['vat'],
+      'vatIncluded': share['vatIncluded'],
+      // ยอดที่เก็บจริงต่างจากส่วนแบ่ง (รอบสุดท้ายรับยอดคงเหลือจริง) — mirror ของ splitPreview ใน backend
+      'adjustment': _roundMoney(amount - (share['total'] as double)),
       'total': amount,
       'remaining': remaining,
       'isLastBatch': share['isLastBatch'],
@@ -194,7 +202,7 @@ extension DemoStorePayments on DemoStore {
 
     final total = (order['total'] as num).toDouble();
     final alreadyPaid = paidAmount(orderId);
-    final remaining = total - alreadyPaid;
+    final remaining = _roundMoney(total - alreadyPaid);
 
     double resolvedAmount;
     if (itemIds != null && itemIds.isNotEmpty) {

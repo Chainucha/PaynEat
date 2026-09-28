@@ -1997,6 +1997,9 @@ Completed work, planned work, and known limitations, with the reasoning for each
   `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
+- [ ] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
+  network the server's operator allows explicitly, with support for a chain's internal CA (see ticket 32 and
+  `docs/DECISIONS.md` #82)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — JSON logs per contract v1.1 (no vendor
   names by default, `LOG_FORMAT=gcp` for Google Cloud), a full `x-request-id` round trip with the request ID
   shown in app error messages, `/metrics` by route template on port 9464, never exposed outside the machine, and

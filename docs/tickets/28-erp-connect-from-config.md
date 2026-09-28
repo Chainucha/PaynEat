@@ -4,7 +4,7 @@
 **สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — รอ 25, 26 และ 27
 **Ref:** [PaynEat-ERP#27 — คำสั่งเดียวรัน ERP + POS + PostgreSQL พร้อมเดโมครบเส้นทาง](https://github.com/SuruchBoss/PaynEat-ERP/issues/27),
 [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md), `docs/DECISIONS.md` #66
-**Blocked by:** `25-erp-connected-mode.md`, `26-erp-sales-outbox.md`, `27-erp-menu-pull.md`
+**Blocked by:** `25-erp-connected-mode.md`, `26-erp-sales-outbox.md`, `27-erp-menu-pull.md`, `32-erp-https-only.md` (`ERP_URL` ต้องเป็น https ตาม #82)
 
 ## ปัญหา
 ticket 25 ให้ admin เข้าโหมดเชื่อมต่อผ่านหน้าจอ ด้วยการกรอก URL ของ ERP และ machine credential ซึ่งเหมาะกับร้านจริง

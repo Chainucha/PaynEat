@@ -150,6 +150,110 @@ void main() {
     });
   });
 
+  group('DemoStore ล็อกรายการในบิลที่ปิดแล้ว (T04 #95)', () {
+    Map<String, dynamic> openTwoItems() {
+      final table = store.tableList().firstWhere(
+        (t) => t['status'] == 'available',
+      );
+      final menu = store.menuList().take(2).toList();
+      final order = store.createOrder(
+        type: 'dine_in',
+        tableId: table['id'] as int,
+        guestCount: 2,
+        items: [
+          for (final item in menu)
+            {'menuItemId': item['id'], 'quantity': 1, 'optionIds': []},
+        ],
+      );
+      store.sendToKitchen(order['id'] as int);
+      return store.findOrder(order['id'] as int);
+    }
+
+    List<int> itemIdsOf(Map<String, dynamic> order) => [
+      for (final item in order['items'] as List) item['id'] as int,
+    ];
+
+    Matcher conflict(String key) => throwsA(
+      isA<ApiException>()
+          .having((e) => e.statusCode, 'statusCode', 409)
+          .having((e) => e.message, 'message', key.tr),
+    );
+
+    test('บิลจ่ายครบแล้ว ยกเลิกรายการไม่ได้ และยอดไม่เปลี่ยน', () {
+      final order = openTwoItems();
+      final total = (order['total'] as num).toDouble();
+      store.pay(
+        orderId: order['id'] as int,
+        method: 'cash',
+        amount: total,
+        received: total,
+      );
+
+      expect(
+        () => store.updateItemStatus(
+          order['id'] as int,
+          itemIdsOf(order).first,
+          'cancelled',
+        ),
+        conflict('order_error_closed_cannot_edit'),
+      );
+      final after = store.findOrder(order['id'] as int);
+      expect(after['total'], total);
+      expect((after['items'] as List).first['status'], 'pending');
+    });
+
+    test(
+      'รายการที่แยกจ่ายแล้วยกเลิกไม่ได้ ส่วนรายการที่ยังไม่จ่ายยกเลิกได้',
+      () {
+        final order = openTwoItems();
+        final ids = itemIdsOf(order);
+        store.pay(
+          orderId: order['id'] as int,
+          method: 'cash',
+          itemIds: [ids.first],
+        );
+
+        expect(
+          () => store.updateItemStatus(
+            order['id'] as int,
+            ids.first,
+            'cancelled',
+          ),
+          conflict('order_error_item_paid_cannot_cancel'),
+        );
+        final result = store.updateItemStatus(
+          order['id'] as int,
+          ids.last,
+          'cancelled',
+        );
+        final statuses = {
+          for (final item in result['items'] as List)
+            item['id']: item['status'],
+        };
+        expect(statuses[ids.first], 'pending');
+        expect(statuses[ids.last], 'cancelled');
+      },
+    );
+
+    test('ครัวยังเดินสถานะอาหารของบิลที่จ่ายแล้วได้', () {
+      final order = openTwoItems();
+      final total = (order['total'] as num).toDouble();
+      store.pay(
+        orderId: order['id'] as int,
+        method: 'cash',
+        amount: total,
+        received: total,
+      );
+      final itemId = itemIdsOf(order).first;
+      for (final status in ['cooking', 'ready', 'served']) {
+        store.updateItemStatus(order['id'] as int, itemId, status);
+      }
+      final after = store.findOrder(order['id'] as int);
+      expect(after['status'], 'paid');
+      expect((after['items'] as List).first['status'], 'served');
+    });
+  });
+
   group(
     'DemoStore payments — ใช้ _findUser ของ auth และ _freeTable ของ tables',
     () {

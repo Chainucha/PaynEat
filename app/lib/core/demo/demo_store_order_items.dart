@@ -282,6 +282,17 @@ extension DemoStoreOrderItems on DemoStore {
     final item = _findItem(order, itemId);
     final previousItemStatus = item['status'] as String;
 
+    // บิลที่ปิดแล้วและรายการที่รับเงินไปแล้วยกเลิกไม่ได้ — mirror ของ order.service.js#updateItemStatus (T04 #95)
+    if (status == OrderItemStatus.cancelled) {
+      _assertMutable(order);
+      if (item['isPaid'] == true) {
+        throw ApiException(
+          message: 'order_error_item_paid_cannot_cancel'.tr,
+          statusCode: 409,
+        );
+      }
+    }
+
     const transitions = {
       OrderItemStatus.pending: [
         OrderItemStatus.cooking,

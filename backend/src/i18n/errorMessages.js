@@ -776,6 +776,11 @@ export const ERROR_MESSAGES = [
     ko: '이 지점의 다른 재료가 이미 이 품목 코드를 쓰고 있습니다',
   },
   {
+    th: 'รายการนี้ชำระเงินแล้ว ต้องคืนเงินก่อนจึงจะยกเลิกได้',
+    en: 'This item has already been paid for — refund it before cancelling',
+    ko: '이미 결제된 항목입니다 — 취소하려면 먼저 환불하세요',
+  },
+  {
     th: 'ที่อยู่ของ PaynEat ERP ต้องเป็น URL แบบ https:// เช่น https://erp.example.com',
     en: "PaynEat ERP's address must be an https:// URL, for example https://erp.example.com",
     ko: 'PaynEat ERP 주소는 https:// URL이어야 합니다 (예: https://erp.example.com)',

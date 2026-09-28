@@ -1,7 +1,9 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
 import 'package:payneat_pos/core/network/socket_client.dart';
@@ -237,10 +239,38 @@ void main() {
       expect(controller.lastChange.value, isNull);
     });
 
-    test('onInit แล้ว onClose ต้องไม่โยน exception (unsubscribe/timer ครบ)', () {
-      // advance path ที่ล้มเหลวแตะ AppDialogs.error จึงไม่ครอบคลุมในเทสต์ระดับ unit นี้
-      expect(() => controller.onInit(), returnsNormally);
-      expect(() => controller.onClose(), returnsNormally);
-    });
+    testWidgets(
+      'เดินสถานะไม่สำเร็จ (409 จาก backend เช่นบิลปิดแล้ว) → จอครัวแสดงเหตุผล คิวเดิมอยู่ครบ และไม่มีแถบเลิกทำ',
+      (tester) async {
+        const message = 'ออเดอร์นี้ปิดแล้ว ไม่สามารถแก้ไขได้';
+        await tester.pumpWidget(const GetMaterialApp(home: Scaffold()));
+        repository.nextQueueResult = Result.success([
+          _item(11, status: OrderItemStatus.cooking),
+        ]);
+        repository.nextUpdateItemStatusResult = const Result.failure(
+          ServerFailure(message, statusCode: 409),
+        );
+        await controller.load();
+
+        await controller.advance(controller.queue.first);
+        await tester.pump();
+
+        expect(find.text(message), findsOneWidget);
+        expect(controller.queue.map((item) => item.id), [11]);
+        expect(controller.lastChange.value, isNull);
+
+        // ให้ snackbar ปิดเองจนหมดเวลา ไม่ค้าง timer ข้ามเทสต์
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+      },
+    );
+
+    test(
+      'onInit แล้ว onClose ต้องไม่โยน exception (unsubscribe/timer ครบ)',
+      () {
+        expect(() => controller.onInit(), returnsNormally);
+        expect(() => controller.onClose(), returnsNormally);
+      },
+    );
   });
 }

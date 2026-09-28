@@ -1242,7 +1242,7 @@ paths:
       summary: อัปเดตสถานะรายการ (pending → cooking → ready → served)
       responses:
         '200': { description: สำเร็จ }
-        '409': { description: เปลี่ยนสถานะข้ามขั้นไม่ได้ }
+        '409': { description: 'เปลี่ยนสถานะข้ามขั้นไม่ได้ หรือยกเลิกรายการในบิลที่จ่ายครบ/ถูกยกเลิกแล้ว หรือรายการที่แยกจ่ายแล้ว (ต้องคืนเงินก่อน — T04)' }
   /orders/{id}/send-to-kitchen:
     parameters:
       - in: path

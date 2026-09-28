@@ -1983,7 +1983,8 @@ Completed work, planned work, and known limitations, with the reasoning for each
   Play applicationId is `suruch.boss.payneat` (#78). The remaining steps take place in the owner's account:
   opening a Play Console account, adding the upload key to Secrets, and recruiting 12 testers for 14 consecutive days
 - [ ] **One Google Play app for every restaurant (ticket 29b)** — enter the shop server's address or scan a QR code on
-  first start, or open demo mode with no server. Free, like the rest of the system. Scheduled after ticket 25. The App
+  first start, or open demo mode with no server. Free, like the rest of the system. Scheduled after ticket 25 and the first round of QA fixes
+  (`docs/DECISIONS.md` #77). The App
   Store will follow when a restaurant requests it; the server itself is still installed in the shop (see ticket 29 and
   `docs/DECISIONS.md` #69)
 - [ ] **A faster web app for users not using Korean** — the full Korean font (3.2MB) is loaded only when needed, and

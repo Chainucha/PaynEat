@@ -1,10 +1,10 @@
 # Ticket: ดึงเมนู ราคา ตัวเลือก และสูตรจาก PaynEat ERP (สัญญา v1.1)
 
 **Priority:** 🟠 High — สัปดาห์ที่ 4 ของแผน PaynEat ERP v1
-**สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — รอ 25 และ PaynEat-ERP#16 (สัญญา v1.1) ซึ่งฝั่ง ERP เริ่มได้แล้วเพราะ #9 merge แล้ว
+**สถานะ (2026-09-28):** ⏳ ยังไม่เริ่ม — 25 ✅ · รอ QA รอบ 1 (`docs/DECISIONS.md` #77) และ PaynEat-ERP#16 (สัญญา v1.1) ซึ่งฝั่ง ERP ยังไม่เริ่ม
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [ERP #16 — เมนูและสูตรเป็น master data + สัญญา v1.1](https://github.com/SuruchBoss/PaynEat-ERP/issues/16), `docs/DECISIONS.md` #66
-**Blocked by:** `25-erp-connected-mode.md`, [PaynEat-ERP#16](https://github.com/SuruchBoss/PaynEat-ERP/issues/16)
+**Blocked by:** ~~`25-erp-connected-mode.md`~~ ✅, [PaynEat-ERP#16](https://github.com/SuruchBoss/PaynEat-ERP/issues/16)
 
 ## ปัญหา
 ticket 25 ทำให้วัตถุดิบและสาขามาจาก ERP แล้ว แต่เมนู ราคา และสูตรยังแก้ในเครื่องได้ ERP ต้องแปลงยอดขายเป็นการใช้วัตถุดิบ

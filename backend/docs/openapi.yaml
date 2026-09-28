@@ -1493,6 +1493,10 @@ paths:
     post:
       tags: [Payments]
       summary: ดูยอดที่ต้องจ่ายล่วงหน้าก่อนแยกบิลรายการอาหารจริง (ไม่ตัดจ่าย)
+      description: >-
+        ส่วนลดมือ ส่วนลดโปรโมชัน Service Charge และ VAT ของทั้งบิลปันตามสัดส่วนราคาของรายการที่เลือก ปัดเศษแบบสะสมให้ผลรวม
+        ของทุกคนเท่ายอดบิลพอดี (T10) โหมด VAT รวมในราคา `vat` อยู่ในยอดแล้วไม่บวกซ้ำ ตัวเลขรวมกันได้ `total` เสมอ:
+        subtotal − discountAmount + serviceCharge (+ vat เมื่อ vatIncluded เป็น false) + adjustment
       requestBody:
         required: true
         content:
@@ -1505,7 +1509,25 @@ paths:
                   type: array
                   items: { type: integer }
       responses:
-        '200': { description: สำเร็จ }
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subtotal: { type: number }
+                  discountAmount: { type: number, description: ส่วนลดมือ + โปรโมชันที่ปันมาให้รายการที่เลือก }
+                  serviceCharge: { type: number }
+                  vat: { type: number }
+                  vatIncluded: { type: boolean, description: ร้านตั้งราคารวม VAT — vat อยู่ใน total แล้ว }
+                  adjustment:
+                    type: number
+                    description: >-
+                      ส่วนต่างระหว่างยอดที่เก็บจริงกับส่วนแบ่ง เช่นรอบสุดท้ายของบิลที่เคยรับเงินแบบระบุยอดไปก่อน
+                  total: { type: number, description: ยอดที่จะเก็บรอบนี้ }
+                  remaining: { type: number }
+                  isLastBatch: { type: boolean }
   /payments/order/{id}:
     parameters:
       - in: path

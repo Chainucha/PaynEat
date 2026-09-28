@@ -130,10 +130,19 @@ class SplitBillPage extends GetView<SplitBillController> {
                           label: 'payment_service_charge_label'.tr,
                           value: preview.serviceCharge,
                         ),
+                        // โหมด VAT รวมในราคา VAT อยู่ในยอดแล้ว บอกไว้ให้รู้ว่าไม่ได้บวกเพิ่ม (T10 #83)
                         _AmountRow(
-                          label: 'payment_vat_label'.tr,
+                          label: preview.vatIncluded
+                              ? 'payment_vat_included_label'.tr
+                              : 'payment_vat_label'.tr,
                           value: preview.vat,
                         ),
+                        if (preview.adjustment.abs() >= 0.005)
+                          _AmountRow(
+                            key: const ValueKey('split-adjustment'),
+                            label: 'payment_split_adjustment_label'.tr,
+                            value: preview.adjustment,
+                          ),
                         const Divider(height: 20),
                         _AmountRow(
                           label: 'payment_amount_due_this_round_label'.tr,
@@ -156,6 +165,7 @@ class SplitBillPage extends GetView<SplitBillController> {
 
 class _AmountRow extends StatelessWidget {
   const _AmountRow({
+    super.key,
     required this.label,
     required this.value,
     this.bold = false,

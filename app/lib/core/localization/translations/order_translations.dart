@@ -135,6 +135,8 @@ const Map<String, String> orderTranslationsTh = {
   'order_error_already_paid_cannot_cancel': 'ออเดอร์ที่ชำระแล้วยกเลิกไม่ได้',
   'order_error_item_not_found': 'ไม่พบรายการนี้ในออเดอร์',
   'order_error_closed_cannot_edit': 'ออเดอร์นี้ปิดแล้ว ไม่สามารถแก้ไขได้',
+  'order_error_item_paid_cannot_cancel':
+      'รายการนี้ชำระเงินแล้ว ต้องคืนเงินก่อนจึงจะยกเลิกได้',
   'order_offline_sync_failed':
       'ส่งรายการที่ค้างไว้ของ @label ไม่สำเร็จ: @message',
 
@@ -301,6 +303,8 @@ const Map<String, String> orderTranslationsEn = {
   'order_error_already_paid_cannot_cancel': 'A paid order cannot be cancelled',
   'order_error_item_not_found': 'Item not found in this order',
   'order_error_closed_cannot_edit': 'This order is closed and cannot be edited',
+  'order_error_item_paid_cannot_cancel':
+      'This item has already been paid for — refund it before cancelling',
   'order_offline_sync_failed':
       'Failed to sync pending items for @label: @message',
 
@@ -447,6 +451,7 @@ const Map<String, String> orderTranslationsKo = {
   'order_error_already_paid_cannot_cancel': '결제된 주문은 취소할 수 없습니다',
   'order_error_item_not_found': '이 주문에서 해당 메뉴를 찾을 수 없습니다',
   'order_error_closed_cannot_edit': '마감된 주문이라 수정할 수 없습니다',
+  'order_error_item_paid_cannot_cancel': '이미 결제된 항목입니다 — 취소하려면 먼저 환불하세요',
   'order_offline_sync_failed': '@label의 대기 항목 전송에 실패했습니다: @message',
 
   'order_continue_to_weigh': '다음: 무게 측정',

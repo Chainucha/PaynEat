@@ -442,6 +442,17 @@ export const orderService = {
     const item = orderRepository.findItemById(itemId);
     if (!item || item.order_id !== order.id) throw ApiError.notFound('ไม่พบรายการนี้ในออเดอร์');
 
+    // บิลที่ปิดแล้วและรายการที่รับเงินไปแล้วยกเลิกไม่ได้ (T04 #95, DECISIONS #85) — ยอดขาย VAT ใบกำกับภาษี และสต๊อก
+    // ของเงินที่รับไปแล้วต้องไม่เปลี่ยนเงียบๆ ต้องคืนเงินก่อน ส่วนครัวยังเดินสถานะอาหารของบิลที่จ่ายก่อนทำ (takeaway) ได้
+    if (status === 'cancelled') {
+      if (!MUTABLE_ORDER_STATUSES.includes(order.status)) {
+        throw ApiError.conflict('ออเดอร์นี้ปิดแล้ว ไม่สามารถแก้ไขได้');
+      }
+      if (item.is_paid) {
+        throw ApiError.conflict('รายการนี้ชำระเงินแล้ว ต้องคืนเงินก่อนจึงจะยกเลิกได้');
+      }
+    }
+
     if (!ITEM_TRANSITIONS[item.status].includes(status)) {
       throw ApiError.conflict(`เปลี่ยนสถานะจาก "${item.status}" เป็น "${status}" ไม่ได้`);
     }

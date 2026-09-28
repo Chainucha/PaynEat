@@ -481,6 +481,16 @@ void main() {
       );
       expect(receipt.receipt.refunds, hasLength(1));
       expect(receipt.receipt.refundedTotal, baht(refundAmount));
+
+      // ยอด "จ่ายแล้ว" หักยอดคืน (T06 #82) แต่บิลที่ปิดแล้วไม่มียอดค้างขึ้นมาใหม่ — แอปอ่านยอดคืนจาก backend จริงได้
+      final summary = expectOk(
+        await cashier.payments.getSummary(order.id),
+        'ยอดชำระหลังคืน',
+      );
+      expect(summary.paid, baht(order.total - refundAmount));
+      expect(summary.refunded, baht(refundAmount));
+      expect(summary.remaining, baht(0));
+      expect(summary.refundedFor(payment.id), baht(refundAmount));
     },
   );
 

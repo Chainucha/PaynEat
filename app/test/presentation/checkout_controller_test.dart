@@ -1,6 +1,7 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
@@ -41,6 +42,18 @@ class _FakePaymentRepository implements PaymentRepository {
   Result<PaymentSummary> nextSummaryResult = Result.success(_summary());
   Result<({PaymentResult result, Order order})>? nextPayResult;
   int payCallCount = 0;
+  Result<Refund>? nextRefundResult;
+  ({int paymentId, double amount, String reason})? lastRefund;
+
+  @override
+  Future<Result<Refund>> refund({
+    required int paymentId,
+    required double amount,
+    required String reason,
+  }) async {
+    lastRefund = (paymentId: paymentId, amount: amount, reason: reason);
+    return nextRefundResult!;
+  }
 
   @override
   Future<Result<PaymentSummary>> getSummary(int orderId) async =>
@@ -511,6 +524,161 @@ void main() {
         expect(credit.maxRedeemablePoints, 0);
         credit.setPointsToRedeem(10);
         expect(credit.pointsToRedeem.value, 0);
+      },
+    );
+  });
+
+  // คืนเงินบนบิลที่ยังเปิด (T06 #82, docs/DECISIONS.md #77 D1, #87) — ยอดคงเหลือมาจาก backend ที่หักยอดคืนแล้วเสมอ
+  group('CheckoutController คืนเงินบนบิลที่ยังเปิด (T06)', () {
+    late SessionService session;
+    late CheckoutController checkout;
+
+    const cash50 = Payment(
+      id: 31,
+      orderId: 1,
+      method: PaymentMethod.cash,
+      amount: 50,
+      received: 50,
+    );
+
+    PaymentSummary summaryAfter({double refunded = 0}) => PaymentSummary(
+      orderId: 1,
+      total: 100.05,
+      paid: 50 - refunded,
+      remaining: 100.05 - (50 - refunded),
+      refunded: refunded,
+      payments: const [cash50],
+      refunds: [
+        if (refunded > 0)
+          Refund(
+            id: 7,
+            paymentId: cash50.id,
+            orderId: 1,
+            amount: refunded,
+            reason: 'ลูกค้าเปลี่ยนใจ',
+          ),
+      ],
+    );
+
+    Future<void> open({
+      required String role,
+      Future<void> Function()? settle,
+    }) async {
+      session.updateUser(
+        User(id: 2, name: 'ผู้ใช้', username: role, role: role, isActive: true),
+      );
+      orderRepository.nextOrderResult = Result.success(_order(total: 100.05));
+      paymentRepository.nextSummaryResult = Result.success(summaryAfter());
+      checkout.onInit();
+      // ใน testWidgets เวลาเดินเมื่อ pump เท่านั้น — ใช้ settle ของ tester แทน Future.delayed
+      await (settle ?? () => Future<void>.delayed(Duration.zero))();
+    }
+
+    setUp(() {
+      session = SessionService(
+        storage: StorageService.memory(),
+        socket: SocketClient(),
+      );
+      checkout = CheckoutController(
+        getOrder: GetOrderUseCase(orderRepository),
+        getSummary: GetPaymentSummaryUseCase(paymentRepository),
+        pay: PayOrderUseCase(paymentRepository),
+        getCurrentShift: GetCurrentShiftUseCase(shiftRepository),
+        getCustomer: GetCustomerUseCase(customerRepository),
+        getSettings: GetSettingsUseCase(settingsRepository),
+        getPromptPayQr: GetPromptPayQrUseCase(paymentRepository),
+        refundPayment: RefundPaymentUseCase(paymentRepository),
+        session: session,
+      );
+    });
+
+    tearDown(() => checkout.onClose());
+
+    test(
+      'ผู้จัดการคืนเงินได้ แคชเชียร์ไม่ได้ (สิทธิ์เดียวกับหน้าใบเสร็จ)',
+      () async {
+        await open(role: UserRole.manager);
+        expect(checkout.canRefund, isTrue);
+
+        session.updateUser(
+          const User(
+            id: 6,
+            name: 'แคชเชียร์',
+            username: 'cashier',
+            role: UserRole.cashier,
+            isActive: true,
+          ),
+        );
+        expect(checkout.canRefund, isFalse);
+      },
+    );
+
+    test('ยอดที่คืนได้หักยอดที่คืนไปแล้วของ payment นั้น', () async {
+      await open(role: UserRole.manager);
+      expect(checkout.refundableAmount(cash50), 50);
+
+      checkout.summary.value = summaryAfter(refunded: 20);
+      expect(checkout.refundableAmount(cash50), 30);
+      checkout.summary.value = summaryAfter(refunded: 50);
+      expect(checkout.refundableAmount(cash50), 0);
+    });
+
+    testWidgets(
+      'จ่าย 50 แล้วคืน 50 → โหลดยอดใหม่จาก backend ยอดคงเหลือกลับเป็น 100.05 และตั้งยอดจ่ายตามนั้น',
+      (tester) async {
+        await tester.pumpWidget(const GetMaterialApp(home: Scaffold()));
+        await open(role: UserRole.manager, settle: tester.pump);
+        expect(checkout.remaining, closeTo(50.05, 0.001));
+
+        paymentRepository.nextRefundResult = const Result.success(
+          Refund(
+            id: 7,
+            paymentId: 31,
+            orderId: 1,
+            amount: 50,
+            reason: 'ลูกค้าเปลี่ยนใจ',
+          ),
+        );
+        paymentRepository.nextSummaryResult = Result.success(
+          summaryAfter(refunded: 50),
+        );
+        await checkout.refundPayment(
+          payment: cash50,
+          amount: 50,
+          reason: 'ลูกค้าเปลี่ยนใจ',
+        );
+        await tester.pump();
+
+        expect(paymentRepository.lastRefund?.paymentId, 31);
+        expect(paymentRepository.lastRefund?.amount, 50);
+        expect(checkout.remaining, 100.05);
+        expect(checkout.amount.value, 100.05);
+        expect(checkout.summary.value?.refunded, 50);
+        expect(checkout.isRefunding.value, isFalse);
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets(
+      'คืนเงินไม่สำเร็จ → แสดงเหตุผลจาก backend และยอดเดิมไม่เปลี่ยน',
+      (tester) async {
+        const message = 'คืนเงินเกินยอดที่คืนได้ (คืนได้สูงสุด 50 บาท)';
+        await tester.pumpWidget(const GetMaterialApp(home: Scaffold()));
+        await open(role: UserRole.manager, settle: tester.pump);
+        paymentRepository.nextRefundResult = const Result.failure(
+          ServerFailure(message, statusCode: 400),
+        );
+
+        await checkout.refundPayment(payment: cash50, amount: 60, reason: 'x');
+        await tester.pump();
+
+        expect(find.text(message), findsOneWidget);
+        expect(checkout.remaining, closeTo(50.05, 0.001));
+
+        await tester.pump(const Duration(seconds: 5));
+        await tester.pumpAndSettle();
       },
     );
   });

@@ -31,10 +31,17 @@ export const paymentRepository = {
       .get(id);
   },
 
-  totalPaid(orderId) {
+  /**
+   * เงินที่ร้านถือไว้สำหรับออเดอร์นี้ = ยอดชำระ − ยอดคืนเงิน (T06 #82, docs/DECISIONS.md #77 D1, #87) — นิยามเดียวที่ใช้
+   * คำนวณยอดคงเหลือและสถานะจ่ายครบทุกจุด คืนเงินบนบิลที่ยังเปิดจึงทำให้ยอดคงเหลือเพิ่มขึ้นตามจริง
+   */
+  netPaid(orderId) {
     return getDb()
-      .prepare('SELECT IFNULL(SUM(amount), 0) AS total FROM payments WHERE order_id = ?')
-      .get(orderId).total;
+      .prepare(
+        `SELECT (SELECT IFNULL(SUM(amount), 0) FROM payments WHERE order_id = ?)
+              - (SELECT IFNULL(SUM(amount), 0) FROM refunds WHERE order_id = ?) AS total`,
+      )
+      .get(orderId, orderId).total;
   },
 
   create({

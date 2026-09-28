@@ -13,7 +13,8 @@ extension DemoStoreRefunds on DemoStore {
       .fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
 
   /// คืนเงินหลังชำระเงินแล้ว (เต็มจำนวน/บางส่วน) — ผูกกับ payment โดยตรงเพราะออเดอร์
-  /// เดียวอาจมีหลาย payment (แยกจ่าย) ไม่แก้ payment เดิมหรือสถานะออเดอร์
+  /// เดียวอาจมีหลาย payment (แยกจ่าย) ไม่แก้ payment เดิมหรือสถานะออเดอร์ คืนบนบิลที่ยังเปิดได้
+  /// ยอดคงเหลือเพิ่มขึ้นตามยอดที่คืนผ่าน [paidAmount] (DECISIONS #77 D1, #87)
   Map<String, dynamic> refundPayment({
     required int paymentId,
     required double amount,
@@ -93,6 +94,21 @@ extension DemoStoreRefunds on DemoStore {
 
     // mirror ของ payment.service.js#refund — ดู docs/tickets/08-audit-log.md
     final order = findOrder(payment['orderId'] as int);
+
+    // คืน payment ที่แยกจ่ายตามรายการครบบนบิลที่ยังเปิด → รายการของ payment นั้นกลับเป็นยังไม่จ่าย (T06 #82)
+    final isOpen =
+        order['status'] != OrderStatus.paid &&
+        order['status'] != OrderStatus.cancelled;
+    if (isOpen &&
+        previousCredited + amount >= (payment['amount'] as num) - 0.001) {
+      for (final item
+          in (order['items'] as List).cast<Map<String, dynamic>>()) {
+        if (item['paidByPaymentId'] == paymentId) {
+          item['isPaid'] = false;
+          item['paidByPaymentId'] = null;
+        }
+      }
+    }
     _logAudit(
       actorId: refundedById,
       action: 'payment.refund',

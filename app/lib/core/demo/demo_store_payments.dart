@@ -5,9 +5,20 @@ part of 'demo_store.dart';
 
 // --------------------------------------------------------- payments -----
 extension DemoStorePayments on DemoStore {
-  double paidAmount(int orderId) => payments
-      .where((row) => row['orderId'] == orderId)
-      .fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
+  /// เงินที่ร้านถือไว้สำหรับออเดอร์นี้ = ยอดชำระ − ยอดคืนเงิน — mirror ของ payment.repository.js#netPaid
+  /// (T06 #82, docs/DECISIONS.md #87)
+  double paidAmount(int orderId) =>
+      payments
+          .where((row) => row['orderId'] == orderId)
+          .fold<double>(
+            0,
+            (sum, row) => sum + (row['amount'] as num).toDouble(),
+          ) -
+      _refundedTotalByOrder(orderId);
+
+  double _refundedTotalByOrder(int orderId) => refundsByOrder(
+    orderId,
+  ).fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
 
   Map<String, dynamic> paymentSummary(int orderId) {
     final order = findOrder(orderId);
@@ -17,10 +28,15 @@ extension DemoStorePayments on DemoStore {
       'orderId': orderId,
       'total': total,
       'paid': paid,
-      'remaining': max(0, total - paid),
+      'refunded': _refundedTotalByOrder(orderId),
+      // บิลที่จ่ายครบแล้วปิดไปแล้ว คืนเงินหลังปิดบิลไม่เปิดยอดค้างใหม่ — mirror ของ payment.service.js#summary
+      'remaining': order['status'] == OrderStatus.paid
+          ? 0.0
+          : max(0, total - paid),
       'payments': payments
           .where((row) => row['orderId'] == orderId)
           .toList(growable: false),
+      'refunds': refundsByOrder(orderId),
     };
   }
 
@@ -295,7 +311,10 @@ extension DemoStorePayments on DemoStore {
     if (itemIds != null && itemIds.isNotEmpty) {
       for (final item
           in (order['items'] as List).cast<Map<String, dynamic>>()) {
-        if (itemIds.contains(item['id'])) item['isPaid'] = true;
+        if (itemIds.contains(item['id'])) {
+          item['isPaid'] = true;
+          item['paidByPaymentId'] = payment['id'];
+        }
       }
     }
 

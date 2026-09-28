@@ -60,17 +60,23 @@ export const paymentService = {
     return paymentRepository.findByOrder(orderId).map(toPaymentDto);
   },
 
-  /** สรุปยอดค้างชำระของออเดอร์ ใช้เปิดหน้าจ่ายเงิน */
+  /**
+   * สรุปยอดค้างชำระของออเดอร์ ใช้เปิดหน้าจ่ายเงิน — `paid` คือเงินที่ร้านถือไว้สุทธิหลังคืนเงิน (T06 #82, DECISIONS #87)
+   * บิลที่จ่ายครบแล้วถือว่าปิด การคืนเงินหลังปิดบิลเป็นการคืนหลังการขาย (หักในรายงาน) ไม่ได้เปิดยอดค้างขึ้นมาใหม่
+   */
   summary(orderId) {
     const order = orderRepository.findById(orderId);
     if (!order) throw ApiError.notFound('ไม่พบออเดอร์นี้');
-    const paid = paymentRepository.totalPaid(orderId);
+    const paid = paymentRepository.netPaid(orderId);
+    const refunds = refundRepository.findByOrder(orderId).map(toRefundDto);
     return {
       orderId,
       total: toBaht(order.total),
       paid: toBaht(paid),
-      remaining: toBaht(Math.max(order.total - paid, 0)),
+      refunded: toBaht(refundRepository.totalByOrder(orderId)),
+      remaining: order.status === 'paid' ? 0 : toBaht(Math.max(order.total - paid, 0)),
       payments: this.listByOrder(orderId),
+      refunds,
     };
   },
 
@@ -84,7 +90,7 @@ export const paymentService = {
     const items = orderRepository.findItems(order.id);
     assertItemsSelectable(items, itemIds);
 
-    const alreadyPaid = paymentRepository.totalPaid(order.id);
+    const alreadyPaid = paymentRepository.netPaid(order.id);
     const remaining = Math.max(order.total - alreadyPaid, 0);
     const { amount, share } = computeItemsAmount(order, items, itemIds, remaining);
 
@@ -114,7 +120,8 @@ export const paymentService = {
     const activeItems = allItems.filter((item) => item.status !== 'cancelled');
     if (activeItems.length === 0) throw ApiError.badRequest('ออเดอร์ยังไม่มีรายการอาหาร');
 
-    const alreadyPaid = paymentRepository.totalPaid(order.id);
+    // เงินที่ถืออยู่สุทธิหลังคืนเงิน — บิลปิดได้เมื่อเก็บครบตามยอดสุทธิเท่านั้น (T06 #82, DECISIONS #77 D1)
+    const alreadyPaid = paymentRepository.netPaid(order.id);
     const remaining = order.total - alreadyPaid;
 
     const itemIds = payload.itemIds?.length ? payload.itemIds : null;
@@ -217,7 +224,7 @@ export const paymentService = {
       if (pointsToRedeem > 0) {
         customerRepository.adjustPoints(order.customer_id, -pointsToRedeem);
       }
-      if (itemIds) orderRepository.markItemsPaid(itemIds);
+      if (itemIds) orderRepository.markItemsPaid(itemIds, payment.id);
 
       if (isFullyPaid) {
         // สินค้าที่ขายไปต้องออกจากสต๊อกเสมอ แม้บิลนั้นไม่เคยผ่านปุ่ม "ส่งเข้าครัว" — หน้าร้านขายของ
@@ -308,6 +315,9 @@ export const paymentService = {
    * คืนเงินหลังชำระเงินแล้ว (เต็มจำนวน/บางส่วน) — ผูกกับ payment โดยตรงเพราะออเดอร์
    * เดียวอาจมีหลาย payment (แยกจ่าย) แยกเป็น record ใหม่เสมอเพื่อเก็บ audit trail
    * ไม่แก้ payment เดิมหรือสถานะออเดอร์ — ยอดขายสุทธิหักออกตอนทำรายงานแทน
+   *
+   * คืนบนบิลที่ยังเปิดได้ (DECISIONS #77 D1): ยอดคงเหลือของบิลเพิ่มขึ้นตามยอดที่คืน (`netPaid`) และถ้าคืน payment
+   * ที่แยกจ่ายตามรายการครบทั้งจำนวน รายการของ payment นั้นกลับเป็นยังไม่จ่าย (T06 #82, DECISIONS #87)
    */
   refund(paymentId, { amount, reason }, user) {
     const payment = paymentRepository.findById(paymentId);
@@ -340,6 +350,7 @@ export const paymentService = {
     }
 
     const order = orderRepository.findById(payment.order_id);
+    const isOpen = order && !['paid', 'cancelled'].includes(order.status);
 
     const refund = getDb().transaction(() => {
       const created = refundRepository.create({
@@ -373,11 +384,16 @@ export const paymentService = {
         // ลดหนี้ส่วนที่เหลือจนยอดค้างเป็น 0 = ชำระครบแล้ว ได้แต้มจากยอดสุทธิหลังลดหนี้ (#59)
         creditPoints.sync(payment.order_id);
       }
+      if (isOpen && alreadyRefunded + amountSatang >= payment.amount) {
+        orderRepository.releaseItemsPaidBy(paymentId);
+      }
       return refundRepository.findById(created.id);
     })();
 
     const dto = toRefundDto(refund);
     emit(EVENTS.REFUND_CREATED, dto);
+    // บิลที่ยังเปิดมียอดคงเหลือเพิ่มขึ้น (และอาจมีรายการกลับเป็นยังไม่จ่าย) ให้หน้าจอที่เปิดบิลนี้อยู่อัปเดต
+    if (isOpen) emit(EVENTS.ORDER_UPDATED, orderService.getById(payment.order_id));
     return dto;
   },
 };

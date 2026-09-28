@@ -31,6 +31,7 @@ class CheckoutController extends GetxController {
     required GetCustomerUseCase getCustomer,
     required GetSettingsUseCase getSettings,
     required GetPromptPayQrUseCase getPromptPayQr,
+    RefundPaymentUseCase? refundPayment,
     SessionService? session,
   }) : _getOrder = getOrder,
        _getSummary = getSummary,
@@ -39,6 +40,7 @@ class CheckoutController extends GetxController {
        _getCustomer = getCustomer,
        _getSettings = getSettings,
        _getPromptPayQr = getPromptPayQr,
+       _refundPayment = refundPayment,
        _session = session;
 
   final GetOrderUseCase _getOrder;
@@ -48,6 +50,7 @@ class CheckoutController extends GetxController {
   final GetCustomerUseCase _getCustomer;
   final GetSettingsUseCase _getSettings;
   final GetPromptPayQrUseCase _getPromptPayQr;
+  final RefundPaymentUseCase? _refundPayment;
   final SessionService? _session;
 
   final Rxn<Order> order = Rxn<Order>();
@@ -57,6 +60,7 @@ class CheckoutController extends GetxController {
   final RxBool hasOpenShift = true.obs;
   final RxBool isLoading = true.obs;
   final RxBool isPaying = false.obs;
+  final RxBool isRefunding = false.obs;
   final RxnString errorMessage = RxnString();
   final RxString method = PaymentMethod.cash.obs;
   final RxDouble amount = 0.0.obs;
@@ -97,6 +101,41 @@ class CheckoutController extends GetxController {
   }
 
   double get remaining => summary.value?.remaining ?? 0;
+
+  /// คืนเงินบนบิลที่ยังเปิดได้ (DECISIONS #77 D1) สิทธิ์เดียวกับหน้าใบเสร็จ — ผู้จัดการขึ้นไป
+  bool get canRefund =>
+      _refundPayment != null && (_session?.currentUser?.isManagement ?? false);
+
+  /// ยอดที่ยังคืนได้ของ payment นี้ (หักที่คืนไปแล้วก่อนหน้า)
+  double refundableAmount(Payment payment) {
+    final left = payment.amount - (summary.value?.refundedFor(payment.id) ?? 0);
+    return left > 0 ? double.parse(left.toStringAsFixed(2)) : 0;
+  }
+
+  /// คืนเงินของ payment ที่รับไว้แล้วบนบิลที่ยังเปิด — ยอดคงเหลือเพิ่มขึ้นตามยอดที่คืน และถ้าคืน payment ที่แยกจ่าย
+  /// ตามรายการครบ รายการเหล่านั้นกลับไปเลือกจ่ายใหม่ได้ โหลดยอดจาก backend ใหม่เสมอ ไม่คำนวณเอง
+  /// (T06 #82, docs/DECISIONS.md #87)
+  Future<void> refundPayment({
+    required Payment payment,
+    required double amount,
+    required String reason,
+  }) async {
+    final refund = _refundPayment;
+    if (refund == null) return;
+    isRefunding.value = true;
+    final result = await refund(
+      RefundParams(paymentId: payment.id, amount: amount, reason: reason),
+    );
+    isRefunding.value = false;
+    await result.fold(
+      onSuccess: (_) async {
+        AppDialogs.success('payment_refund_success'.tr);
+        await load();
+      },
+      onFailure: (failure) async => AppDialogs.error(failure.message),
+    );
+  }
+
   bool get isCash => method.value == PaymentMethod.cash;
   bool get isCredit => method.value == PaymentMethod.credit;
 

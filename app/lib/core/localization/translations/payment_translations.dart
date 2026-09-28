@@ -105,6 +105,8 @@ const Map<String, String> paymentTranslationsTh = {
   'payment_error_points_insufficient': 'แต้มสะสมของลูกค้าไม่พอ',
   'payment_error_points_value_exceeds_amount':
       'แต้มที่ใช้มีมูลค่าเกินยอดที่ต้องชำระรอบนี้',
+  'payment_error_points_value_not_set':
+      'ร้านยังไม่ได้ตั้งมูลค่าแต้ม จึงใช้แต้มแลกส่วนลดไม่ได้',
 
   // checkout_page — ส่วนแลกแต้มสะสม (ดู docs/tickets/09-customer-loyalty.md)
   'payment_loyalty_customer_label': 'ลูกค้า: @name',
@@ -252,6 +254,8 @@ const Map<String, String> paymentTranslationsEn = {
       'The customer does not have enough points',
   'payment_error_points_value_exceeds_amount':
       'The value of the points redeemed exceeds the amount due this round',
+  'payment_error_points_value_not_set':
+      "The store hasn't set what a point is worth, so points can't be redeemed",
 
   // checkout_page — loyalty points redemption section
   'payment_loyalty_customer_label': 'Customer: @name',
@@ -372,6 +376,7 @@ const Map<String, String> paymentTranslationsKo = {
   'payment_error_points_requires_customer': '적립금을 사용하려면 주문에 고객을 먼저 연결해야 합니다',
   'payment_error_points_insufficient': '고객의 적립금이 부족합니다',
   'payment_error_points_value_exceeds_amount': '사용하려는 적립금이 이번에 받을 금액을 초과합니다',
+  'payment_error_points_value_not_set': '매장에서 포인트 가치를 설정하지 않아 적립금을 사용할 수 없습니다',
   'payment_loyalty_customer_label': '고객: @name',
   'payment_loyalty_points_balance': '@points P 보유',
   'payment_loyalty_redeem_label': '적립금으로 할인받기',

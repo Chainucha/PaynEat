@@ -164,12 +164,13 @@ extension DemoStoreReceivables on DemoStore {
     final refunded = refunds
         .where((row) => row['orderId'] == orderId)
         .fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
-    // สตางค์เป็นจำนวนเต็มเหมือน backend — หารทศนิยมตรง ๆ อาจปัดต่างกันหนึ่งแต้มที่ขอบ
-    final netSatang = (((order['total'] as num).toDouble() - refunded) * 100)
-        .round();
-    final rateSatang =
-        ((settings['pointsEarnRateBaht'] as num).toDouble() * 100).round();
-    final target = settled && netSatang > 0 ? netSatang ~/ rateSatang : 0;
+    // คิดเป็นสตางค์เหมือน backend และอัตราที่ใช้ไม่ได้ให้ 0 แต้ม (T15 #84)
+    final target = settled
+        ? pointsForAmount(
+            (order['total'] as num).toDouble() - refunded,
+            (settings['pointsEarnRateBaht'] as num).toDouble(),
+          )
+        : 0;
     final current = (order['pointsEarned'] as num?)?.toInt() ?? 0;
 
     if (target > current) {

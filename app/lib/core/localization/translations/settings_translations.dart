@@ -80,8 +80,8 @@ const Map<String, String> settingsTranslationsTh = {
   'settings_points_earn_rate_label': 'จ่ายกี่บาทได้ 1 แต้ม',
   'settings_points_redeem_value_label': 'มูลค่า 1 แต้มตอนใช้แลกส่วนลด',
   'settings_points_baht_per_point': 'บาท',
-  'settings_points_earn_rate_error': 'อัตราสะสมแต้มต้องมากกว่า 0',
-  'settings_points_redeem_value_error': 'มูลค่าแต้มต้องไม่ติดลบ',
+  'settings_points_earn_rate_error': 'ยอดซื้อต่อ 1 แต้มต้องอย่างน้อย 0.01 บาท',
+  'settings_points_redeem_value_error': 'มูลค่า 1 แต้มต้องอย่างน้อย 0.01 บาท',
 
   // ขายตามน้ำหนัก/บาร์โค้ด/ขายเชื่อ (tickets 18–20)
   'settings_scale_title': 'ฉลากตาชั่ง (บาร์โค้ดน้ำหนัก)',
@@ -188,8 +188,10 @@ const Map<String, String> settingsTranslationsEn = {
   'settings_points_earn_rate_label': 'Baht spent per 1 point earned',
   'settings_points_redeem_value_label': 'Value of 1 point when redeemed',
   'settings_points_baht_per_point': 'baht',
-  'settings_points_earn_rate_error': 'The earn rate must be greater than 0',
-  'settings_points_redeem_value_error': 'The redeem value cannot be negative',
+  'settings_points_earn_rate_error':
+      'Baht spent per point must be at least 0.01',
+  'settings_points_redeem_value_error':
+      'The value of 1 point must be at least 0.01 baht',
 
   'settings_scale_title': 'Scale labels (weight barcodes)',
   'settings_scale_subtitle':
@@ -284,8 +286,8 @@ const Map<String, String> settingsTranslationsKo = {
   'settings_points_earn_rate_label': '1포인트 적립에 필요한 결제 금액',
   'settings_points_redeem_value_label': '1포인트 사용 시 금액',
   'settings_points_baht_per_point': '바트',
-  'settings_points_earn_rate_error': '적립 기준 금액은 0보다 커야 합니다',
-  'settings_points_redeem_value_error': '사용 금액은 음수일 수 없습니다',
+  'settings_points_earn_rate_error': '1포인트 적립에 필요한 결제 금액은 최소 0.01바트여야 합니다',
+  'settings_points_redeem_value_error': '1포인트 사용 시 금액은 최소 0.01바트여야 합니다',
 
   'settings_scale_title': '저울 라벨 (무게 바코드)',
   'settings_scale_subtitle': '라벨 저울 설정과 맞추세요 — 라벨을 스캔하면 상품과 무게를 함께 읽습니다',

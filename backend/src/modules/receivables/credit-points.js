@@ -1,8 +1,8 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
-import { toSatang } from '../../core/money.js';
 import { customerRepository } from '../customers/customer.repository.js';
+import { pointsForAmount } from '../customers/loyalty.js';
 import { orderRepository } from '../orders/order.repository.js';
 import { refundRepository } from '../payments/refund.repository.js';
 import { settingsService } from '../settings/settings.service.js';
@@ -44,8 +44,9 @@ export const creditPoints = {
     const settled =
       order.status === 'paid' && invoices.every((invoice) => invoice.outstanding <= 0);
     const netSales = order.total - refundRepository.totalByOrder(orderId);
-    const earnRate = toSatang(settingsService.get().pointsEarnRateBaht);
-    const target = settled && netSales > 0 ? Math.floor(netSales / earnRate) : 0;
+    const target = settled
+      ? pointsForAmount(netSales, settingsService.get().pointsEarnRateBaht)
+      : 0;
     const current = order.points_earned ?? 0;
 
     if (target > current) {

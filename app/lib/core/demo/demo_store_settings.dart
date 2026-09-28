@@ -34,6 +34,24 @@ extension DemoStoreSettings on DemoStore {
       );
     }
 
+    // อัตราสะสมแต้มและมูลค่าแต้มอย่างน้อย 0.01 บาท (mirror ของ settings.service.js, T15 #84)
+    final earnRate = (changes['pointsEarnRateBaht'] as num?)?.toDouble();
+    if (changes.containsKey('pointsEarnRateBaht') &&
+        !isValidPointRate(earnRate)) {
+      throw ApiException(
+        message: 'settings_points_earn_rate_error'.tr,
+        statusCode: 400,
+      );
+    }
+    final redeemValue = (changes['pointsRedeemValueBaht'] as num?)?.toDouble();
+    if (changes.containsKey('pointsRedeemValueBaht') &&
+        !isValidPointRate(redeemValue)) {
+      throw ApiException(
+        message: 'settings_points_redeem_value_error'.tr,
+        statusCode: 400,
+      );
+    }
+
     // ดอกเบี้ยผิดนัด 0–15% ต่อปี ผ่อนผัน 0–365 วัน (mirror ของ settings.routes.js)
     final rate = (changes['lateFeeAnnualRatePercent'] as num?)?.toDouble();
     final grace = (changes['lateFeeGraceDays'] as num?)?.toInt();

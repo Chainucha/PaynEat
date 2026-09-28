@@ -33,6 +33,8 @@ class AuditLogAction {
 
   // ลูกหนี้/ขายเชื่อ (ดู docs/tickets/20-b2b-credit.md)
   static const String customerCreditUpdate = 'customer.credit_update';
+  // ระบบซ่อมยอดแต้มที่เสียตอนอัปเกรดฐานข้อมูล (migration 0005, T15 #84)
+  static const String customerPointsRepair = 'customer.points_repair';
   static const String receivableReceipt = 'receivable.receipt';
   static const String receivableReceiptVoid = 'receivable.receipt_void';
   static const String receivableBillingNote = 'receivable.billing_note';
@@ -71,6 +73,7 @@ class AuditLogAction {
     promotionDelete,
     ingredientStockAdjust,
     customerCreditUpdate,
+    customerPointsRepair,
     receivableReceipt,
     receivableReceiptVoid,
     receivableBillingNote,
@@ -107,6 +110,7 @@ class AuditLogAction {
     promotionDelete: 'audit_log_action_promotion_delete',
     ingredientStockAdjust: 'audit_log_action_ingredient_stock_adjust',
     customerCreditUpdate: 'audit_log_action_customer_credit_update',
+    customerPointsRepair: 'audit_log_action_customer_points_repair',
     receivableReceipt: 'audit_log_action_receivable_receipt',
     receivableReceiptVoid: 'audit_log_action_receivable_receipt_void',
     receivableBillingNote: 'audit_log_action_receivable_billing_note',

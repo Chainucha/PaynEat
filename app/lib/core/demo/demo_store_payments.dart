@@ -242,6 +242,16 @@ extension DemoStorePayments on DemoStore {
           statusCode: 400,
         );
       }
+      // มูลค่าแต้มที่ตั้งไว้ก่อนมีขั้นต่ำ 0.01 บาทอาจเป็น 0 — แลกแล้วลูกค้าเสียแต้มฟรี (T15 #84)
+      if (pointValueSatang(
+            (settings['pointsRedeemValueBaht'] as num).toDouble(),
+          ) ==
+          0) {
+        throw ApiException(
+          message: 'payment_error_points_value_not_set'.tr,
+          statusCode: 400,
+        );
+      }
       pointsRedeemedValue = _roundMoney(
         pointsToRedeem * (settings['pointsRedeemValueBaht'] as num).toDouble(),
       );
@@ -346,8 +356,10 @@ extension DemoStorePayments on DemoStore {
       if (customerId != null && _hasCreditPayment(orderId)) {
         _syncCreditPoints(orderId);
       } else if (customerId != null) {
-        final earnRate = (settings['pointsEarnRateBaht'] as num).toDouble();
-        final pointsEarned = (total / earnRate).floor();
+        final pointsEarned = pointsForAmount(
+          total,
+          (settings['pointsEarnRateBaht'] as num).toDouble(),
+        );
         if (pointsEarned > 0) {
           order['pointsEarned'] = pointsEarned;
           adjustCustomerPoints(customerId, pointsEarned);

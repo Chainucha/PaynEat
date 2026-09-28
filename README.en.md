@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1106%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1127%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1106 automated tests.
+control and 1127 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1106 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,106 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,127 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -739,6 +739,12 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   current round → both are rejected outright (never silently capped), and if the order is not linked to a
   customer, the redeem control is not shown. Pay part of a linked order's bill with points to see how the
   "amount applied to the order" differs from the "amount actually collected" (see `docs/DECISIONS.md` #22)
+- Log in as `manager` → **Settings** → type `0.004` in **"Baht spent per 1 point earned"** and save → the app says "Baht spent per
+  point must be at least 0.01" straight away and sends nothing (the same for `0` in "Value of 1 point when redeemed"; calling the API
+  directly gets a 400 with the same message in the user's language) — `0.5` saves and shows as 0.5. A store that saved a rate below
+  0.01 baht before the update still sells normally but earns 0 points, and points can't be redeemed until it's set again; customer
+  balances that were already broken are rebuilt from purchase history when the database is updated, with a **"Points balance
+  repair"** entry in the activity history (see `docs/DECISIONS.md` #89)
 - Log in as `admin` → **Settings** → clear the **"PromptPay ID"** field and save → return to checkout
   and select "QR" again → a clear error message is shown instead of a broken screen or an empty QR. Enter
   a number again (e.g. `0812345678`) and retry; a valid QR is generated (see
@@ -812,8 +818,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 503 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 554 cases — domain / controller / widget
+cd backend && npm test      # 511 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 567 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1022,7 +1028,8 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   (`docs/DECISIONS.md` #83)
 - **Store settings** — store name, VAT, Service Charge, VAT-inclusive pricing mode, tax ID/address/
   branch (for issuing tax invoices — optional if the store is not VAT-registered), the loyalty
-  points exchange rate (baht spent per point earned / point value when redeemed), the **PromptPay
+  points exchange rate (baht spent per point earned / point value when redeemed — both at least 0.01 baht, checked by the
+  form before it sends, and a lower rate saved before the update can't break points; see `docs/DECISIONS.md` #89), the **PromptPay
   ID** (phone number/national ID/tax ID — required before the "QR" payment method can display a real QR,
   see `docs/DECISIONS.md` #26), the **scale label format** (prefix + number of PLU digits, to match
   the store's own scale — see `docs/DECISIONS.md` #49), and a **Credit customers** section (late-payment
@@ -1483,13 +1490,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 503 cases
-cd app && flutter test      # 554 cases
+cd backend && npm test      # 511 cases
+cd app && flutter test      # 567 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (503 + 554 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (511 + 567 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1544,7 +1551,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (503 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (511 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1596,6 +1603,14 @@ first; "prices include VAT" 160 + 80 pays 176.00 and 88.00; a **property test** 
 promotion, SC, VAT mode, grouping and order) checks that shares add up to the bill and each is within 3 satang of its fair
 portion; and through the real API the preview shows the shared-out discount and adds up to the amount charged, including a
 bill that already took a fixed-amount payment (the adjustment line) (see `docs/DECISIONS.md` #88)
+
+`points-rate.test.js` (6 cases) covers the minimum points rate (T15): an earn rate of 0.004 / 0.009 / 0 / negative gets a 400
+with the minimum in Thai/English/Korean and saves none of the other fields sent with it; a point value of 0 gets a 400 while
+exactly 0.01 saves; with 0 or 0.004 already stored, a cash sale and a fully collected credit sale both earn 0 points (no
+Infinity in the database); with a stored point value of 0, points can't be redeemed and aren't deducted; and a points amount
+that isn't an integer is refused before it reaches the database. `migrations.test.js` adds 2 cases for migration 0005, which
+repairs broken balances: rebuilt from history (earned − redeemed, never below 0), broken points on a bill become 0, healthy
+balances are left alone, and each repair is audited as `customer.points_repair` (see `docs/DECISIONS.md` #89)
 
 `promotion-engine.test.js` (16 cases) tests the pure promotion-matching logic (percent/amount/bogo, day/time/
 minimum-spend/menu-category conditions, `findBestAutoPromotion`, `describeIneligibility`), and
@@ -1746,7 +1761,7 @@ oldest first and never above the amount owed, cash counted into the shift, no vo
 its shift has closed, billing notes (no duplicates/void and reissue/paid status), refunds of a credit bill
 capped at the amount still owed, debt aging, and RBAC — `migrate-credit.test.js` (1 case) builds a
 pre-ticket-20 database and migrates it, verifying that the monetary data, the refunds referencing it, and the
-indexes are all preserved (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (9 cases) covers versioned
+indexes are all preserved (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (11 cases) covers versioned
 migrations (T01): each runs once regardless of how often the server starts; one that fails midway is rolled back completely
 (the tables and columns it created are removed, and it is not recorded as applied); one that runs without foreign keys must
 pass `foreign_key_check` before committing; an edited applied migration, or an app older than its database, prevents
@@ -1833,7 +1848,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (554 cases)** — organized into 3 levels:
+**Flutter (567 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1842,8 +1857,9 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Domain | `cart_line_test.dart` | Merging duplicate cart lines + a weighed line priced in satang before rounding, matching the backend (including prices with fractional satang), per-kg modifiers, two bags of equal weight never merging (ticket 18) |
 | Domain | `barcode_resolver_test.dart` | Reading product barcodes/EAN-13 scale labels: PLUs with leading zeros, no guessing on a bad check digit, store-defined label formats, labels matching only weighed items, and a registered exact barcode winning over label parsing (ticket 19) |
 | Domain | `entities_test.dart` | Role-based permissions, order-item status transitions, an item the kitchen started and then undid still cannot be edited or removed (T05), PaymentSummary/SplitPreview read refunds, included VAT and the adjustment line from the backend (T06, T10) |
+| Domain | `loyalty_points_test.dart` | App-side loyalty points (mirrors the backend): computed in satang and rounded down, a rate of 0 / below 0.01 / NaN / Infinity gives 0 points instead of an exception, a point value below 0.01 baht can't be redeemed, and 0.01 baht is the lowest rate that can be set (T15) |
 | Domain | `split_share_test.dart` | The app-side split share (mirrors the backend): 50% off on 160 + 320 gives 94.16/188.32 whoever pays first, included VAT on 160 + 80 gives 176/88, and a property test over 2,000 random bills adds up to the bill (T10) |
-| Domain | `demo_store_test.dart` | Verifies `demo_store.dart`, split into 20 files, still works correctly across domains, including the full auto/code/remove/eligible-list promotion flow, the full stock-deduction / auto sold-out flow, the tax-invoice issue/void/reissue flow with running numbers, the audit-log flow covering every risky action (ticket 08), the customer/loyalty flow: creating/searching customers, linking `customerId` at order creation, earning points exactly once when fully paid (including split-payment rounds), redeeming points for a discount without changing the order's `amount`, and rejecting every invalid redemption (ticket 09), and the takeaway queue number: only assigned for `type=takeaway`, running correctly per day even with dine-in/delivery orders interleaved (ticket 10), and the financial/accounting audit flow: menu price changes only log when the price actually changes, promotion create/edit/delete, manual ingredient stock adjustments, and `auditLogExportCsv` returning CSV correctly filtered by action (ticket 14), and every table having a unique `qrToken`, `resolveTableByQrToken` finding the right table / rejecting a bad token or a deactivated table, and `regenerateQrToken` invalidating the old token immediately (ticket 17), selling by weight/duplicate codes/kg stock deduction on payment/QR self-order hiding weighed items (tickets 18–19), credit sales/payments applied oldest first/cash into the shift/no voiding a receipt after its shift closed/billing notes/credit reduction/debt aging (ticket 20), and late interest on the seeded bill (8 days at 12%, no double charge)/no voiding paid interest/the 15% cap/credit notes + VAT on the difference/simulated e-mail defaulting to the customer's address and refusing voided documents (tickets 21, 23), and credit-sale points earned on full payment / taken back on a void as far as possible / withheld while interest is owed / net of credit notes (#59), and closed bills or items paid in a split cannot have an item cancelled while the kitchen can still move them on (T04), and an item the kitchen started then undid: only a manager can cancel it (403 for waiters/kitchen), the audit names the stage reached and matches the backend letter for letter, it cannot be edited or removed, and the stage reached never goes down (T05), and split by item in Demo Mode gives the backend's figures for 50% off and for included VAT, with the adjustment line after a fixed-amount payment (T10) |
+| Domain | `demo_store_test.dart` | Verifies `demo_store.dart`, split into 20 files, still works correctly across domains, including the full auto/code/remove/eligible-list promotion flow, the full stock-deduction / auto sold-out flow, the tax-invoice issue/void/reissue flow with running numbers, the audit-log flow covering every risky action (ticket 08), the customer/loyalty flow: creating/searching customers, linking `customerId` at order creation, earning points exactly once when fully paid (including split-payment rounds), redeeming points for a discount without changing the order's `amount`, and rejecting every invalid redemption (ticket 09), and the takeaway queue number: only assigned for `type=takeaway`, running correctly per day even with dine-in/delivery orders interleaved (ticket 10), and the financial/accounting audit flow: menu price changes only log when the price actually changes, promotion create/edit/delete, manual ingredient stock adjustments, and `auditLogExportCsv` returning CSV correctly filtered by action (ticket 14), and every table having a unique `qrToken`, `resolveTableByQrToken` finding the right table / rejecting a bad token or a deactivated table, and `regenerateQrToken` invalidating the old token immediately (ticket 17), selling by weight/duplicate codes/kg stock deduction on payment/QR self-order hiding weighed items (tickets 18–19), credit sales/payments applied oldest first/cash into the shift/no voiding a receipt after its shift closed/billing notes/credit reduction/debt aging (ticket 20), and late interest on the seeded bill (8 days at 12%, no double charge)/no voiding paid interest/the 15% cap/credit notes + VAT on the difference/simulated e-mail defaulting to the customer's address and refusing voided documents (tickets 21, 23), and credit-sale points earned on full payment / taken back on a void as far as possible / withheld while interest is owed / net of credit notes (#59), and closed bills or items paid in a split cannot have an item cancelled while the kitchen can still move them on (T04), and an item the kitchen started then undid: only a manager can cancel it (403 for waiters/kitchen), the audit names the stage reached and matches the backend letter for letter, it cannot be edited or removed, and the stage reached never goes down (T05), and split by item in Demo Mode gives the backend's figures for 50% off and for included VAT, with the adjustment line after a fixed-amount payment (T10), and a points rate below 0.01 baht can't be set, a stored rate of 0 earns 0 points on a cash sale or a fully collected credit sale, and a stored point value of 0 can't be redeemed (T15) |
 | Controller | `cart_controller_test.dart` | Cart logic, using a fake repository, including the case of no `Get.arguments` at all (coming straight from the "New takeaway/delivery" button) still defaulting to takeaway rather than dine-in (ticket 10), weighed items sending `weightGrams` to the backend/no quantity edits but re-weighing allowed, scanning labels/barcodes into the cart, and a bad scan leaving the cart unchanged (tickets 18–19) |
 | Controller | `request_id_error_test.dart` | The request ID on error messages, through the real ApiClient → repository → controller chain: 500/409 give the backend's translated message + "Request ID: …" matching what was sent, 422 gets no ID, every request gets a fresh `x-request-id` in the format the backend accepts, `ServerFailure.requestId` (ticket 24) |
 | Controller | `receivable_controllers_test.dart` | Totals of what's owed/overdue, splitting open bills/unbilled bills/open billing notes, document voiding limited to managers and up, a successful payment sending the chosen billing note then reloading / a failed one not reloading (ticket 20), late interest/credit notes limited to managers and up and reloading on success, e-mail with no recipient using the customer's address (tickets 21, 23) |
@@ -1860,6 +1876,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `checkout_controller_test.dart` | (continued) a disabled pay button always states the reason below it (no shift / invalid amount / cash short) and shows nothing once payment is possible (#62) |
 | Controller | `receipt_controller_test.dart` | Loading a receipt by orderId, the `Payment.tendered` rule (a receipt shows the cash the customer handed over, not the amount applied to the bill: tendered − change = amount applied), silently loading the tax invoice when none has been issued yet (404 isn't an error), and tax-invoice void permission (manager role or above) |
 | Controller | `settings_controller_test.dart` | Loading store settings into the correct form fields |
+| Widget | `settings_points_form_test.dart` | The settings form warns about an earn rate or point value below 0.01 baht before sending (no API call), exactly 0.01 sends, and a rate of 0.5 shows as 0.5 instead of being rounded to 1 and saved over (T15) |
 | Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, saying when scheduled pulls have stopped, the create-branch button (success names the branch actually created / a 409 shows the reason and reloads / not in demo mode), demo mode always standalone, parsing the backend's status (including how the credential travels — an older backend that doesn't send it counts as https), and ERP unit names (unknown codes shown as they are) |
 | Controller | `ingredients_controller_test.dart` | The ingredients page is read-only when connected to the ERP, an unreadable mode keeps the last value, the "low stock" filter is cleared in connected mode, item codes are sent in capitals and an edit sends null to clear one (ticket 25) |
 | Controller | `staff_controller_test.dart` | Filtering staff by role, counting by role |
@@ -1882,7 +1899,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Core | `korean_font_coverage_test.dart` | Also covers Korean Material strings (date/time pickers, buttons) and the Korean backend error messages in `backend/src/i18n/errorMessages.js`; this check identified 18 missing glyphs before they could render as empty boxes (#64) |
 | Core | `korean_font_coverage_test.dart` | (continued, #74) every Korean font weight must contain ≥ 2,350 syllables (KS X 1001) plus all jamo produced while typing; restoring the previous font makes the test fail (it contained only 474), and the test also covers the Korean name/address of the credit customer |
 | Domain | `demo_store_test.dart` | (continued, #74) after every case, checks **every** audit log created by that case (28 actions): rebuilt in Thai from `summaryArgs`, it must match the recorded sentence character for character, and rebuilt in English/Korean, it must contain no Thai beyond values entered by the user — this check detected Demo Mode printing "500.0 บาท" where the backend prints "500" |
-| Presentation | `audit_summary_text_test.dart` | audit sentences for the backend-only actions (payment, shift open/close, move table, merge bills, apply/remove a code, create a branch from the ERP) in every language, a recipient e-mail containing `@` is not substituted twice, old logs and unknown actions fall back to the recorded sentence, and Thai always shows the recorded sentence, and a void of an undone item names the stage the kitchen reached in the viewer's language (T05) |
+| Presentation | `audit_summary_text_test.dart` | audit sentences for the backend-only actions (payment, shift open/close, move table, merge bills, apply/remove a code, create a branch from the ERP) in every language, a recipient e-mail containing `@` is not substituted twice, old logs and unknown actions fall back to the recorded sentence, and Thai always shows the recorded sentence, and a void of an undone item names the stage the kitchen reached in the viewer's language (T05), and the points repair on database update matches the migration's Thai sentence (T15) |
 | Core | `locale_service_test.dart` | The first launch uses the device language (Korean/English), and an unsupported language falls back to Thai (#62) |
 | Widget | `cart_panel_locale_test.dart` | The cart must show item names in the selected language (English/Korean), matching the card just tapped, rather than the Thai-only `menuItem.name`; also checks that a weighed line does not overflow with wide glyphs (see `docs/DECISIONS.md` #58) |
 | Core | `formatters_due_date_test.dart` | Due dates render in the current language ("11 Oct 2026" / "2026년 10월 11일") instead of a raw `2026-10-11`, without shifting a day with the device timezone |
@@ -2106,8 +2123,8 @@ Completed work, planned work, and known limitations, with the reasoning for each
   `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79), T02 every order change in one
   transaction (`docs/DECISIONS.md` #84), T04 locking the items of closed bills (`docs/DECISIONS.md` #85), T05 cancelling
   food the kitchen has started needs a manager even after an undo (`docs/DECISIONS.md` #86), T06 net paid after refunds
-  (`docs/DECISIONS.md` #87), T10 split by item sharing promotions and included VAT correctly (`docs/DECISIONS.md` #88) and T19 production
-  defaults (`docs/DECISIONS.md` #83)
+  (`docs/DECISIONS.md` #87), T10 split by item sharing promotions and included VAT correctly (`docs/DECISIONS.md` #88), T15 a 0.01-baht
+  minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89) and T19 production defaults (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed

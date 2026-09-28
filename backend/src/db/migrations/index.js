@@ -8,6 +8,7 @@ import baseline from './0001_baseline.js';
 import erpConnection from './0002_erp_connection.js';
 import orderItemKitchenReached from './0003_order_item_kitchen_reached.js';
 import orderItemPaidByPayment from './0004_order_item_paid_by_payment.js';
+import repairCustomerPoints from './0005_repair_customer_points.js';
 
 /**
  * Migrations ทั้งหมดตามลำดับ (T01 #80, docs/DECISIONS.md #79) — ตัวรันอยู่ที่ ../migrate.js
@@ -21,7 +22,13 @@ import orderItemPaidByPayment from './0004_order_item_paid_by_payment.js';
  * ห้ามแก้ migration ที่อยู่ใน main แล้ว แม้แต่คอมเมนต์หรือการจัดรูปแบบ: checksum ถูกบันทึกในทุกฐานข้อมูลที่รัน
  * และเซิร์ฟเวอร์ของร้านจะไม่ยอมเปิดถ้าไฟล์ไม่ตรงกับที่รันไปแล้ว
  */
-const DEFINITIONS = [baseline, erpConnection, orderItemKitchenReached, orderItemPaidByPayment];
+const DEFINITIONS = [
+  baseline,
+  erpConnection,
+  orderItemKitchenReached,
+  orderItemPaidByPayment,
+  repairCustomerPoints,
+];
 
 /** sha256 ของไฟล์ของ migration — ปรับบรรทัดเป็น \n ก่อน เพื่อให้ checkout บน Windows (CRLF) ได้ค่าเดียวกัน */
 export const checksumOf = (files) => {

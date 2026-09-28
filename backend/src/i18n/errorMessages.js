@@ -467,6 +467,11 @@ export const ERROR_MESSAGES = [
     ko: '사용하는 적립금이 이번 결제 금액보다 많습니다',
   },
   {
+    th: 'ร้านยังไม่ได้ตั้งมูลค่าแต้ม จึงใช้แต้มแลกส่วนลดไม่ได้',
+    en: "The store hasn't set what a point is worth, so points can't be redeemed",
+    ko: '매장에서 포인트 가치를 설정하지 않아 적립금을 사용할 수 없습니다',
+  },
+  {
     th: 'ร้านยังไม่ได้ตั้งค่าเลขพร้อมเพย์ (ตั้งได้ที่หน้าตั้งค่าระบบ)',
     en: "The store's PromptPay ID isn't set (set it in Settings)",
     ko: '매장 프롬프트페이 번호가 설정되지 않았습니다 (설정 화면에서 설정)',
@@ -644,6 +649,16 @@ export const ERROR_MESSAGES = [
     th: 'รูปแบบฉลากตาชั่ง: prefix + PLU ต้องเหลือหลักน้ำหนัก 4–6 หลัก',
     en: 'Scale label format: prefix + PLU must leave 4–6 digits for the weight',
     ko: '저울 라벨 형식: prefix + PLU 뒤에 무게 자리 4–6자리가 남아야 합니다',
+  },
+  {
+    th: 'ยอดซื้อต่อ 1 แต้มต้องอย่างน้อย 0.01 บาท',
+    en: 'Baht spent per point must be at least 0.01',
+    ko: '1포인트 적립에 필요한 결제 금액은 최소 0.01바트여야 합니다',
+  },
+  {
+    th: 'มูลค่า 1 แต้มต้องอย่างน้อย 0.01 บาท',
+    en: 'The value of 1 point must be at least 0.01 baht',
+    ko: '1포인트 사용 시 금액은 최소 0.01바트여야 합니다',
   },
   { th: 'ไม่พบกะนี้', en: 'Shift not found', ko: '근무를 찾을 수 없습니다' },
   {

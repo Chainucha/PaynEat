@@ -17,6 +17,7 @@ import { customerRepository } from '../customers/customer.repository.js';
 import { ingredientService } from '../ingredients/ingredient.service.js';
 import { creditNoteService } from '../receivables/credit-note.service.js';
 import { creditPoints } from '../receivables/credit-points.js';
+import { pointsForAmount, pointValueSatang } from '../customers/loyalty.js';
 import { receivableService } from '../receivables/receivable.service.js';
 import { paymentRepository } from './payment.repository.js';
 import { refundRepository } from './refund.repository.js';
@@ -178,6 +179,10 @@ export const paymentService = {
       if (!customer || pointsToRedeem > customer.points_balance) {
         throw ApiError.badRequest('แต้มสะสมของลูกค้าไม่พอ');
       }
+      // มูลค่าแต้มที่ตั้งไว้ก่อนมีขั้นต่ำ 0.01 บาทอาจเป็น 0 — แลกแล้วลูกค้าเสียแต้มฟรี (T15 #84)
+      if (pointValueSatang(settings.pointsRedeemValueBaht) === 0) {
+        throw ApiError.badRequest('ร้านยังไม่ได้ตั้งมูลค่าแต้ม จึงใช้แต้มแลกส่วนลดไม่ได้');
+      }
       pointsRedeemedValue = toSatang(pointsToRedeem * settings.pointsRedeemValueBaht);
       if (pointsRedeemedValue > amount) {
         throw ApiError.badRequest('แต้มที่ใช้มีมูลค่าเกินยอดที่ต้องชำระรอบนี้');
@@ -253,8 +258,7 @@ export const paymentService = {
         if (order.customer_id && creditPoints.hasCredit(order.id)) {
           creditPoints.sync(order.id);
         } else if (order.customer_id) {
-          const earnRateSatang = toSatang(settings.pointsEarnRateBaht);
-          const pointsEarned = Math.floor(order.total / earnRateSatang);
+          const pointsEarned = pointsForAmount(order.total, settings.pointsEarnRateBaht);
           if (pointsEarned > 0) {
             orderRepository.setPointsEarned(order.id, pointsEarned);
             customerRepository.adjustPoints(order.customer_id, pointsEarned);

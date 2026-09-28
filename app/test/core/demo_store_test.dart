@@ -254,6 +254,164 @@ void main() {
     });
   });
 
+  group('DemoStore ยกเลิกรายการที่ครัวเคยทำต้องใช้ผู้จัดการ (T05 #104)', () {
+    // id ใน demo_seed: 2 = ผู้จัดการ, 3 = พนักงานเสิร์ฟ, 5 = ครัว
+    const manager = 2;
+    const waiter = 3;
+    const kitchen = 5;
+
+    ({int orderId, int itemId}) sentToKitchen() {
+      final table = store.tableList().firstWhere(
+        (t) => t['status'] == 'available',
+      );
+      final order = store.createOrder(
+        type: 'dine_in',
+        tableId: table['id'] as int,
+        guestCount: 2,
+        items: [
+          for (final item in store.menuList().take(2))
+            {'menuItemId': item['id'], 'quantity': 1, 'optionIds': []},
+        ],
+      );
+      store.sendToKitchen(order['id'] as int);
+      return (
+        orderId: order['id'] as int,
+        itemId: ((order['items'] as List).first as Map)['id'] as int,
+      );
+    }
+
+    Map<String, dynamic> walk(
+      ({int orderId, int itemId}) at,
+      List<(String, int)> steps,
+    ) {
+      for (final (status, actor) in steps) {
+        store.updateItemStatus(at.orderId, at.itemId, status, actorId: actor);
+      }
+      return (store.findOrder(at.orderId)['items'] as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((item) => item['id'] == at.itemId);
+    }
+
+    List<Map<String, dynamic>> voidLogs(int itemId) => store
+        .auditLogList(action: 'order_item.void', entityId: itemId)
+        .rows
+        .cast<Map<String, dynamic>>();
+
+    test(
+      'ready → cooking → pending แล้วพนักงานเสิร์ฟยกเลิก → 403 ไม่มีอะไรเปลี่ยน',
+      () {
+        final at = sentToKitchen();
+        final undone = walk(at, [
+          ('cooking', kitchen),
+          ('ready', kitchen),
+          ('cooking', waiter),
+          ('pending', waiter),
+        ]);
+        expect(undone['status'], 'pending');
+        expect(undone['kitchenReached'], 'ready');
+        final total = store.findOrder(at.orderId)['total'];
+
+        for (final actor in [waiter, kitchen]) {
+          expect(
+            () => store.updateItemStatus(
+              at.orderId,
+              at.itemId,
+              'cancelled',
+              actorId: actor,
+            ),
+            throwsA(
+              isA<ApiException>()
+                  .having((e) => e.statusCode, 'statusCode', 403)
+                  .having(
+                    (e) => e.message,
+                    'message',
+                    'order_error_void_needs_manager'.tr,
+                  ),
+            ),
+          );
+        }
+        expect(store.findOrder(at.orderId)['total'], total);
+        expect(walk(at, const [])['status'], 'pending');
+        expect(voidLogs(at.itemId), isEmpty);
+      },
+    );
+
+    test(
+      'ลำดับเดียวกันโดยผู้จัดการ → ยกเลิกได้ และ audit บอกขั้นที่เคยถึง ตรงกับ backend',
+      () {
+        final at = sentToKitchen();
+        final name = walk(at, [
+          ('cooking', kitchen),
+          ('ready', kitchen),
+          ('cooking', waiter),
+          ('pending', waiter),
+        ])['name'];
+        final cancelled = walk(at, [('cancelled', manager)]);
+        expect(cancelled['status'], 'cancelled');
+
+        final logs = voidLogs(at.itemId);
+        expect(logs, hasLength(1));
+        final code = store.findOrder(at.orderId)['code'];
+        expect(
+          logs.first['summary'],
+          'ยกเลิกรายการ "$name" ในออเดอร์ #$code '
+          '(สถานะก่อนยกเลิก: pending, ครัวเคยทำถึง: ready)',
+        );
+        final metadata = logs.first['metadata'] as Map;
+        expect(metadata['kitchenReached'], 'ready');
+        expect(metadata['summaryArgs'], {
+          'code': code,
+          'name': name,
+          'status': 'pending',
+          'reached': 'ready',
+        });
+      },
+    );
+
+    test('รายการที่เคยเริ่มทำแล้วถูกเลิกทำ แก้จำนวนหรือลบไม่ได้ (409)', () {
+      final at = sentToKitchen();
+      walk(at, [('cooking', kitchen), ('pending', kitchen)]);
+      Matcher conflict(String key) => throwsA(
+        isA<ApiException>()
+            .having((e) => e.statusCode, 'statusCode', 409)
+            .having((e) => e.message, 'message', key.tr),
+      );
+      expect(
+        () => store.updateItem(at.orderId, at.itemId, quantity: 3),
+        conflict('order_error_item_locked_edit'),
+      );
+      expect(
+        () => store.removeItem(at.orderId, at.itemId),
+        conflict('order_error_item_locked_remove'),
+      );
+    });
+
+    test('รายการที่ครัวยังไม่เคยแตะ พนักงานเสิร์ฟยกเลิกเองได้ ไม่มี audit', () {
+      final at = sentToKitchen();
+      final cancelled = walk(at, [('cancelled', waiter)]);
+      expect(cancelled['status'], 'cancelled');
+      expect(cancelled['kitchenReached'], isNull);
+      expect(voidLogs(at.itemId), isEmpty);
+    });
+
+    test('ครัวเลิกทำได้หนึ่งขั้นเหมือนเดิม และขั้นที่เคยถึงไม่ถอยลง', () {
+      final at = sentToKitchen();
+      for (final (status, reached) in [
+        ('cooking', 'cooking'),
+        ('ready', 'ready'),
+        ('cooking', 'ready'),
+        ('pending', 'ready'),
+        ('cooking', 'ready'),
+        ('ready', 'ready'),
+        ('served', 'served'),
+      ]) {
+        final item = walk(at, [(status, kitchen)]);
+        expect(item['status'], status);
+        expect(item['kitchenReached'], reached, reason: 'หลัง $status');
+      }
+    });
+  });
+
   group(
     'DemoStore payments — ใช้ _findUser ของ auth และ _freeTable ของ tables',
     () {

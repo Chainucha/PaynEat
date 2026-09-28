@@ -77,6 +77,38 @@ void main() {
     );
   });
 
+  test(
+    'void รายการที่ถูกเลิกทำ — บอกขั้นที่ครัวเคยทำถึงเป็นภาษาของผู้ดู (T05 #104)',
+    () {
+      final undone = log('order_item.void', {
+        'code': 'ORD-1',
+        'name': 'Pad Thai',
+        'status': 'pending',
+        'reached': 'ready',
+      });
+      expect(
+        AuditSummaryText.render(undone, lookup('en_US')),
+        'Voided "Pad Thai" on order #ORD-1 '
+        '(status before voiding: ${strings['en_US']!['order_item_status_pending']}, '
+        'kitchen had reached: ${strings['en_US']!['order_item_status_ready']})',
+      );
+      final korean = AuditSummaryText.render(undone, lookup('ko_KR'))!;
+      expect(korean, contains(strings['ko_KR']!['order_item_status_ready']!));
+      expect(korean, isNot(contains('@')));
+
+      // ไม่ได้ถูกเลิกทำ (ไม่มี reached) ใช้ประโยคเดิม
+      final direct = log('order_item.void', {
+        'code': 'ORD-1',
+        'name': 'Pad Thai',
+        'status': 'cooking',
+      });
+      expect(
+        AuditSummaryText.render(direct, lookup('en_US')),
+        isNot(contains('kitchen had reached')),
+      );
+    },
+  );
+
   test('อีเมลปลายทางมี @ — แทนค่ารอบเดียว ไม่เอาไปแทนซ้ำ', () {
     final sent = log('receivable.document_email', {
       'document': 'billing_note',

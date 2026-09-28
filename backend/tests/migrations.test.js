@@ -235,3 +235,37 @@ describe('the real migrations', () => {
     assert.deepEqual(counts(), before);
   });
 });
+
+describe('0003 order_item_kitchen_reached (T05 #104)', () => {
+  test('marks items the kitchen is working on or finished as reached, and leaves the rest unknown', () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, MIGRATIONS.slice(0, 2));
+    const order = db
+      .prepare("INSERT INTO orders (code, status) VALUES ('ORD-T05-1', 'in_kitchen')")
+      .run().lastInsertRowid;
+    const insert = db.prepare(
+      `INSERT INTO order_items (order_id, name_snapshot, unit_price, quantity, status)
+       VALUES (?, ?, 5000, 1, ?)`,
+    );
+    for (const status of ['pending', 'cooking', 'ready', 'served', 'cancelled']) {
+      insert.run(order, status, status);
+    }
+
+    assert.deepEqual(runMigrations(db), ['0003_order_item_kitchen_reached']);
+    assert.deepEqual(
+      db.prepare('SELECT status, kitchen_reached FROM order_items ORDER BY id').all(),
+      [
+        { status: 'pending', kitchen_reached: null },
+        { status: 'cooking', kitchen_reached: 'cooking' },
+        { status: 'ready', kitchen_reached: 'ready' },
+        { status: 'served', kitchen_reached: 'served' },
+        { status: 'cancelled', kitchen_reached: null },
+      ],
+    );
+    assert.throws(
+      () => db.prepare("UPDATE order_items SET kitchen_reached = 'pending' WHERE id = 1").run(),
+      /CHECK constraint failed/,
+    );
+  });
+});

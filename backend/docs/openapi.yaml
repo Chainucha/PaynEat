@@ -367,6 +367,13 @@ components:
         lineTotal: { type: number }
         note: { type: string, nullable: true }
         status: { type: string, enum: [pending, cooking, ready, served, cancelled] }
+        kitchenReached:
+          type: string
+          nullable: true
+          enum: [cooking, ready, served, null]
+          description: >-
+            ขั้นที่ครัวเคยทำรายการนี้ไปถึง ไม่ถอยลงแม้ครัวกด "เลิกทำ" — null = ครัวยังไม่เคยเริ่มทำ ถ้าไม่ใช่ null
+            รายการนี้แก้/ลบไม่ได้ และการยกเลิกต้องใช้ผู้จัดการ (T05)
         isPaid: { type: boolean, description: จ่ายไปแล้วในรอบแยกบิลรายการอาหารหรือยัง }
         weightGrams:
           type: integer
@@ -1224,13 +1231,13 @@ paths:
       - { in: path, name: itemId, required: true, schema: { type: integer } }
     patch:
       tags: [Orders]
-      summary: แก้จำนวน/โน้ต (เฉพาะรายการที่ครัวยังไม่เริ่มทำ)
+      summary: แก้จำนวน/โน้ต (เฉพาะรายการที่ครัวยังไม่เคยเริ่มทำ)
       responses:
         '200': { description: สำเร็จ }
-        '409': { description: ครัวเริ่มทำแล้ว }
+        '409': { description: 'ครัวเริ่มทำแล้ว หรือเคยเริ่มทำแล้วถูกเลิกทำ (kitchenReached ไม่ใช่ null — T05)' }
     delete:
       tags: [Orders]
-      summary: ลบรายการ (เฉพาะที่ครัวยังไม่เริ่มทำ)
+      summary: ลบรายการ (เฉพาะที่ครัวยังไม่เคยเริ่มทำ — รายการที่เคยเริ่มแล้วใช้การยกเลิกแทน)
       responses:
         '200': { description: สำเร็จ }
   /orders/{id}/items/{itemId}/status:
@@ -1240,8 +1247,13 @@ paths:
     patch:
       tags: [Orders]
       summary: อัปเดตสถานะรายการ (pending → cooking → ready → served)
+      description: >-
+        ครัวย้อนสถานะได้หนึ่งขั้น (ปุ่ม "เลิกทำ") แต่ระบบจำขั้นที่เคยไปถึงไว้ใน `kitchenReached` —
+        การยกเลิกรายการที่ครัวเคยลงมือทำแล้วต้องใช้ผู้จัดการและถูกบันทึก audit `order_item.void` เสมอ
+        แม้สถานะตอนนี้จะถอยกลับเป็น pending แล้ว (T05)
       responses:
         '200': { description: สำเร็จ }
+        '403': { description: 'ยกเลิกรายการที่ครัวเคยลงมือทำแล้ว (ดู kitchenReached) โดยไม่ใช่ผู้จัดการ/ผู้ดูแลระบบ' }
         '409': { description: 'เปลี่ยนสถานะข้ามขั้นไม่ได้ หรือยกเลิกรายการในบิลที่จ่ายครบ/ถูกยกเลิกแล้ว หรือรายการที่แยกจ่ายแล้ว (ต้องคืนเงินก่อน — T04)' }
   /orders/{id}/send-to-kitchen:
     parameters:

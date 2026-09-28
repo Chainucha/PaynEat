@@ -174,7 +174,7 @@ extension DemoStoreOrderItems on DemoStore {
     _assertMutable(order);
     final item = _findItem(order, itemId);
 
-    if (item['status'] != OrderItemStatus.pending) {
+    if (_kitchenStarted(item)) {
       throw ApiException(
         message: 'order_error_item_locked_edit'.tr,
         statusCode: 409,
@@ -233,7 +233,7 @@ extension DemoStoreOrderItems on DemoStore {
     _assertMutable(order);
     final item = _findItem(order, itemId);
 
-    if (item['status'] != OrderItemStatus.pending) {
+    if (_kitchenStarted(item)) {
       throw ApiException(
         message: 'order_error_item_locked_remove'.tr,
         statusCode: 409,
@@ -325,17 +325,33 @@ extension DemoStoreOrderItems on DemoStore {
       );
     }
 
+    // void รายการที่ครัวเคยลงมือทำแล้ว (นับรวมรายการที่ถูกเลิกทำถอยกลับไปรอทำ) ต้องเป็นผู้จัดการขึ้นไป และ log ทุกครั้ง
+    // — mirror ของ order.service.js#updateItemStatus (T05 #104, docs/DECISIONS.md #86)
+    final isRiskyVoid =
+        status == OrderItemStatus.cancelled && _kitchenStarted(item);
+    if (isRiskyVoid && !_isManagement(actorId)) {
+      throw ApiException(
+        message: 'order_error_void_needs_manager'.tr,
+        statusCode: 403,
+      );
+    }
+    // รายการใน seed ไม่มีค่านี้ ถือว่าเคยถึงสถานะปัจจุบัน เหมือน migration 0003 ที่เติมค่าให้รายการเดิม
+    final previousReached =
+        item['kitchenReached'] as String? ??
+        _furthestKitchenStage(null, previousItemStatus);
+
     if (status == OrderItemStatus.cancelled && item['stockDeducted'] == true) {
       restoreForOrderItem(item);
     }
 
     item['status'] = status;
+    item['kitchenReached'] = _furthestKitchenStage(previousReached, status);
     item['updatedAt'] = _now();
 
-    // log เฉพาะการ void รายการที่ครัวลงมือทำแล้ว (pending ยกเลิกเองยังไม่ถือว่าเสี่ยง)
-    // mirror ของ order.service.js#updateItemStatus — ดู docs/tickets/08-audit-log.md
-    if (status == OrderItemStatus.cancelled &&
-        previousItemStatus != OrderItemStatus.pending) {
+    if (isRiskyVoid) {
+      // ถ้าครัวเคยทำไปไกลกว่าสถานะตอนยกเลิก (ถูกเลิกทำถอยกลับมา) ให้ผู้ตรวจเห็นขั้นที่เคยไปถึงด้วย
+      final reached = previousReached ?? previousItemStatus;
+      final undone = reached != previousItemStatus;
       _logAudit(
         actorId: actorId,
         action: 'order_item.void',
@@ -343,16 +359,20 @@ extension DemoStoreOrderItems on DemoStore {
           'code': order['code'],
           'name': item['name'],
           'status': previousItemStatus,
+          if (undone) 'reached': reached,
         },
         entityType: 'order_item',
         entityId: itemId,
-        summary:
-            'ยกเลิกรายการ "${item['name']}" ในออเดอร์ #${order['code']} '
-            '(สถานะก่อนยกเลิก: $previousItemStatus)',
+        summary: undone
+            ? 'ยกเลิกรายการ "${item['name']}" ในออเดอร์ #${order['code']} '
+                  '(สถานะก่อนยกเลิก: $previousItemStatus, ครัวเคยทำถึง: $reached)'
+            : 'ยกเลิกรายการ "${item['name']}" ในออเดอร์ #${order['code']} '
+                  '(สถานะก่อนยกเลิก: $previousItemStatus)',
         metadata: {
           'orderId': orderId,
           'orderCode': order['code'],
           'previousStatus': previousItemStatus,
+          'kitchenReached': reached,
         },
       );
     }
@@ -367,6 +387,33 @@ extension DemoStoreOrderItems on DemoStore {
     }
 
     return _recalculate(order);
+  }
+
+  /// ขั้นที่ครัวทำรายการไปถึง เรียงจากน้อยไปมาก — `kitchenReached` เก็บขั้นที่ไกลที่สุด ไม่ถอยลงแม้เลิกทำ
+  /// (mirror ของ KITCHEN_STAGES ใน order.service.js, T05 #104)
+  static const _kitchenStages = [
+    OrderItemStatus.cooking,
+    OrderItemStatus.ready,
+    OrderItemStatus.served,
+  ];
+
+  String? _furthestKitchenStage(String? reached, String status) =>
+      _kitchenStages.indexOf(status) > _kitchenStages.indexOf(reached ?? '')
+      ? status
+      : reached;
+
+  /// ครัวเคยลงมือทำรายการนี้แล้วหรือยัง — นับรวมรายการที่ถูกเลิกทำถอยกลับไปรอทำด้วย
+  bool _kitchenStarted(Map<String, dynamic> item) =>
+      item['status'] != OrderItemStatus.pending ||
+      item['kitchenReached'] != null;
+
+  /// ไม่รู้ผู้ทำ (เรียกจากโค้ดภายใน) ถือว่าผ่าน เหมือนเส้นทางอื่นของ demo store ที่ไม่ได้ตรวจสิทธิ์ซ้ำ
+  bool _isManagement(int? actorId) {
+    if (actorId == null) return true;
+    final role = users.firstWhereOrNull(
+      (user) => user['id'] == actorId,
+    )?['role'];
+    return role == 'admin' || role == 'manager';
   }
 
   Map<String, dynamic> _findItem(Map<String, dynamic> order, int itemId) =>

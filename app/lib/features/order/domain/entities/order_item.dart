@@ -33,6 +33,7 @@ class OrderItem {
     this.optionsPrice = 0,
     this.note,
     this.isPaid = false,
+    this.kitchenReached,
     this.createdAt,
     this.updatedAt,
     this.orderCode,
@@ -58,6 +59,10 @@ class OrderItem {
 
   /// จ่ายไปแล้วในรอบแยกบิลรายการอาหารหรือยัง (ใช้กันเลือกจ่ายซ้ำ)
   final bool isPaid;
+
+  /// ขั้นที่ครัวเคยทำถึง (cooking/ready/served) ไม่ถอยลงแม้ครัวกด "เลิกทำ" — null = ครัวยังไม่เคยเริ่ม
+  /// (T05 #104, docs/DECISIONS.md #86)
+  final String? kitchenReached;
   final String? createdAt;
   final String? updatedAt;
 
@@ -68,7 +73,11 @@ class OrderItem {
 
   String get statusLabel => OrderItemStatus.label(status);
   bool get isCancelled => status == OrderItemStatus.cancelled;
-  bool get isEditable => status == OrderItemStatus.pending;
+
+  /// ครัวเคยลงมือทำแล้ว — นับรวมรายการที่ถูกเลิกทำถอยกลับไปรอทำ: แก้/ลบไม่ได้ ยกเลิกได้โดยผู้จัดการเท่านั้น
+  bool get kitchenStarted =>
+      status != OrderItemStatus.pending || kitchenReached != null;
+  bool get isEditable => !kitchenStarted;
   String? get nextStatus => OrderItemStatus.next(status);
   String? get nextActionLabel => OrderItemStatus.nextActionLabel(status);
 

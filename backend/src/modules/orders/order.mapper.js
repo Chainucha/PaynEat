@@ -28,6 +28,8 @@ export const toOrderItemDto = (row) => {
     lineTotal: toBaht(row.line_total),
     note: row.note,
     status: row.status,
+    // ขั้นที่ครัวเคยทำถึง (cooking/ready/served) ไม่ถอยลงแม้เลิกทำ — null = ครัวยังไม่เคยเริ่ม (T05 #104)
+    kitchenReached: row.kitchen_reached ?? null,
     isPaid: Boolean(row.is_paid),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

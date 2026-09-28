@@ -1,6 +1,8 @@
 # รันทั้งระบบด้วยคำสั่งเดียว:  docker compose up --build
 #   - เว็บผู้ดูแลระบบ/หน้าร้าน : http://localhost:8080
 #   - REST API + เอกสาร        : http://localhost:3000/docs
+# ต้องตั้ง JWT_SECRET ก่อน (ไม่มีค่าสำรองในไฟล์นี้) — สร้างไฟล์ .env ข้างไฟล์นี้ แล้วใส่บรรทัด
+#   JWT_SECRET=<ค่าสุ่มจาก openssl rand -hex 32>
 services:
   api:
     build:
@@ -12,7 +14,8 @@ services:
       # deploy จริง: NODE_ENV=production + SEED_*_PASSWORD ครบ 6 ตัว + JWT_SECRET/CORS_ORIGIN ของจริง
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3000
-      JWT_SECRET: ${JWT_SECRET:-payneat-local-demo-secret}
+      # ไม่ตั้งค่า = compose หยุดพร้อมข้อความนี้ ใน production ค่าต้องสุ่มเองและยาวอย่างน้อย 32 ตัว (DECISIONS #83)
+      JWT_SECRET: ${JWT_SECRET:?ตั้ง JWT_SECRET ก่อน - สร้างไฟล์ .env ข้าง docker-compose.yml แล้วใส่ JWT_SECRET=ค่าจาก openssl rand -hex 32}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       AUTO_SEED: "true"
       DATABASE_FILE: data/payneat.sqlite
@@ -30,8 +33,10 @@ services:
       # log JSON ตามสัญญา telemetry (ticket 24) — ดูด้วย `docker compose logs api`
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: ${LOG_FORMAT:-default}
-    # /metrics อยู่พอร์ต 9464 ในคอนเทนเนอร์ และตั้งใจไม่เปิดออกนอกเครื่อง (ห้ามเปิดสาธารณะ — DECISIONS #68)
-    # ตัวเก็บ metric ที่อยู่ใน compose network เดียวกันเรียก http://api:9464/metrics ได้เลย
+      # /metrics อยู่พอร์ต 9464 ในคอนเทนเนอร์ และตั้งใจไม่เปิดออกนอกเครื่อง (ห้ามเปิดสาธารณะ — DECISIONS #68)
+      # ฟังทุก interface ของคอนเทนเนอร์ ตัวเก็บ metric ใน compose network เดียวกันจึงเรียก http://api:9464/metrics ได้
+      # (นอก Docker ค่าเริ่มต้นคือ 127.0.0.1)
+      METRICS_HOST: 0.0.0.0
     ports:
       - "3000:3000"
     volumes:

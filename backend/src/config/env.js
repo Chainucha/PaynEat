@@ -24,9 +24,38 @@ if (!process.env.JWT_SECRET) {
   );
 }
 
+/** ความยาวขั้นต่ำของ JWT_SECRET ใน production (`openssl rand -hex 32` ได้ 64 ตัว) */
+export const JWT_SECRET_MIN_LENGTH = 32;
+
+/** ค่าที่อยู่ใน repo (ตัวอย่าง เดโม เทสต์) — production ต้องใช้ค่าที่ร้านสุ่มเอง (T19, DECISIONS #83) */
+const PUBLISHED_JWT_SECRETS = new Set([
+  'change-this-secret-in-production',
+  'payneat-local-demo-secret',
+  'test-secret',
+  'e2e-secret',
+]);
+
+/** เหตุผลที่ JWT_SECRET ใช้ใน production ไม่ได้ หรือ undefined ถ้าใช้ได้ — ตอนพัฒนา/เดโมไม่ตรวจ */
+export const jwtSecretProblem = (secret, nodeEnv) => {
+  if (nodeEnv !== 'production') return undefined;
+  if (PUBLISHED_JWT_SECRETS.has(secret)) {
+    return 'JWT_SECRET เป็นค่าตัวอย่างที่เผยแพร่อยู่ใน repo — ตั้งค่าสุ่มของร้านเอง เช่นจาก `openssl rand -hex 32`';
+  }
+  if (secret.length < JWT_SECRET_MIN_LENGTH) {
+    return `JWT_SECRET ใน production ต้องยาวอย่างน้อย ${JWT_SECRET_MIN_LENGTH} ตัวอักษร — ตั้งค่าสุ่ม เช่นจาก \`openssl rand -hex 32\``;
+  }
+  return undefined;
+};
+
+const jwtProblem = jwtSecretProblem(process.env.JWT_SECRET, process.env.NODE_ENV);
+if (jwtProblem) throw new Error(jwtProblem);
+
 export const env = {
   rootDir,
   nodeEnv: process.env.NODE_ENV ?? 'development',
+  // แนบ stack ของ error 500 ไปกับคำตอบ — เฉพาะตอนดีบักที่ตั้งเองชัดเจน และไม่ทำงานใน production
+  exposeErrorStack:
+    process.env.EXPOSE_ERROR_STACK === 'true' && process.env.NODE_ENV !== 'production',
   isTest: process.env.NODE_ENV === 'test',
   port: toInt(process.env.PORT, 3000),
   host: process.env.HOST ?? '0.0.0.0',
@@ -106,7 +135,8 @@ export const env = {
     logFormat: process.env.LOG_FORMAT === 'gcp' ? 'gcp' : 'default',
     gcpProject: process.env.GOOGLE_CLOUD_PROJECT || undefined,
     metricsPort: toInt(process.env.METRICS_PORT, 9464),
-    metricsHost: process.env.METRICS_HOST ?? process.env.HOST ?? '0.0.0.0',
+    // ค่าเริ่มต้นฟังเฉพาะเครื่องนี้ — ตัวเก็บ metric ในเครื่องอื่น (เช่น compose network) ตั้ง METRICS_HOST เอง
+    metricsHost: process.env.METRICS_HOST || '127.0.0.1',
   },
 };
 

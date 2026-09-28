@@ -138,7 +138,21 @@ export const userService = {
         metadata: { username: target.username, role: target.role },
       });
     });
-    run();
+    try {
+      run();
+    } catch (error) {
+      // บัญชีที่มีประวัติกะ/ธุรกรรมอ้างอิงอยู่ (foreign key แบบ RESTRICT) ลบไม่ได้ — ปิดการใช้งานแทน
+      // ประวัติการเงินต้องยังบอกได้ว่าใครทำ (T19)
+      // (SQLite รายงาน ON DELETE RESTRICT เป็น SQLITE_CONSTRAINT_TRIGGER ส่วน FK ปกติเป็น _FOREIGNKEY)
+      if (/^SQLITE_CONSTRAINT/.test(error?.code) && /FOREIGN KEY/.test(error.message)) {
+        throw new ApiError(
+          409,
+          'บัญชีนี้มีประวัติการทำรายการแล้วจึงลบไม่ได้ ให้ปิดการใช้งานบัญชีแทน',
+          { code: 'USER_HAS_HISTORY' },
+        );
+      }
+      throw error;
+    }
   },
 };
 

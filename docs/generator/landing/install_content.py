@@ -127,9 +127,13 @@ TH = {
                 {'title': 'หา IP ของเครื่องนี้',
                  'html': 'Windows: เปิด PowerShell พิมพ์ <code>ipconfig</code> ดูบรรทัด <b>IPv4 Address</b> · '
                  'Mac/Linux: <code>ifconfig | grep inet</code> — จะได้เลขหน้าตาแบบ <code>192.168.1.15</code>'},
+                {'title': 'ตั้งรหัสลับของเซิร์ฟเวอร์',
+                 'html': 'สร้างไฟล์ชื่อ <code>.env</code> ไว้ในโฟลเดอร์โค้ด (ข้างไฟล์ <code>docker-compose.yml</code>) ที่มีบรรทัด '
+                 '<code>JWT_SECRET=</code> ตามด้วยค่าสุ่มของร้าน — ถ้าไม่มีบรรทัดนี้ ระบบจะไม่เริ่มทำงานและบอกวิธีตั้ง · '
+                 'Mac/Linux ใช้คำสั่งด้านล่าง · Windows PowerShell ใช้ <code>(&quot;JWT_SECRET=&quot; + [guid]::NewGuid().ToString(&quot;N&quot;) + [guid]::NewGuid().ToString(&quot;N&quot;)) | Out-File -Encoding ascii .env</code>',
+                 'code': 'echo "JWT_SECRET=$(openssl rand -hex 32)" > .env', 'lang': 'Terminal (Mac/Linux)'},
                 {'title': 'บอกแอปว่าเซิร์ฟเวอร์อยู่ที่ไหน',
-                 'html': 'สร้างไฟล์ชื่อ <code>.env</code> ไว้ในโฟลเดอร์โค้ด (ข้างไฟล์ <code>docker-compose.yml</code>) ใส่บรรทัดนี้ '
-                 'โดยเปลี่ยนเลขเป็น IP ของคุณ — ข้ามขั้นนี้ได้ถ้าจะใช้แค่เครื่องนี้เครื่องเดียว',
+                 'html': 'เพิ่มบรรทัดนี้ในไฟล์ <code>.env</code> เดิม โดยเปลี่ยนเลขเป็น IP ของคุณ — ข้ามขั้นนี้ได้ถ้าจะใช้แค่เครื่องนี้เครื่องเดียว',
                  'code': 'API_BASE_URL=http://192.168.1.15:3000', 'lang': '.env'},
                 {'title': 'สั่งให้ระบบเริ่มทำงาน',
                  'html': 'เปิด Terminal (Windows: PowerShell) ในโฟลเดอร์โค้ด แล้วรันคำสั่งนี้ — ครั้งแรกรอ 5–10 นาทีเพราะต้อง build แอปให้',
@@ -198,7 +202,8 @@ TH = {
         'title': 'เช็คลิสต์ก่อนเปิดให้พนักงานใช้งานจริง',
         'sub': 'บัญชีทดลองและรหัสผ่านข้างบนเผยแพร่อยู่บนอินเทอร์เน็ต ระบบจึงกันไว้ให้แล้ว: ถ้าตั้งเป็นโหมดใช้งานจริงแต่ยังใช้รหัสทดลอง เซิร์ฟเวอร์จะไม่ยอมเปิด',
         'items_html': [
-            'ตั้ง <code>JWT_SECRET</code> เป็นค่าสุ่มของร้านเอง เช่นจากคำสั่ง <code>openssl rand -hex 32</code> — ห้ามใช้ค่าตัวอย่าง',
+            'ตั้ง <code>JWT_SECRET</code> เป็นค่าสุ่มของร้านเอง เช่นจากคำสั่ง <code>openssl rand -hex 32</code> — ถ้าตั้ง '
+            '<code>NODE_ENV=production</code> แต่ใช้ค่าตัวอย่างหรือค่าที่สั้นกว่า 32 ตัวอักษร เซิร์ฟเวอร์จะไม่ยอมเปิด',
             'ตั้งรหัสผ่านบัญชีเริ่มต้นเองครบทั้ง 6 ตัว (<code>SEED_ADMIN_PASSWORD</code> … <code>SEED_CASHIER_PASSWORD</code>) '
             'หรือปิด <code>AUTO_SEED</code> แล้วสร้างบัญชีพนักงานจริงเอง',
             'ตั้ง <code>CORS_ORIGIN</code> เป็นที่อยู่จริงของร้านแทน <code>*</code>',
@@ -218,6 +223,8 @@ TH = {
             ('เปิดหน้าเว็บได้ แต่เข้าสู่ระบบไม่ได้', 'เปิด <b>http://localhost:3000/health</b> ถ้าไม่ขึ้นแปลว่าเซิร์ฟเวอร์ยังไม่ทำงาน · '
              'ถ้าตั้ง <code>API_BASE_URL</code> ไว้ ตรวจว่า IP ถูกและรัน <code>docker compose up --build</code> ใหม่หลังแก้'),
             ('มือถือหรือแท็บเล็ตต่อไม่ได้', 'ต้องอยู่ Wi-Fi เดียวกับเครื่องเซิร์ฟเวอร์ ใช้ IP ไม่ใช่ <code>localhost</code> และไฟร์วอลล์ต้องยอมพอร์ต 8080 กับ 3000'),
+            ('Docker ขึ้นว่า "required variable JWT_SECRET is missing a value"', 'ยังไม่ได้ตั้งรหัสลับของเซิร์ฟเวอร์ — '
+             'สร้างไฟล์ <code>.env</code> ข้าง <code>docker-compose.yml</code> ตามขั้น "ตั้งรหัสลับของเซิร์ฟเวอร์" ใน<a href="#docker">ทางที่ 3</a> แล้วรันใหม่'),
             ('ขึ้นว่า "ต้องตั้งค่า JWT_SECRET"', 'ยังไม่ได้สร้างไฟล์ <code>.env</code> — รัน <code>cp .env.example .env</code> ในโฟลเดอร์ <code>backend</code> '
              '(Windows: <code>copy</code>) แล้ว <code>npm run dev</code> ใหม่'),
             ('<code>npm install</code> ล้มที่ better-sqlite3', 'ขาดเครื่องมือ build · macOS: <code>xcode-select --install</code> · '
@@ -328,9 +335,13 @@ EN = {
                 {'title': 'Find this computer’s IP address',
                  'html': 'Windows: open PowerShell, type <code>ipconfig</code> and look for <b>IPv4 Address</b>. '
                  'Mac/Linux: <code>ifconfig | grep inet</code>. It looks like <code>192.168.1.15</code>.'},
+                {'title': 'Set the server secret',
+                 'html': 'Create a file named <code>.env</code> in the code folder (next to <code>docker-compose.yml</code>) containing a '
+                 '<code>JWT_SECRET=</code> line with your own random value. Without it the system does not start and explains how to set it. '
+                 'On Mac/Linux use the command below; in Windows PowerShell use <code>(&quot;JWT_SECRET=&quot; + [guid]::NewGuid().ToString(&quot;N&quot;) + [guid]::NewGuid().ToString(&quot;N&quot;)) | Out-File -Encoding ascii .env</code>.',
+                 'code': 'echo "JWT_SECRET=$(openssl rand -hex 32)" > .env', 'lang': 'Terminal (Mac/Linux)'},
                 {'title': 'Tell the app where the server is',
-                 'html': 'Create a file named <code>.env</code> in the code folder (next to <code>docker-compose.yml</code>) with this line, '
-                 'using your own IP. Skip this step if only this computer will use it.',
+                 'html': 'Add this line to the same <code>.env</code> file, using your own IP. Skip this step if only this computer will use it.',
                  'code': 'API_BASE_URL=http://192.168.1.15:3000', 'lang': '.env'},
                 {'title': 'Start it',
                  'html': 'Open a terminal (Windows: PowerShell) in the code folder and run this. The first time takes 5–10 minutes while the app is built.',
@@ -400,7 +411,8 @@ EN = {
         'sub': 'The demo accounts and passwords above are published on the internet, so the system guards against them: '
         'in production mode it refuses to start while they’re still in place.',
         'items_html': [
-            'Set <code>JWT_SECRET</code> to your own random value, for example from <code>openssl rand -hex 32</code> — never the sample one.',
+            'Set <code>JWT_SECRET</code> to your own random value, for example from <code>openssl rand -hex 32</code>. With '
+            '<code>NODE_ENV=production</code>, the server refuses to start with a sample value or one shorter than 32 characters.',
             'Set your own passwords for all six starting accounts (<code>SEED_ADMIN_PASSWORD</code> … <code>SEED_CASHIER_PASSWORD</code>), '
             'or turn off <code>AUTO_SEED</code> and create real staff accounts yourself.',
             'Set <code>CORS_ORIGIN</code> to the restaurant’s real address instead of <code>*</code>.',
@@ -420,6 +432,8 @@ EN = {
             ('The page opens but sign-in fails', 'Open <b>http://localhost:3000/health</b>; if nothing answers, the server isn’t running. '
              'If you set <code>API_BASE_URL</code>, check the IP and run <code>docker compose up --build</code> again after changing it.'),
             ('A phone or tablet can’t connect', 'It has to be on the server’s Wi-Fi, use the IP rather than <code>localhost</code>, and the firewall must allow ports 8080 and 3000.'),
+            ('Docker says "required variable JWT_SECRET is missing a value"', 'The server secret is not set yet. Create the '
+             '<code>.env</code> file next to <code>docker-compose.yml</code> as in the "Set the server secret" step of <a href="#docker">way 3</a>, then run it again.'),
             ('It says JWT_SECRET must be set', 'There is no <code>.env</code> yet: run <code>cp .env.example .env</code> in <code>backend</code> '
              '(Windows: <code>copy</code>), then <code>npm run dev</code> again.'),
             ('<code>npm install</code> fails on better-sqlite3', 'Build tools are missing. macOS: <code>xcode-select --install</code> · '
@@ -530,8 +544,13 @@ KO = {
                 {'title': '이 컴퓨터의 IP 찾기',
                  'html': 'Windows: PowerShell에서 <code>ipconfig</code>를 입력하고 <b>IPv4 Address</b>를 보세요. '
                  'Mac/Linux: <code>ifconfig | grep inet</code>. <code>192.168.1.15</code> 같은 모양입니다.'},
+                {'title': '서버 비밀 값 설정',
+                 'html': '코드 폴더(<code>docker-compose.yml</code> 옆)에 <code>.env</code> 파일을 만들고 <code>JWT_SECRET=</code> 뒤에 '
+                 '매장 고유의 무작위 값을 넣으세요. 이 줄이 없으면 시스템이 시작되지 않고 설정 방법을 안내합니다. '
+                 'Mac/Linux는 아래 명령을, Windows PowerShell은 <code>(&quot;JWT_SECRET=&quot; + [guid]::NewGuid().ToString(&quot;N&quot;) + [guid]::NewGuid().ToString(&quot;N&quot;)) | Out-File -Encoding ascii .env</code>를 사용하세요.',
+                 'code': 'echo "JWT_SECRET=$(openssl rand -hex 32)" > .env', 'lang': 'Terminal (Mac/Linux)'},
                 {'title': '앱에 서버 위치 알려 주기',
-                 'html': '코드 폴더(<code>docker-compose.yml</code> 옆)에 <code>.env</code> 파일을 만들고 이 줄을 넣으세요. 숫자는 사장님 IP로 바꿉니다. '
+                 'html': '같은 <code>.env</code> 파일에 이 줄을 추가하세요. 숫자는 사장님 IP로 바꿉니다. '
                  '이 컴퓨터에서만 쓰실 거라면 건너뛰셔도 됩니다.',
                  'code': 'API_BASE_URL=http://192.168.1.15:3000', 'lang': '.env'},
                 {'title': '시작하기',
@@ -602,7 +621,8 @@ KO = {
         'sub': '위의 데모 계정과 비밀번호는 인터넷에 공개되어 있어서 시스템이 막아 두었습니다: '
         '운영 모드에서 데모 비밀번호가 남아 있으면 서버가 아예 켜지지 않습니다.',
         'items_html': [
-            '<code>JWT_SECRET</code>을 매장 고유의 무작위 값으로 — 예: <code>openssl rand -hex 32</code>. 예시 값은 절대 쓰지 마세요.',
+            '<code>JWT_SECRET</code>을 매장 고유의 무작위 값으로 — 예: <code>openssl rand -hex 32</code>. <code>NODE_ENV=production</code>에서는 '
+            '예시 값이나 32자보다 짧은 값이면 서버가 시작되지 않습니다.',
             '시작 계정 6개의 비밀번호를 모두 직접 정하거나(<code>SEED_ADMIN_PASSWORD</code> … <code>SEED_CASHIER_PASSWORD</code>), '
             '<code>AUTO_SEED</code>를 끄고 실제 직원 계정을 직접 만드세요.',
             '<code>CORS_ORIGIN</code>을 <code>*</code> 대신 매장의 실제 주소로.',
@@ -622,6 +642,8 @@ KO = {
             ('화면은 열리는데 로그인이 안 돼요', '<b>http://localhost:3000/health</b> 를 열어 보세요. 응답이 없으면 서버가 아직 안 켜진 것입니다. '
              '<code>API_BASE_URL</code>을 설정하셨다면 IP를 확인하고, 바꾼 뒤 <code>docker compose up --build</code>를 다시 실행하세요.'),
             ('휴대폰이나 태블릿이 연결되지 않아요', '서버와 같은 와이파이여야 하고, <code>localhost</code> 대신 IP를 쓰고, 방화벽이 8080과 3000 포트를 허용해야 합니다.'),
+            ('Docker에 "required variable JWT_SECRET is missing a value"가 나와요', '서버 비밀 값이 아직 없습니다. '
+             '<a href="#docker">방법 3</a>의 "서버 비밀 값 설정" 단계대로 <code>docker-compose.yml</code> 옆에 <code>.env</code>를 만든 뒤 다시 실행하세요.'),
             ('JWT_SECRET을 설정하라고 나와요', '<code>.env</code>가 아직 없습니다. <code>backend</code>에서 <code>cp .env.example .env</code> '
              '(Windows: <code>copy</code>) 후 <code>npm run dev</code>를 다시 실행하세요.'),
             ('<code>npm install</code>이 better-sqlite3에서 실패해요', '빌드 도구가 없습니다. macOS: <code>xcode-select --install</code> · '

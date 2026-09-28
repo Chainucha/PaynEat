@@ -33,6 +33,8 @@ const Map<String, String> authTranslationsTh = {
   'auth_demo_session_expired': 'เซสชันหมดอายุ',
   'auth_username_taken': 'username นี้ถูกใช้งานแล้ว',
   'auth_user_not_found': 'ไม่พบผู้ใช้งาน',
+  'auth_user_has_history':
+      'บัญชีนี้มีประวัติการทำรายการแล้วจึงลบไม่ได้ ให้ปิดการใช้งานบัญชีแทน',
 
   // เลือก/สลับสาขา (ดู docs/tickets/11-multi-branch.md)
   'branch_selection_title': 'เลือกสาขา',
@@ -80,6 +82,8 @@ const Map<String, String> authTranslationsEn = {
   'auth_demo_session_expired': 'Session expired',
   'auth_username_taken': 'This username is already taken',
   'auth_user_not_found': 'User not found',
+  'auth_user_has_history':
+      'This account has transaction history and cannot be deleted — deactivate it instead',
 
   // Branch selection / switching (ticket 11)
   'branch_selection_title': 'Select branch',
@@ -123,6 +127,7 @@ const Map<String, String> authTranslationsKo = {
   'auth_demo_session_expired': '세션이 만료되었습니다',
   'auth_username_taken': '이미 사용 중인 아이디입니다',
   'auth_user_not_found': '사용자를 찾을 수 없습니다',
+  'auth_user_has_history': '이 계정은 거래 이력이 있어 삭제할 수 없습니다 — 대신 계정을 비활성화하십시오',
   'branch_selection_title': '지점 선택',
   'branch_selection_subtitle':
       '이 계정은 두 곳 이상의 지점에 접근할 수 있습니다. 지금 근무할 지점을 선택하세요.',

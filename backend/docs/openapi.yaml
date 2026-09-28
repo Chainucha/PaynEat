@@ -804,6 +804,8 @@ paths:
       summary: ลบพนักงาน (admin)
       responses:
         '204': { description: ลบแล้ว }
+        '400': { description: ลบบัญชีของตัวเองไม่ได้ }
+        '409': { description: 'USER_HAS_HISTORY — บัญชีมีประวัติกะหรือธุรกรรมแล้ว ลบไม่ได้ ให้ปิดการใช้งาน (isActive: false) แทน' }
 
   /categories:
     get:

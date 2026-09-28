@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/core/demo/demo_data_sources.dart';
 import 'package:payneat_pos/core/demo/demo_names.dart';
@@ -1108,6 +1109,38 @@ void main() {
       expect(logs.first['actorUserId'], 1);
       expect(logs.first['actorName'], 'ผู้ดูแลระบบ');
     });
+
+    test(
+      'deleteStaff บัญชีที่เคยเปิดกะ → 409 ให้ปิดการใช้งานแทน (เหมือน backend, T19)',
+      () {
+        final cashierId = store.shifts.first['openedBy'] as int;
+        final before = store.users.length;
+
+        expect(
+          () => store.deleteStaff(cashierId, actorId: 1),
+          throwsA(
+            isA<ApiException>()
+                .having((e) => e.statusCode, 'statusCode', 409)
+                .having((e) => e.code, 'code', 'USER_HAS_HISTORY')
+                .having(
+                  (e) => e.message,
+                  'message',
+                  'auth_user_has_history'.tr,
+                ),
+          ),
+        );
+        expect(store.users, hasLength(before));
+        expect(
+          store.auditLogList(action: 'user.delete', entityId: cashierId).rows,
+          isEmpty,
+        );
+        // ปิดการใช้งานแทนได้
+        final updated = store.updateStaff(cashierId, {
+          'isActive': false,
+        }, actorId: 1);
+        expect(updated['isActive'], isFalse);
+      },
+    );
 
     test(
       'updateSettings log เป็น settings.update เฉพาะตอนแก้ VAT/ค่าบริการ',

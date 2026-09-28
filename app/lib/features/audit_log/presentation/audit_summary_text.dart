@@ -65,6 +65,14 @@ class AuditSummaryText {
           'order_item_status_${args['status']}',
           args['status'],
         );
+        // ครัวเคยทำไปไกลกว่าสถานะตอนยกเลิก (ถูกเลิกทำถอยกลับมา) — T05 #104
+        if (args['reached'] != null) {
+          key = '${key}_reached';
+          values['reached'] = label(
+            'order_item_status_${args['reached']}',
+            args['reached'],
+          );
+        }
       case 'payment.pay' || 'receivable.receipt':
         values['method'] = label(
           'payment_method_${args['method']}',

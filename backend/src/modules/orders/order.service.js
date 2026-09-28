@@ -35,6 +35,18 @@ const ITEM_TRANSITIONS = {
 
 const MUTABLE_ORDER_STATUSES = ['open', 'in_kitchen', 'served'];
 
+/**
+ * ขั้นที่ครัวทำรายการไปถึง เรียงจากน้อยไปมาก — `order_items.kitchen_reached` เก็บขั้นที่ไกลที่สุดและไม่ถอยลง แม้ครัวกด
+ * "เลิกทำ" ถอยสถานะกลับ (T05 #104, docs/DECISIONS.md #86)
+ */
+const KITCHEN_STAGES = ['cooking', 'ready', 'served'];
+
+const furthestKitchenStage = (reached, status) =>
+  KITCHEN_STAGES.indexOf(status) > KITCHEN_STAGES.indexOf(reached) ? status : reached;
+
+/** ครัวเคยลงมือทำรายการนี้แล้วหรือยัง — นับรวมรายการที่ถูกเลิกทำถอยกลับไป pending ด้วย */
+const kitchenStarted = (item) => item.status !== 'pending' || item.kitchen_reached != null;
+
 const assertOrderMutable = (order) => {
   if (!MUTABLE_ORDER_STATUSES.includes(order.status)) {
     throw ApiError.conflict('ออเดอร์นี้ปิดแล้ว ไม่สามารถแก้ไขได้');
@@ -342,7 +354,7 @@ export const orderService = {
 
     const item = orderRepository.findItemById(itemId);
     if (!item || item.order_id !== order.id) throw ApiError.notFound('ไม่พบรายการนี้ในออเดอร์');
-    if (item.status !== 'pending') {
+    if (kitchenStarted(item)) {
       throw ApiError.conflict('แก้ไขไม่ได้ เพราะครัวเริ่มทำรายการนี้แล้ว');
     }
     if (item.weight_grams && payload.quantity !== undefined && payload.quantity !== 1) {
@@ -399,7 +411,7 @@ export const orderService = {
 
     const item = orderRepository.findItemById(itemId);
     if (!item || item.order_id !== order.id) throw ApiError.notFound('ไม่พบรายการนี้ในออเดอร์');
-    if (item.status !== 'pending') {
+    if (kitchenStarted(item)) {
       throw ApiError.conflict('ลบไม่ได้ เพราะครัวเริ่มทำรายการนี้แล้ว กรุณาใช้การยกเลิกรายการแทน');
     }
 
@@ -456,33 +468,45 @@ export const orderService = {
     if (!ITEM_TRANSITIONS[item.status].includes(status)) {
       throw ApiError.conflict(`เปลี่ยนสถานะจาก "${item.status}" เป็น "${status}" ไม่ได้`);
     }
-    // ยกเลิกรายการที่ครัวลงมือทำแล้ว ต้องเป็นผู้จัดการขึ้นไป (void)
-    if (
-      status === 'cancelled' &&
-      item.status !== 'pending' &&
-      !['admin', 'manager'].includes(user.role)
-    ) {
+
+    // ยกเลิกรายการที่ครัวเคยลงมือทำแล้ว (void) ต้องเป็นผู้จัดการขึ้นไป และ log ทุกครั้ง — ดู docs/tickets/08-audit-log.md
+    // ตัดสินจากขั้นที่ครัวเคยทำถึง ไม่ใช่สถานะตอนนี้ (T05 #104, DECISIONS #86): ปุ่ม "เลิกทำ" มีไว้แก้กดผิดบนจอครัว
+    // ถอยสถานะแล้วรายการยังนับว่าครัวลงมือทำแล้ว ส่วนรายการที่ครัวยังไม่เคยแตะ พนักงานยกเลิกเองได้โดยไม่ log
+    const isRiskyVoid = status === 'cancelled' && kitchenStarted(item);
+    if (isRiskyVoid && !['admin', 'manager'].includes(user.role)) {
       throw ApiError.forbidden('ยกเลิกรายการที่ครัวทำแล้วต้องใช้สิทธิ์ผู้จัดการ');
     }
-
-    // log เฉพาะการ void รายการที่ครัวลงมือทำแล้ว (pending ยกเลิกเองยังไม่ถือว่าเสี่ยง) — ดู
-    // docs/tickets/08-audit-log.md
-    const isRiskyVoid = status === 'cancelled' && item.status !== 'pending';
+    const kitchenReached = furthestKitchenStage(item.kitchen_reached, status);
 
     const updated = changeOrder(() => {
-      orderRepository.updateItem(itemId, { status });
+      orderRepository.updateItem(itemId, { status, kitchenReached });
       if (status === 'cancelled' && item.stock_deducted) {
         ingredientService.restoreForOrderItem(item);
       }
       if (isRiskyVoid) {
+        // ถ้าครัวเคยทำไปไกลกว่าสถานะตอนยกเลิก (ถูกเลิกทำถอยกลับมา) ให้ผู้ตรวจเห็นขั้นที่เคยไปถึงด้วย
+        const reached = item.kitchen_reached ?? item.status;
+        const undone = reached !== item.status;
         auditLogService.log({
           actorUser: user,
           action: 'order_item.void',
-          summaryArgs: { code: order.code, name: item.name_snapshot, status: item.status },
+          summaryArgs: {
+            code: order.code,
+            name: item.name_snapshot,
+            status: item.status,
+            ...(undone ? { reached } : {}),
+          },
           entityType: 'order_item',
           entityId: item.id,
-          summary: `ยกเลิกรายการ "${item.name_snapshot}" ในออเดอร์ #${order.code} (สถานะก่อนยกเลิก: ${item.status})`,
-          metadata: { orderId: order.id, orderCode: order.code, previousStatus: item.status },
+          summary: undone
+            ? `ยกเลิกรายการ "${item.name_snapshot}" ในออเดอร์ #${order.code} (สถานะก่อนยกเลิก: ${item.status}, ครัวเคยทำถึง: ${reached})`
+            : `ยกเลิกรายการ "${item.name_snapshot}" ในออเดอร์ #${order.code} (สถานะก่อนยกเลิก: ${item.status})`,
+          metadata: {
+            orderId: order.id,
+            orderCode: order.code,
+            previousStatus: item.status,
+            kitchenReached: reached,
+          },
         });
       }
 

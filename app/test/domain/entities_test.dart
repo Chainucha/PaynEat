@@ -6,6 +6,7 @@ import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item.dart';
+import 'package:payneat_pos/features/order/data/models/order_model.dart';
 import 'package:payneat_pos/features/table/domain/entities/dining_table.dart';
 
 void main() {
@@ -69,6 +70,30 @@ void main() {
       expect(itemWith(OrderItemStatus.pending).isEditable, isTrue);
       expect(itemWith(OrderItemStatus.cooking).isEditable, isFalse);
     });
+
+    test(
+      'ครัวเคยทำแล้วถูกเลิกทำกลับไปรอทำ ยังนับว่าเริ่มทำแล้ว แก้/ลบไม่ได้ (T05 #104)',
+      () {
+        final undone = OrderItemModel.fromJson({
+          'id': 1,
+          'name': 'ผัดกะเพรา',
+          'status': OrderItemStatus.pending,
+          'kitchenReached': OrderItemStatus.ready,
+        });
+        expect(undone.kitchenReached, OrderItemStatus.ready);
+        expect(undone.kitchenStarted, isTrue);
+        expect(undone.isEditable, isFalse);
+
+        final untouched = OrderItemModel.fromJson({
+          'id': 2,
+          'name': 'ผัดกะเพรา',
+          'status': OrderItemStatus.pending,
+          'kitchenReached': null,
+        });
+        expect(untouched.kitchenStarted, isFalse);
+        expect(untouched.isEditable, isTrue);
+      },
+    );
   });
 
   group('Order', () {

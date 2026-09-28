@@ -68,6 +68,8 @@ const Map<String, String> auditLogTranslationsTh = {
   'audit_summary_order_item_remove': 'ลบรายการ "@line" ออกจากออเดอร์ #@code',
   'audit_summary_order_item_void':
       'ยกเลิกรายการ "@name" ในออเดอร์ #@code (สถานะก่อนยกเลิก: @status)',
+  'audit_summary_order_item_void_reached':
+      'ยกเลิกรายการ "@name" ในออเดอร์ #@code (สถานะก่อนยกเลิก: @status, ครัวเคยทำถึง: @reached)',
   'audit_summary_order_discount_none': 'ยกเลิกส่วนลดออเดอร์ #@code',
   'audit_summary_order_discount_percent':
       'ให้ส่วนลดออเดอร์ #@code เป็น @value%',
@@ -195,6 +197,8 @@ const Map<String, String> auditLogTranslationsEn = {
   'audit_summary_order_item_remove': 'Removed "@line" from order #@code',
   'audit_summary_order_item_void':
       'Voided "@name" on order #@code (status before voiding: @status)',
+  'audit_summary_order_item_void_reached':
+      'Voided "@name" on order #@code (status before voiding: @status, kitchen had reached: @reached)',
   'audit_summary_order_discount_none': 'Removed the discount on order #@code',
   'audit_summary_order_discount_percent':
       'Gave order #@code a @value% discount',
@@ -318,6 +322,8 @@ const Map<String, String> auditLogTranslationsKo = {
   'audit_summary_order_item_edit': '주문 #@code의 "@name" 수량을 @from에서 @to(으)로 변경',
   'audit_summary_order_item_remove': '주문 #@code에서 "@line" 삭제',
   'audit_summary_order_item_void': '주문 #@code의 "@name" 취소 (취소 전 상태: @status)',
+  'audit_summary_order_item_void_reached':
+      '주문 #@code의 "@name" 취소 (취소 전 상태: @status, 주방이 도달했던 단계: @reached)',
   'audit_summary_order_discount_none': '주문 #@code 할인 해제',
   'audit_summary_order_discount_percent': '주문 #@code에 @value% 할인 적용',
   'audit_summary_order_discount_amount': '주문 #@code에 @value바트 할인 적용',

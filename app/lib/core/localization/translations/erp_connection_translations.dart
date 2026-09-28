@@ -20,6 +20,9 @@ const Map<String, String> erpConnectionTranslationsTh = {
   'erp_credential_saved': 'บันทึกไว้แล้ว (ไม่แสดงอีก)',
   'erp_connect_button': 'เชื่อมต่อ',
   'erp_save_credential_button': 'บันทึก credential ใหม่',
+  'erp_save_address_button': 'บันทึกที่อยู่และ credential ใหม่',
+  'erp_url_https_hint':
+      'ขึ้นต้นด้วย https:// — credential ไม่ถูกส่งแบบไม่เข้ารหัส',
   'erp_change_credential_button': 'เปลี่ยน credential',
   'erp_pull_button': 'ดึงทันที',
   'erp_disconnect_button': 'ออกจากโหมดเชื่อมต่อ',
@@ -78,6 +81,18 @@ const Map<String, String> erpConnectionTranslationsTh = {
   'erp_last_error_unsupported_contract':
       'ERP ใช้สัญญาเวอร์ชันที่ POS รุ่นนี้ไม่รองรับ — อัปเดต POS',
   'erp_last_error_refused': 'ERP ปฏิเสธคำขอ — ตรวจที่อยู่และ proxy',
+  'erp_last_error_insecure_transport':
+      'ดึงครั้งล่าสุดไม่ได้เรียก ERP เพราะที่อยู่เป็น http://',
+  'erp_last_error_untrusted_certificate':
+      'ใบรับรอง HTTPS ของ ERP ไม่น่าเชื่อถือ — ถ้าเชนใช้ CA ภายใน ให้ผู้ดูแลเซิร์ฟเวอร์ POS ตั้ง NODE_EXTRA_CA_CERTS',
+  'erp_transport_insecure_allowed_title':
+      'credential ถูกส่งแบบไม่เข้ารหัส (http://)',
+  'erp_transport_insecure_allowed_note':
+      'เซิร์ฟเวอร์ POS ตั้ง ERP_ALLOW_INSECURE_HTTP=true ไว้ ใช้ได้เฉพาะเครือข่ายปิด เช่นเดโมที่ POS กับ ERP อยู่ใน Docker network เดียวกัน — ร้านที่ใช้งานจริงต้องใช้ที่อยู่ https://',
+  'erp_transport_insecure_blocked_title':
+      'หยุดเรียก ERP แล้ว: ที่อยู่เป็น http://',
+  'erp_transport_insecure_blocked_note':
+      'credential ต้องส่งผ่าน https:// เท่านั้น เครื่องนี้จึงไม่ส่ง credential ไปที่อยู่นี้อีก — บันทึกที่อยู่ https:// ใหม่พร้อม credential ด้านล่าง (ถ้าไม่มี credential แล้ว ขอใหม่จากผู้ดูแล ERP)',
   'erp_last_error_other': 'ดึงครั้งล่าสุดไม่สำเร็จ',
   'erp_pull_stopped_note':
       'หยุดดึงตามรอบเวลาไว้จนกว่าจะแก้ต้นเหตุ — แก้แล้วกด "ดึงทันที" ระบบจะกลับมาดึงตามรอบเอง',
@@ -120,6 +135,9 @@ const Map<String, String> erpConnectionTranslationsEn = {
   'erp_credential_saved': 'Saved (never shown again)',
   'erp_connect_button': 'Connect',
   'erp_save_credential_button': 'Save new credential',
+  'erp_save_address_button': 'Save new address and credential',
+  'erp_url_https_hint':
+      'Starts with https:// — the credential is never sent unencrypted',
   'erp_change_credential_button': 'Change credential',
   'erp_pull_button': 'Pull now',
   'erp_disconnect_button': 'Leave connected mode',
@@ -181,6 +199,18 @@ const Map<String, String> erpConnectionTranslationsEn = {
       "The ERP uses a contract version this POS doesn't support — update the POS",
   'erp_last_error_refused':
       'The ERP refused the request — check the address and any proxy',
+  'erp_last_error_insecure_transport':
+      "The last pull didn't call the ERP, because the address is http://",
+  'erp_last_error_untrusted_certificate':
+      "The ERP's HTTPS certificate isn't trusted — if the chain uses its own internal CA, the POS server's administrator sets NODE_EXTRA_CA_CERTS",
+  'erp_transport_insecure_allowed_title':
+      'The credential is sent unencrypted (http://)',
+  'erp_transport_insecure_allowed_note':
+      "The POS server has ERP_ALLOW_INSECURE_HTTP=true. That is only for a closed network, such as a demo where the POS and the ERP share one Docker network — a store in real use needs an https:// address",
+  'erp_transport_insecure_blocked_title':
+      'Stopped calling the ERP: the address is http://',
+  'erp_transport_insecure_blocked_note':
+      "The credential travels only over https://, so this POS no longer sends it to this address — save a new https:// address with the credential below (if you no longer have the credential, ask the ERP administrator for a new one)",
   'erp_last_error_other': 'The last pull failed',
   'erp_pull_stopped_note':
       'Scheduled pulls are stopped until the cause is fixed — fix it, then tap "Pull now" and scheduled pulls resume',
@@ -220,6 +250,8 @@ const Map<String, String> erpConnectionTranslationsKo = {
   'erp_credential_saved': '저장됨 (다시 표시되지 않음)',
   'erp_connect_button': '연결',
   'erp_save_credential_button': '새 자격 증명 저장',
+  'erp_save_address_button': '새 주소와 자격 증명 저장',
+  'erp_url_https_hint': 'https://로 시작합니다 — 자격 증명은 암호화 없이 전송되지 않습니다',
   'erp_change_credential_button': '자격 증명 변경',
   'erp_pull_button': '지금 가져오기',
   'erp_disconnect_button': '연결 모드 해제',
@@ -272,6 +304,16 @@ const Map<String, String> erpConnectionTranslationsKo = {
   'erp_last_error_unsupported_contract':
       'ERP가 이 POS 버전이 지원하지 않는 규약을 사용합니다 — POS를 업데이트하세요',
   'erp_last_error_refused': 'ERP가 요청을 거부했습니다 — 주소와 프록시를 확인하세요',
+  'erp_last_error_insecure_transport':
+      '주소가 http://여서 마지막 가져오기에서 ERP를 호출하지 않았습니다',
+  'erp_last_error_untrusted_certificate':
+      'ERP의 HTTPS 인증서를 신뢰할 수 없습니다 — 체인이 내부 CA를 쓰는 경우 POS 서버 관리자가 NODE_EXTRA_CA_CERTS를 설정하세요',
+  'erp_transport_insecure_allowed_title': '자격 증명이 암호화 없이 전송됩니다 (http://)',
+  'erp_transport_insecure_allowed_note':
+      'POS 서버에 ERP_ALLOW_INSECURE_HTTP=true가 설정되어 있습니다. POS와 ERP가 같은 Docker 네트워크에 있는 데모처럼 닫힌 네트워크에서만 쓰세요 — 실제 매장은 https:// 주소를 써야 합니다',
+  'erp_transport_insecure_blocked_title': 'ERP 호출을 멈췄습니다: 주소가 http://입니다',
+  'erp_transport_insecure_blocked_note':
+      '자격 증명은 https://로만 전송되므로 이 POS는 더 이상 이 주소로 보내지 않습니다 — 아래에 새 https:// 주소와 자격 증명을 저장하세요 (자격 증명이 없다면 ERP 관리자에게 새로 요청하세요)',
   'erp_last_error_other': '마지막 가져오기에 실패했습니다',
   'erp_pull_stopped_note':
       '원인을 고칠 때까지 주기적 가져오기를 멈췄습니다 — 고친 뒤 "지금 가져오기"를 누르면 주기적 가져오기가 다시 시작됩니다',

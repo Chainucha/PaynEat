@@ -4,6 +4,7 @@
 import { randomUUID } from 'node:crypto';
 import { env } from '../../config/env.js';
 import { contractErrors, contractMajor, SUPPORTED_CONTRACT_MAJOR } from './erp.contract.js';
+import { erpTransport } from './erp.transport.js';
 
 /**
  * เรียก PaynEat ERP ตามสัญญา POS v1 (ticket 25, DECISIONS #80) — ทุกคำขอมี `Authorization: Bearer <credential>`
@@ -17,6 +18,8 @@ import { contractErrors, contractMajor, SUPPORTED_CONTRACT_MAJOR } from './erp.c
  * - `unsupported_contract` — ERP ใช้สัญญา major ที่ POS รุ่นนี้ไม่รู้จัก
  * - `invalid_response` — 2xx แต่ body ไม่ตรงสัญญา
  * - `refused` — สถานะอื่น (400, 403, 404…): ที่อยู่ผิด, proxy, หรือสัญญาไม่ตรงกัน
+ * - `insecure_transport` — ที่อยู่เป็น http:// ที่ไม่ได้รับอนุญาต (ticket 32) ไม่มีคำขอออกไปเลย
+ * - `untrusted_certificate` — ใบรับรอง HTTPS ของ ERP ไม่ผ่านการตรวจ (CA ที่เครื่องไม่เชื่อ, หมดอายุ, ชื่อไม่ตรง)
  *
  * credential ไม่ถูกใส่ในข้อความ error หรือค่าใดที่คืนออกไป
  */
@@ -41,7 +44,8 @@ export class ErpCallError extends Error {
  * - `details.reason` ที่ ERP ส่งมาเอง ถ้ามี (`credential_revoked`, `credential_unknown`, และค่าของ 422 ในยอดขาย)
  * - `erp_unreachable` — เน็ตหลุด หมดเวลา หรือ 5xx
  * - `rate_limited` — 429 หรือ 503 ที่มี `Retry-After`
- * - `unexpected_response` — สถานะอื่น (รวม 401 ที่ body ไม่บอกเหตุผล) หรือ 2xx ที่ body ไม่ตรงสัญญา
+ * - `unexpected_response` — สถานะอื่น (รวม 401 ที่ body ไม่บอกเหตุผล), 2xx ที่ body ไม่ตรงสัญญา และปัญหาของช่องทาง
+ *   (`insecure_transport`, `untrusted_certificate`) ซึ่งแคตตาล็อก v1.2 ยังไม่มีค่าเฉพาะ (ticket 32) — ทุกกรณีต้องมีคนตั้งค่าใหม่
  * - `contract_unsupported` — ERP ใช้สัญญา major ที่ POS รุ่นนี้ไม่รองรับ
  * error ที่ไม่ใช่ ErpCallError (บั๊กของ POS เอง) ไม่มี reason — ไม่เดา
  */
@@ -97,6 +101,36 @@ export const parseRetryAfter = (header, now = Date.now()) => {
 };
 
 /**
+ * รหัส error ของ TLS (OpenSSL/Node) ที่แปลว่าใบรับรองของ ERP ไม่ผ่านการตรวจ — ต่างจากเน็ตหลุด: ลองใหม่ไม่ช่วย
+ * ต้องมีคนแก้ใบรับรองหรือให้เครื่องเชื่อ CA ของเชน (`NODE_EXTRA_CA_CERTS`)
+ */
+const CERTIFICATE_ERRORS = new Set([
+  'CERT_HAS_EXPIRED',
+  'CERT_NOT_YET_VALID',
+  'CERT_REJECTED',
+  'CERT_REVOKED',
+  'CERT_SIGNATURE_FAILURE',
+  'CERT_UNTRUSTED',
+  'DEPTH_ZERO_SELF_SIGNED_CERT',
+  'ERR_TLS_CERT_ALTNAME_INVALID',
+  'HOSTNAME_MISMATCH',
+  'INVALID_CA',
+  'SELF_SIGNED_CERT_IN_CHAIN',
+  'UNABLE_TO_GET_ISSUER_CERT',
+  'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+]);
+
+/** fetch ห่อ error ของ TLS ไว้ใน `cause` (บางครั้งซ้อนสองชั้น) */
+const isCertificateError = (error) => {
+  let cause = error;
+  for (let depth = 0; cause && depth < 5; depth += 1, cause = cause.cause) {
+    if (CERTIFICATE_ERRORS.has(cause.code)) return true;
+  }
+  return false;
+};
+
+/**
  * URL ฐานของ ERP → URL ของ endpoint (รองรับ ERP ที่อยู่ใต้ path เช่น https://host/erp/)
  * ที่อยู่ของ ERP ถูกตรวจรูปแบบแล้วตอนบันทึก (erp.schema.js)
  */
@@ -142,6 +176,9 @@ const get = async (
   kind,
   { query, requestId = randomUUID(), precheck } = {},
 ) => {
+  // ตรวจทุกคำขอ ไม่ใช่แค่ตอนบันทึก: การเชื่อมต่อที่บันทึกไว้ด้วย http:// ก่อน ticket 32 ต้องหยุดส่ง credential ทันที
+  if (erpTransport(baseUrl) === 'insecure_blocked') throw new ErpCallError('insecure_transport');
+
   let response;
   try {
     response = await fetch(endpoint(baseUrl, path, query), {
@@ -154,9 +191,10 @@ const get = async (
       redirect: 'manual',
       signal: AbortSignal.timeout(env.erp.timeoutMs),
     });
-  } catch {
+  } catch (error) {
     // ข้อความของ fetch อาจยก URL มาทั้งเส้น (ไม่มี credential แต่ไม่จำเป็นต้องเก็บ) — บอกแค่ประเภท
-    throw new ErpCallError('network');
+    // TLS ล้มก่อนส่งคำขอ HTTP credential จึงไม่ได้ออกไปในทั้งสองกรณี
+    throw new ErpCallError(isCertificateError(error) ? 'untrusted_certificate' : 'network');
   }
 
   if (!response.ok) throw await failureFor(response);

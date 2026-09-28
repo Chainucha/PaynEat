@@ -15,6 +15,7 @@ import {
 } from './erp.client.js';
 import { LOCATION_CODE_PATTERN } from './erp.contract.js';
 import { erpRepository } from './erp.repository.js';
+import { erpTransport } from './erp.transport.js';
 
 /**
  * โหมดเชื่อมต่อ PaynEat ERP (ticket 25, DECISIONS #80) — เข้า/ออกโหมด, ดึง master data ตามเวอร์ชัน และสถานะที่หน้า
@@ -109,6 +110,8 @@ const toConnectionDto = (row) =>
         // ดึงตามรอบเวลาหยุดไว้จนกว่าจะมีคนมาจัดการ (reason ใน lastError) — กด "ดึงทันที" เพื่อลองใหม่
         pullStopped: Boolean(row.pull_stopped),
         retryAfter: row.retry_after,
+        // ช่องทางของ credential (ticket 32): insecure_allowed = แสดงคำเตือนถาวร, insecure_blocked = ต้องเปลี่ยนเป็น https
+        transport: erpTransport(row.base_url),
         // บอกแค่ว่ามี credential บันทึกไว้ — ตัว credential ไม่เคยถูกส่งกลับหลังบันทึก
         credentialSaved: true,
       }
@@ -308,6 +311,19 @@ const ERP_FAILURES = {
     new ApiError(502, 'คำตอบของ PaynEat ERP ไม่ตรงกับสัญญาเชื่อมต่อ POS v1', {
       code: 'ERP_BAD_RESPONSE',
     }),
+  // การเชื่อมต่อที่บันทึกไว้ด้วย http:// ก่อน ticket 32 — ไม่มีคำขอออกไป ต้องบันทึกที่อยู่ https:// ใหม่
+  insecure_transport: () =>
+    new ApiError(
+      409,
+      'ที่อยู่ของ PaynEat ERP ต้องขึ้นต้นด้วย https:// เพื่อไม่ให้ credential ถูกส่งแบบไม่เข้ารหัส',
+      { code: 'ERP_URL_NOT_HTTPS' },
+    ),
+  untrusted_certificate: () =>
+    new ApiError(
+      502,
+      'ใบรับรอง HTTPS ของ PaynEat ERP ไม่น่าเชื่อถือ ถ้าเชนใช้ CA ภายใน ให้ผู้ดูแลเซิร์ฟเวอร์ POS ตั้ง NODE_EXTRA_CA_CERTS',
+      { code: 'ERP_CERTIFICATE_UNTRUSTED' },
+    ),
   refused: (error) =>
     new ApiError(
       502,
@@ -371,6 +387,15 @@ export const erpService = {
    * สถานะบอกเหตุผลไว้ และกดดึงใหม่ได้)
    */
   async connect({ erpUrl, credential }, actingUser) {
+    // credential ไปได้ทาง https, loopback หรือ http ที่ผู้ดูแลเซิร์ฟเวอร์อนุญาตเองเท่านั้น (ticket 32, DECISIONS #82)
+    if (erpTransport(erpUrl) === 'insecure_blocked') {
+      throw new ApiError(
+        400,
+        'ที่อยู่ของ PaynEat ERP ต้องขึ้นต้นด้วย https:// เพื่อไม่ให้ credential ถูกส่งแบบไม่เข้ารหัส',
+        { code: 'ERP_URL_NOT_HTTPS' },
+      );
+    }
+
     const invalid = erpRepository
       .allBranches()
       .filter((branch) => branch.is_active && codeProblem(branch.code))
@@ -563,6 +588,31 @@ export const erpService = {
     });
     return { branchId, status: this.status() };
   },
+};
+
+// ---------------------------------------------------------------------------- ตอนเปิดเซิร์ฟเวอร์
+
+/**
+ * ตรวจช่องทางของ credential ตอนเปิดเซิร์ฟเวอร์ (ticket 32, server.js เรียก):
+ * - `ERP_ALLOW_INSECURE_HTTP=true` → log `WARNING` หนึ่งบรรทัด ให้คนที่ดู log เห็นว่า credential อาจไปทาง http
+ * - การเชื่อมต่อที่บันทึกไว้ด้วย http:// ก่อนกติกานี้ → ดึงหนึ่งรอบทันที ซึ่งล้มก่อนมีคำขอออกไป: บันทึกเหตุผลให้หน้าตั้งค่า,
+ *   หยุดดึงตามรอบ และ log `master_data.pull.failed` ระดับ `ERROR` โดยไม่ต้องรอรอบเวลาแรก (หรือรอคนกดดึงถ้าปิดรอบไว้)
+ */
+export const checkErpTransportOnStartup = async () => {
+  const row = erpRepository.find();
+  if (env.erp.allowInsecureHttp) {
+    logErp({
+      severity: 'WARNING',
+      message:
+        'ERP_ALLOW_INSECURE_HTTP=true: the PaynEat ERP credential may travel over plain HTTP; allow this only on a closed network',
+      instanceCode: row?.instance_code,
+    });
+  }
+  if (row && erpTransport(row.base_url) === 'insecure_blocked') {
+    await erpService.pull().catch(() => {
+      // เหตุผลถูกบันทึกและ log ไว้แล้ว
+    });
+  }
 };
 
 // ------------------------------------------------------------------------------- ดึงตามรอบเวลา

@@ -1,5 +1,6 @@
 {
-  "CHANGELOG.md": "faf1f77d56b1e3cb4f24f08e59d494e279da1e905099677334189e6a57ee1f6c",
+  "CHANGELOG.md": "6bf8d83acd851f398d33367c2a0b9e2a4c52516cd649b1db705a4f48ab01c1de",
+  "README.md": "e41eadd7283160e4e0dbee10ba0af7d30a8fe1aaf9a00f34a0fde0d4b2976c7a",
   "v1/error.schema.json": "da96800c5564eaadd8cf60a0fefa3fed65472cf5b65f972d740931d32e8209a1",
   "v1/examples/error.credential-revoked.json": "2eede77c1923480b7f0cb1c7d09fef1613f9e38da4f8677c4aea5c842c7b9cf0",
   "v1/examples/error.schema-invalid.json": "846fe0123b5fdd502374727b8923d4c31b01f696820910e4c122270d7296e2b7",

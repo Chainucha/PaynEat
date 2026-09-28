@@ -1,10 +1,10 @@
 # Ticket: เชื่อมต่อ PaynEat ERP จากค่าตั้งค่าตอนเปิดเครื่อง และปักเวอร์ชันที่ ERP ใช้ทำเดโมได้
 
 **Priority:** 🟡 Medium — สัปดาห์ที่ 6 ของแผน PaynEat ERP v1
-**สถานะ (2026-09-28):** ⏳ ยังไม่เริ่ม — 25 ✅ · รอ QA รอบ 1 (`docs/DECISIONS.md` #77), 26, 27 และ 32
+**สถานะ (2026-09-28):** ⏳ ยังไม่เริ่ม — 25 ✅ · 32 ✅ · รอ QA รอบ 1 (`docs/DECISIONS.md` #77), 26 และ 27
 **Ref:** [PaynEat-ERP#27 — คำสั่งเดียวรัน ERP + POS + PostgreSQL พร้อมเดโมครบเส้นทาง](https://github.com/SuruchBoss/PaynEat-ERP/issues/27),
 [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md), `docs/DECISIONS.md` #66
-**Blocked by:** ~~`25-erp-connected-mode.md`~~ ✅, `26-erp-sales-outbox.md`, `27-erp-menu-pull.md`, `32-erp-https-only.md` (`ERP_URL` ต้องเป็น https ตาม #82)
+**Blocked by:** ~~`25-erp-connected-mode.md`~~ ✅, `26-erp-sales-outbox.md`, `27-erp-menu-pull.md`, ~~`32-erp-https-only.md`~~ ✅ (`ERP_URL` ต้องผ่าน `erpTransport()` ใน `backend/src/modules/erp/erp.transport.js` ตาม #82)
 
 ## ปัญหา
 ticket 25 ให้ admin เข้าโหมดเชื่อมต่อผ่านหน้าจอ ด้วยการกรอก URL ของ ERP และ machine credential ซึ่งเหมาะกับร้านจริง

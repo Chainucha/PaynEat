@@ -1,7 +1,7 @@
 # Ticket: ส่ง credential ให้ PaynEat ERP ผ่าน HTTPS เท่านั้น
 
 **Priority:** 🟠 High — ต้องเสร็จก่อนร้านจริงร้านแรกใช้โหมดเชื่อมต่อ ERP
-**สถานะ (2026-09-28):** ⏳ ยังไม่เริ่ม — เริ่มได้ (กติกาอยู่ในสัญญาแล้ว: PaynEat-ERP#61)
+**สถานะ (2026-09-28):** ✅ เสร็จแล้ว — รายละเอียดที่ ticket ไม่ได้กำหนดอยู่ใน `docs/DECISIONS.md` #82 หัวข้อ "สิ่งที่ทำจริงใน ticket 32"
 **Ref:** `docs/DECISIONS.md` #82, #80 (ticket 25), [PaynEat-ERP#60](https://github.com/SuruchBoss/PaynEat-ERP/issues/60) (HTTPS ฝั่ง ERP),
 สัญญา POS v1 1.0 (`backend/contracts/erp-pos/`)
 **Blocked by:** ไม่มี — งานเล็กที่ปิดช่องทางส่ง credential โดยไม่เข้ารหัส จึงไม่ต้องรอ QA รอบ 1 (#77) แต่ต้องเสร็จก่อน ticket 26 และ 28
@@ -38,15 +38,19 @@ PaynEat-ERP#60 และเสนอกติกาในสัญญาว่�
   - README ไทย/อังกฤษ และ `docs/DECISIONS.md` #82 (อัปเดตถ้าพฤติกรรมต่างจากที่เขียนไว้)
 
 ## Acceptance Criteria
-- [ ] `http://erp.example.com` → 400 พร้อมเหตุผล; `http://localhost:3000`, `http://127.0.0.1:3000`, `http://[::1]:3000` → รับได้
-- [ ] `http://127.example.com` หรือชื่อที่ resolve เป็น 127.0.0.1 → ไม่นับเป็น loopback
-- [ ] `ERP_ALLOW_INSECURE_HTTP=true` → รับ `http://erp:3000` ได้ หน้าตั้งค่าแสดงคำเตือน และมี log `WARNING` ตอนเปิดเครื่อง
-- [ ] การเชื่อมต่อ http เดิมหลังอัปเดต → ไม่มีคำขอไป ERP เลย หน้าตั้งค่าบอกให้เปลี่ยน และมี log ตามที่ระบุ
-- [ ] https ที่ใบรับรองไม่ผ่าน → ปฏิเสธ พร้อมเหตุผลว่าใบรับรองไม่น่าเชื่อถือ; https ที่ใช้ CA ภายในผ่าน `NODE_EXTRA_CA_CERTS` → ต่อได้
-- [ ] เทสต์เดิมที่ใช้ ERP ปลอมบน `http://127.0.0.1` ยังผ่านโดยไม่ต้องตั้งค่าเพิ่ม
-- [ ] README ไทย/อังกฤษ, `docs/DECISIONS.md`, `docs/FEATURE-GAP-ANALYSIS.md`, `SECURITY.md` และคู่มือติดตั้งอัปเดตตาม `CLAUDE.md`
+- [x] `http://erp.example.com` → 400 พร้อมเหตุผล; `http://localhost:3000`, `http://127.0.0.1:3000`, `http://[::1]:3000` → รับได้
+- [x] `http://127.example.com` หรือชื่อที่ resolve เป็น 127.0.0.1 → ไม่นับเป็น loopback
+- [x] `ERP_ALLOW_INSECURE_HTTP=true` → รับ `http://erp:3000` ได้ หน้าตั้งค่าแสดงคำเตือน และมี log `WARNING` ตอนเปิดเครื่อง
+- [x] การเชื่อมต่อ http เดิมหลังอัปเดต → ไม่มีคำขอไป ERP เลย หน้าตั้งค่าบอกให้เปลี่ยน และมี log ตามที่ระบุ
+- [x] https ที่ใบรับรองไม่ผ่าน → ปฏิเสธ พร้อมเหตุผลว่าใบรับรองไม่น่าเชื่อถือ; https ที่ใช้ CA ภายในผ่าน `NODE_EXTRA_CA_CERTS` → ต่อได้
+- [x] เทสต์เดิมที่ใช้ ERP ปลอมบน `http://127.0.0.1` ยังผ่านโดยไม่ต้องตั้งค่าเพิ่ม
+- [x] README ไทย/อังกฤษ, `docs/DECISIONS.md`, `docs/FEATURE-GAP-ANALYSIS.md`, `SECURITY.md` และคู่มือติดตั้งอัปเดตตาม `CLAUDE.md`
 
 ## เทสต์
 - backend: ตารางของที่อยู่ที่รับหรือปฏิเสธ, ค่า env, การเชื่อมต่อ http เดิมหลัง migration
 - ERP ปลอมแบบ HTTPS ที่ใช้ใบรับรองจาก CA ทดสอบ ทั้งกรณีเชื่อ CA และไม่เชื่อ
 - แอป: คำเตือนบนหน้าตั้งค่าเมื่อใช้ http ด้วย `ERP_ALLOW_INSECURE_HTTP`
+
+**ที่ทำ:** `backend/tests/erp-transport.test.js` (22 เคส — CA ทดสอบสร้างใหม่ด้วย openssl ทุกครั้ง ไม่เก็บ private key ใน repo และมีเคส
+ชื่อในใบรับรองไม่ตรง) · `app/test/widget/erp_transport_warning_test.dart` (6 เคส) และเคสแปลงค่า `transport` ใน
+`app/test/presentation/erp_connection_controller_test.dart`

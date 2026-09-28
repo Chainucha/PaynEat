@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1017%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1046%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -104,7 +104,7 @@
 
 ## 🍽 문제 해결 메뉴
 
-대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,017개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
+대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,046개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
 
 | # | 가게의 문제 | 해결하는 세트 | 얻는 것 |
 |---|---|---|---|
@@ -366,6 +366,10 @@
   생기지 않으며, 생성 내역은 변경 이력에 기록됩니다). 재시도로 해결되지 않는 오류(규약에 맞지 않는 응답, 새 규약 버전, 사용할
   수 없는 자격 증명)가 발생하면 주기적 가져오기를 중단하고 화면에 알립니다. 단독 매장은 별도 설정 없이 기존과 동일하게
   동작합니다 (`docs/DECISIONS.md` #80)
+  - 자격 증명은 `https://`로만 ERP에 전송되며 인증서는 항상 검증됩니다. 같은 기기의 ERP가 아닌 `http://` 주소는 저장할 때
+    거부되고, 업데이트 전에 `http://`로 저장된 연결은 즉시 자격 증명 전송을 멈추며 설정 화면에서 새 `https://` 주소를 저장하도록
+    안내합니다. 닫힌 네트워크(예: 같은 Docker 네트워크의 데모)는 `ERP_ALLOW_INSECURE_HTTP=true`를 쓸 수 있으며, 이때 설정 화면에
+    빨간 경고가 항상 표시됩니다. 체인의 내부 CA 인증서는 `NODE_EXTRA_CA_CERTS`로 신뢰합니다 (ticket 32, `docs/DECISIONS.md` #82)
 - 직원 계정 관리 — 역할 변경·사용 중지는 확인 절차를 거쳐 적용되며, 본인 계정의 역할을 낮추거나 사용 중지할 수 없습니다
   (실수로 본인 계정이 잠기는 것을 방지)
 - **AI 어시스턴트** — 한국어로 질문하면 매장 데이터베이스에 연결된 도구를 호출하여
@@ -416,6 +420,7 @@ POS는 매출 데이터와 고객 정보를 함께 다루므로, 보안은 사�
 안전하지 않습니다. **이러한 기본값은 숨기지 않고 코드에서 차단합니다.** 운영 모드
 (`NODE_ENV=production`)에서 데모 비밀번호로 계정을 생성하려고 하거나, `JWT_SECRET`이 예시 값이거나 32자보다 짧으면
 서버가 시작되지 않습니다. 소스에서 Docker로 실행하는 경우(`docker-compose.yml`)에도 `JWT_SECRET`을 직접 설정해야 합니다.
+PaynEat ERP에 연결한다면 `https://` 주소를 사용해야 하며, `ERP_ALLOW_INSECURE_HTTP`는 닫힌 네트워크에서만 설정하십시오.
 
 전체 체크리스트는 [SECURITY.md](SECURITY.md)를 참고하십시오.
 보안 취약점은 저장소의 **Security** 탭을 통해 비공개로 신고해 주십시오.
@@ -460,13 +465,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1017건**의 자동화 테스트를 통과합니다.
+공개 전 **1046건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 452건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 516건 — domain / controller / widget
+cd backend && npm test      # 474건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 523건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1017건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1046건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 49건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

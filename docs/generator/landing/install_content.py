@@ -209,6 +209,9 @@ TH = {
             'ตั้ง <code>CORS_ORIGIN</code> เป็นที่อยู่จริงของร้านแทน <code>*</code>',
             'เก็บไฟล์ฐานข้อมูลและไฟล์ <code>.env</code> ไว้ในเครื่องร้าน อย่าอัปโหลดหรือแชร์ออกไป และสำรองข้อมูลสม่ำเสมอ',
             'ไม่ใช้ตัวติดตั้งบรรทัดเดียวบน Windows กับร้านจริง เพราะตั้งค่าไว้สำหรับทดลอง',
+            'ถ้าเชื่อมต่อ PaynEat ERP ใช้ที่อยู่ <code>https://</code> — ระบบไม่ส่ง credential ของเครื่องผ่าน <code>http://</code> '
+            'ยกเว้นไปเครื่องเดียวกัน และห้ามตั้ง <code>ERP_ALLOW_INSECURE_HTTP</code> นอกเครือข่ายปิด '
+            '· ERP ใช้ใบรับรองจาก CA ภายในของเชน: ดูหัวข้อแก้ปัญหา "ใบรับรอง HTTPS ของ PaynEat ERP ไม่น่าเชื่อถือ"',
         ],
         'more_html': 'รายละเอียดทุกข้อและวิธีแจ้งช่องโหว่อยู่ใน <a href="' + SECURITY + '">SECURITY.md</a>',
     },
@@ -227,6 +230,15 @@ TH = {
              'สร้างไฟล์ <code>.env</code> ข้าง <code>docker-compose.yml</code> ตามขั้น "ตั้งรหัสลับของเซิร์ฟเวอร์" ใน<a href="#docker">ทางที่ 3</a> แล้วรันใหม่'),
             ('ขึ้นว่า "ต้องตั้งค่า JWT_SECRET"', 'ยังไม่ได้สร้างไฟล์ <code>.env</code> — รัน <code>cp .env.example .env</code> ในโฟลเดอร์ <code>backend</code> '
              '(Windows: <code>copy</code>) แล้ว <code>npm run dev</code> ใหม่'),
+            ('หน้าตั้งค่าขึ้นว่า "ที่อยู่ของ PaynEat ERP ต้องขึ้นต้นด้วย https://"', 'credential ของเครื่องส่งผ่าน <code>https://</code> เท่านั้น '
+             '— ขอที่อยู่ <code>https://</code> ของ ERP จากผู้ดูแล ERP · ที่อยู่ <code>http://</code> ใช้ได้เฉพาะ ERP ที่รันในเครื่องเดียวกัน '
+             '(<code>localhost</code>) · ร้านที่เชื่อมต่อด้วย <code>http://</code> ไว้ก่อนอัปเดต ระบบหยุดส่ง credential แล้ว '
+             'ให้บันทึกที่อยู่ <code>https://</code> ใหม่พร้อม credential ที่หน้าตั้งค่า'),
+            ('หน้าตั้งค่าขึ้นว่า "ใบรับรอง HTTPS ของ PaynEat ERP ไม่น่าเชื่อถือ"', 'เครื่องเซิร์ฟเวอร์ POS ยังไม่เชื่อ CA ที่ออกใบรับรองให้ ERP ของเชน '
+             '— ขอไฟล์ CA (PEM) จากผู้ดูแล ERP · ตรวจก่อนว่าต่อได้: <code>curl --cacert chain-ca.pem https://ที่อยู่ของ-erp/health</code> '
+             'ต้องได้ <code>"status":"ok"</code> · จากนั้นเริ่มเซิร์ฟเวอร์ POS ใหม่โดยมี <code>NODE_EXTRA_CA_CERTS=/ที่อยู่/chain-ca.pem</code> '
+             'ใน environment (ใส่ในไฟล์ <code>backend/.env</code> ไม่ได้ผล เพราะ Node อ่านค่านี้ตอนเริ่มก่อนโหลดไฟล์) · Docker: mount ไฟล์ CA '
+             'เข้าคอนเทนเนอร์ <code>api</code> แล้วตั้งค่านี้ใน <code>docker-compose.override.yml</code> · ห้ามปิดการตรวจใบรับรอง'),
             ('<code>npm install</code> ล้มที่ better-sqlite3', 'ขาดเครื่องมือ build · macOS: <code>xcode-select --install</code> · '
              'Linux: <code>sudo apt install build-essential python3</code> · Windows: ติดตั้ง Visual Studio Build Tools'),
             ('อยากล้างข้อมูลเริ่มใหม่', 'ทางที่ 2: ดับเบิลคลิก Reset PaynEat data · ทางที่ 3: <code>docker compose down -v</code> · '
@@ -418,6 +430,9 @@ EN = {
             'Set <code>CORS_ORIGIN</code> to the restaurant’s real address instead of <code>*</code>.',
             'Keep the database file and <code>.env</code> on the restaurant’s machine — never upload or share them — and back up regularly.',
             'Don’t use the one-line Windows installer for a real shop: it is set up for trying things out.',
+            'If you connect PaynEat ERP, use its <code>https://</code> address. The POS never sends its credential over '
+            '<code>http://</code> except to the same machine, and <code>ERP_ALLOW_INSECURE_HTTP</code> is only for a closed network. '
+            'If the ERP’s certificate comes from the chain’s own CA, see “PaynEat ERP’s HTTPS certificate isn’t trusted” under troubleshooting.',
         ],
         'more_html': 'Every item in detail, and how to report a vulnerability: <a href="' + SECURITY + '">SECURITY.md</a>',
     },
@@ -436,6 +451,16 @@ EN = {
              '<code>.env</code> file next to <code>docker-compose.yml</code> as in the "Set the server secret" step of <a href="#docker">way 3</a>, then run it again.'),
             ('It says JWT_SECRET must be set', 'There is no <code>.env</code> yet: run <code>cp .env.example .env</code> in <code>backend</code> '
              '(Windows: <code>copy</code>), then <code>npm run dev</code> again.'),
+            ('Settings say “PaynEat ERP’s address must start with https://”', 'The POS sends its credential only over <code>https://</code>. '
+             'Ask the ERP administrator for the ERP’s <code>https://</code> address. A <code>http://</code> address works only for an ERP '
+             'on the same machine (<code>localhost</code>). If you connected over <code>http://</code> before this update, the POS has '
+             'stopped sending the credential: save the <code>https://</code> address with the credential in Settings.'),
+            ('Settings say “PaynEat ERP’s HTTPS certificate isn’t trusted”', 'The POS server doesn’t trust the certificate authority '
+             'that issued the chain’s ERP certificate. Ask the ERP administrator for the CA file (PEM), and check it first: '
+             '<code>curl --cacert chain-ca.pem https://your-erp-address/health</code> must answer <code>"status":"ok"</code>. '
+             'Then restart the POS server with <code>NODE_EXTRA_CA_CERTS=/path/to/chain-ca.pem</code> in its environment '
+             '(putting it in <code>backend/.env</code> has no effect: Node reads it at startup, before that file). Docker: mount the CA '
+             'file into the <code>api</code> container and set it in <code>docker-compose.override.yml</code>. Never turn certificate checks off.'),
             ('<code>npm install</code> fails on better-sqlite3', 'Build tools are missing. macOS: <code>xcode-select --install</code> · '
              'Linux: <code>sudo apt install build-essential python3</code> · Windows: install Visual Studio Build Tools.'),
             ('I want to start over with fresh data', 'Way 2: double-click Reset PaynEat data · way 3: <code>docker compose down -v</code> · '
@@ -628,6 +653,9 @@ KO = {
             '<code>CORS_ORIGIN</code>을 <code>*</code> 대신 매장의 실제 주소로.',
             '데이터베이스 파일과 <code>.env</code>는 매장 기기에만 — 업로드하거나 공유하지 말고, 정기적으로 백업하세요.',
             'Windows 한 줄 설치는 실제 매장에 쓰지 마세요. 체험용 설정입니다.',
+            'PaynEat ERP에 연결한다면 <code>https://</code> 주소를 쓰세요. POS는 같은 기기가 아니면 자격 증명을 <code>http://</code>로 '
+            '보내지 않으며, <code>ERP_ALLOW_INSECURE_HTTP</code>는 닫힌 네트워크에서만 씁니다. ERP 인증서를 체인의 내부 CA가 발급했다면 '
+            '문제 해결의 “PaynEat ERP의 HTTPS 인증서를 신뢰할 수 없습니다”를 보세요.',
         ],
         'more_html': '항목별 자세한 내용과 취약점 신고 방법: <a href="' + SECURITY + '">SECURITY.md</a>',
     },
@@ -646,6 +674,15 @@ KO = {
              '<a href="#docker">방법 3</a>의 "서버 비밀 값 설정" 단계대로 <code>docker-compose.yml</code> 옆에 <code>.env</code>를 만든 뒤 다시 실행하세요.'),
             ('JWT_SECRET을 설정하라고 나와요', '<code>.env</code>가 아직 없습니다. <code>backend</code>에서 <code>cp .env.example .env</code> '
              '(Windows: <code>copy</code>) 후 <code>npm run dev</code>를 다시 실행하세요.'),
+            ('설정 화면에 “PaynEat ERP 주소는 https://로 시작해야 합니다”가 나와요', 'POS는 자격 증명을 <code>https://</code>로만 보냅니다. '
+             'ERP 관리자에게 ERP의 <code>https://</code> 주소를 받으세요. <code>http://</code> 주소는 같은 기기에서 도는 ERP(<code>localhost</code>)에만 '
+             '쓸 수 있습니다. 업데이트 전에 <code>http://</code>로 연결했다면 POS가 자격 증명 전송을 멈췄으니, 설정에서 <code>https://</code> 주소와 '
+             '자격 증명을 다시 저장하세요.'),
+            ('설정 화면에 “PaynEat ERP의 HTTPS 인증서를 신뢰할 수 없습니다”가 나와요', 'POS 서버가 체인의 ERP 인증서를 발급한 CA를 아직 신뢰하지 '
+             '않습니다. ERP 관리자에게 CA 파일(PEM)을 받아 먼저 확인하세요: <code>curl --cacert chain-ca.pem https://ERP-주소/health</code>가 '
+             '<code>"status":"ok"</code>를 돌려줘야 합니다. 그다음 환경에 <code>NODE_EXTRA_CA_CERTS=/경로/chain-ca.pem</code>을 두고 POS 서버를 '
+             '다시 시작하세요(<code>backend/.env</code>에 넣으면 효과가 없습니다 — Node가 그 파일보다 먼저, 시작할 때 읽습니다). Docker: CA 파일을 '
+             '<code>api</code> 컨테이너에 마운트하고 <code>docker-compose.override.yml</code>에서 설정하세요. 인증서 검사는 절대 끄지 마세요.'),
             ('<code>npm install</code>이 better-sqlite3에서 실패해요', '빌드 도구가 없습니다. macOS: <code>xcode-select --install</code> · '
              'Linux: <code>sudo apt install build-essential python3</code> · Windows: Visual Studio Build Tools 설치.'),
             ('데이터를 처음부터 다시 하고 싶어요', '방법 2: Reset PaynEat data 더블클릭 · 방법 3: <code>docker compose down -v</code> · '

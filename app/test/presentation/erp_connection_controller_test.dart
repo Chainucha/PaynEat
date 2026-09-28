@@ -540,6 +540,27 @@ void main() {
       },
     );
 
+    test(
+      'ช่องทางของ credential (ticket 32): แปลงจาก backend และ backend รุ่นก่อนที่ไม่มีฟิลด์นี้ = https',
+      () {
+        ErpTransport transportOf(Object? value) =>
+            ErpConnectionStatusModel.fromJson({
+              'mode': 'connected',
+              'connection': {
+                'erpUrl': 'https://erp.example.com',
+                'instanceCode': 'POS-SILOM-1',
+                'transport': ?value,
+              },
+            }).connection!.transport;
+
+        expect(transportOf('https'), ErpTransport.https);
+        expect(transportOf('loopback'), ErpTransport.loopback);
+        expect(transportOf('insecure_allowed'), ErpTransport.insecureAllowed);
+        expect(transportOf('insecure_blocked'), ErpTransport.insecureBlocked);
+        expect(transportOf(null), ErpTransport.https);
+      },
+    );
+
     test('รหัสกลางของระบบนิเวศ และชื่อหน่วยจาก ERP', () {
       expect(EcosystemCode.isValid('WHOLE-CHICKEN'), isTrue);
       expect(EcosystemCode.isValid('-BAD'), isFalse);

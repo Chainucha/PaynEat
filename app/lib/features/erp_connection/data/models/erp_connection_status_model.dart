@@ -45,6 +45,7 @@ class ErpConnectionStatusModel {
       credentialRejected: json['credentialRejected'] as bool? ?? false,
       pullStopped: json['pullStopped'] as bool? ?? false,
       retryAfter: json['retryAfter'] as String?,
+      transport: ErpTransport.parse(json['transport'] as String?),
     );
   }
 

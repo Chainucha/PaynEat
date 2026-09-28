@@ -776,9 +776,19 @@ export const ERROR_MESSAGES = [
     ko: '이 지점의 다른 재료가 이미 이 품목 코드를 쓰고 있습니다',
   },
   {
-    th: 'ที่อยู่ของ PaynEat ERP ต้องเป็น http:// หรือ https:// เช่น https://erp.example.com',
-    en: "PaynEat ERP's address must start with http:// or https://, for example https://erp.example.com",
-    ko: 'PaynEat ERP 주소는 http:// 또는 https://로 시작해야 합니다 (예: https://erp.example.com)',
+    th: 'ที่อยู่ของ PaynEat ERP ต้องเป็น URL แบบ https:// เช่น https://erp.example.com',
+    en: "PaynEat ERP's address must be an https:// URL, for example https://erp.example.com",
+    ko: 'PaynEat ERP 주소는 https:// URL이어야 합니다 (예: https://erp.example.com)',
+  },
+  {
+    th: 'ที่อยู่ของ PaynEat ERP ต้องขึ้นต้นด้วย https:// เพื่อไม่ให้ credential ถูกส่งแบบไม่เข้ารหัส',
+    en: "PaynEat ERP's address must start with https://, so the credential is never sent unencrypted",
+    ko: 'PaynEat ERP 주소는 https://로 시작해야 합니다 — 자격 증명이 암호화되지 않은 채 전송되지 않도록 하기 위해서입니다',
+  },
+  {
+    th: 'ใบรับรอง HTTPS ของ PaynEat ERP ไม่น่าเชื่อถือ ถ้าเชนใช้ CA ภายใน ให้ผู้ดูแลเซิร์ฟเวอร์ POS ตั้ง NODE_EXTRA_CA_CERTS',
+    en: "PaynEat ERP's HTTPS certificate isn't trusted — if the chain uses its own internal CA, the POS server's administrator sets NODE_EXTRA_CA_CERTS",
+    ko: 'PaynEat ERP의 HTTPS 인증서를 신뢰할 수 없습니다 — 체인이 내부 CA를 쓰는 경우 POS 서버 관리자가 NODE_EXTRA_CA_CERTS를 설정하세요',
   },
   {
     th: 'credential ต้องขึ้นต้นด้วย pnepos_ ตามที่ PaynEat ERP แสดงตอนลงทะเบียน POS',

@@ -31,6 +31,29 @@ class EcosystemCode {
   static bool isValid(String? code) => code != null && pattern.hasMatch(code);
 }
 
+/// credential ของเครื่องเดินทางไปหา ERP ทางไหน (ดู docs/tickets/32-erp-https-only.md)
+enum ErpTransport {
+  /// เข้ารหัสและตรวจใบรับรอง — ปกติ
+  https,
+
+  /// http ไปเครื่องเดียวกัน (localhost) — ไม่ผ่านเครือข่าย
+  loopback,
+
+  /// http ที่ผู้ดูแลเซิร์ฟเวอร์อนุญาตเองด้วย `ERP_ALLOW_INSECURE_HTTP=true` — เตือนตลอดเวลาที่ใช้
+  insecureAllowed,
+
+  /// การเชื่อมต่อ http ที่บันทึกไว้ก่อนกติกา https — backend ไม่ส่ง credential จนกว่าจะบันทึกที่อยู่ใหม่
+  insecureBlocked;
+
+  /// backend รุ่นก่อนไม่มีฟิลด์นี้ = ถือว่าปกติ
+  static ErpTransport parse(String? value) => switch (value) {
+    'loopback' => ErpTransport.loopback,
+    'insecure_allowed' => ErpTransport.insecureAllowed,
+    'insecure_blocked' => ErpTransport.insecureBlocked,
+    _ => ErpTransport.https,
+  };
+}
+
 /// การดึงครั้งล่าสุดที่ล้มเหลว — `kind` ตามที่ backend จัดประเภทไว้ (credential_rejected, network …)
 class ErpPullError {
   const ErpPullError({required this.kind, this.status, this.reason, this.at});
@@ -56,6 +79,7 @@ class ErpConnectionInfo {
     this.credentialRejected = false,
     this.pullStopped = false,
     this.retryAfter,
+    this.transport = ErpTransport.https,
   });
 
   final String erpUrl;
@@ -73,6 +97,7 @@ class ErpConnectionInfo {
   /// — กด "ดึงทันที" ได้ ถ้าสำเร็จ backend กลับมาดึงตามรอบเอง
   final bool pullStopped;
   final String? retryAfter;
+  final ErpTransport transport;
 }
 
 /// สาขาในเครื่องพร้อมผลตรวจรหัส และว่า ERP ให้เครื่องนี้ดูแลไหม (null = ใช้งานเดี่ยว)

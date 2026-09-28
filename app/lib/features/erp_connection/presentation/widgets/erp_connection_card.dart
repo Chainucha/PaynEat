@@ -150,15 +150,7 @@ class _StandaloneForm extends GetView<ErpConnectionController> {
           ),
           const SizedBox(height: 12),
         ],
-        TextField(
-          controller: controller.urlController,
-          keyboardType: TextInputType.url,
-          autocorrect: false,
-          decoration: InputDecoration(
-            labelText: 'erp_url_label'.tr,
-            hintText: 'https://erp.example.com',
-          ),
-        ),
+        const _UrlField(),
         const SizedBox(height: 12),
         const _CredentialField(),
         const SizedBox(height: 14),
@@ -215,6 +207,24 @@ class _StandaloneForm extends GetView<ErpConnectionController> {
   }
 }
 
+class _UrlField extends GetView<ErpConnectionController> {
+  const _UrlField();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller.urlController,
+      keyboardType: TextInputType.url,
+      autocorrect: false,
+      decoration: InputDecoration(
+        labelText: 'erp_url_label'.tr,
+        hintText: 'https://erp.example.com',
+        helperText: 'erp_url_https_hint'.tr,
+      ),
+    );
+  }
+}
+
 class _CredentialField extends GetView<ErpConnectionController> {
   const _CredentialField();
 
@@ -243,6 +253,8 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
   Widget build(BuildContext context) {
     final connection = status.connection!;
     final problem = controller.lastPullProblem;
+    final transportWarning = controller.transportWarning;
+    final blocked = controller.transportBlocked;
     final notServed = status.branchesNotServed;
     final missing = status.servedButMissing;
     final superseded = status.branches
@@ -275,6 +287,17 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
           label: 'erp_credential_label'.tr,
           value: 'erp_credential_saved'.tr,
         ),
+        // ช่องทางของ credential (ticket 32): http ที่อนุญาตไว้เตือนถาวร, http เดิมบอกให้เปลี่ยนเป็น https
+        if (transportWarning case (final title, final note)) ...[
+          const SizedBox(height: 8),
+          _ListBox(
+            key: const ValueKey('erp-transport-warning'),
+            title: title,
+            note: note,
+            color: AppColors.dangerInk,
+            children: const [],
+          ),
+        ],
         if (problem != null) ...[
           const SizedBox(height: 8),
           _Message(text: problem, isError: true),
@@ -314,7 +337,8 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
                       () => TextButton.icon(
                         onPressed:
                             controller.isBusy.value ||
-                                connection.credentialRejected
+                                connection.credentialRejected ||
+                                blocked
                             ? null
                             : () => _confirmCreate(branch),
                         icon: const Icon(Icons.add_business_rounded, size: 18),
@@ -337,17 +361,25 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
         const SizedBox(height: 14),
         Obx(() {
           if (!controller.editingCredential.value &&
-              !connection.credentialRejected) {
+              !connection.credentialRejected &&
+              !blocked) {
             return const SizedBox.shrink();
           }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ที่อยู่ http เดิมใช้ไม่ได้แล้ว — แก้ที่อยู่ได้ตรงนี้ credential ต้องกรอกใหม่ด้วย (backend ไม่ส่ง credential
+              // ที่บันทึกไว้ไปที่อยู่ใหม่ให้เอง)
+              if (blocked) ...[const _UrlField(), const SizedBox(height: 12)],
               const _CredentialField(),
               const SizedBox(height: 10),
               FilledButton(
                 onPressed: controller.isBusy.value ? null : controller.connect,
-                child: Text('erp_save_credential_button'.tr),
+                child: Text(
+                  blocked
+                      ? 'erp_save_address_button'.tr
+                      : 'erp_save_credential_button'.tr,
+                ),
               ),
               const SizedBox(height: 10),
             ],
@@ -360,13 +392,15 @@ class _ConnectedDetails extends GetView<ErpConnectionController> {
             children: [
               FilledButton.icon(
                 onPressed:
-                    controller.isBusy.value || connection.credentialRejected
+                    controller.isBusy.value ||
+                        connection.credentialRejected ||
+                        blocked
                     ? null
                     : controller.pullNow,
                 icon: const Icon(Icons.sync_rounded),
                 label: Text('erp_pull_button'.tr),
               ),
-              if (!connection.credentialRejected)
+              if (!connection.credentialRejected && !blocked)
                 OutlinedButton(
                   onPressed: controller.isBusy.value
                       ? null
@@ -432,6 +466,7 @@ class _ActionMessages extends GetView<ErpConnectionController> {
 
 class _ListBox extends StatelessWidget {
   const _ListBox({
+    super.key,
     required this.title,
     required this.color,
     required this.children,

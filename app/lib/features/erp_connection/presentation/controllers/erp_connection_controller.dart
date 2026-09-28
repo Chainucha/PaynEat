@@ -221,18 +221,38 @@ class ErpConnectionController extends GetxController {
     return true;
   }
 
-  /// ดึงตามรอบเวลาหยุดรอคนแก้ต้นเหตุ (credential ที่ถูกปฏิเสธมีข้อความของตัวเองอยู่แล้ว)
+  /// การเชื่อมต่อ http ที่บันทึกไว้ก่อนกติกา https (ticket 32) — backend ไม่เรียก ERP เลยจนกว่าจะบันทึกที่อยู่
+  /// https:// ใหม่พร้อม credential การ์ดจึงแสดงช่องที่อยู่ และปิดปุ่มที่ต้องเรียก ERP
+  bool get transportBlocked =>
+      status.value.connection?.transport == ErpTransport.insecureBlocked;
+
+  /// กรอบเตือนสีแดงเรื่องช่องทางของ credential (หัวข้อ, คำอธิบาย) — null = ส่งแบบเข้ารหัสหรือในเครื่องเดียวกัน
+  (String, String)? get transportWarning =>
+      switch (status.value.connection?.transport) {
+        ErpTransport.insecureAllowed => (
+          'erp_transport_insecure_allowed_title'.tr,
+          'erp_transport_insecure_allowed_note'.tr,
+        ),
+        ErpTransport.insecureBlocked => (
+          'erp_transport_insecure_blocked_title'.tr,
+          'erp_transport_insecure_blocked_note'.tr,
+        ),
+        _ => null,
+      };
+
+  /// ดึงตามรอบเวลาหยุดรอคนแก้ต้นเหตุ (credential ที่ถูกปฏิเสธและที่อยู่ http มีข้อความของตัวเองอยู่แล้ว)
   bool get pullStopped {
     final connection = status.value.connection;
     return connection != null &&
         connection.pullStopped &&
-        !connection.credentialRejected;
+        !connection.credentialRejected &&
+        !transportBlocked;
   }
 
   /// เหตุผลของการดึงครั้งล่าสุดที่ล้มเหลว เป็นประโยคตามภาษาของแอป (null = ครั้งล่าสุดสำเร็จ)
   String? get lastPullProblem {
     final connection = status.value.connection;
-    if (connection == null) return null;
+    if (connection == null || transportBlocked) return null;
     if (connection.credentialRejected) return 'erp_last_error_credential'.tr;
     final error = connection.lastError;
     if (error == null) return null;

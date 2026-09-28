@@ -4,7 +4,10 @@
 import { z } from 'zod';
 import { LOCATION_CODE_PATTERN } from './erp.contract.js';
 
-/** ที่อยู่ของ PaynEat ERP: http(s) เท่านั้น ไม่มีชื่อผู้ใช้/รหัสผ่าน query หรือ # ในที่อยู่ */
+/**
+ * ที่อยู่ของ PaynEat ERP: รูปแบบ http(s) ไม่มีชื่อผู้ใช้/รหัสผ่าน query หรือ # ในที่อยู่
+ * http:// ใช้ได้เฉพาะ loopback หรือเมื่อผู้ดูแลเซิร์ฟเวอร์อนุญาต — erp.service ตรวจต่อและตอบ 400 (ticket 32, erp.transport.js)
+ */
 const erpUrl = z
   .string()
   .trim()
@@ -22,7 +25,7 @@ const erpUrl = z
     } catch {
       return false;
     }
-  }, 'ที่อยู่ของ PaynEat ERP ต้องเป็น http:// หรือ https:// เช่น https://erp.example.com');
+  }, 'ที่อยู่ของ PaynEat ERP ต้องเป็น URL แบบ https:// เช่น https://erp.example.com');
 
 export const connectErpSchema = z.object({
   erpUrl,

@@ -120,9 +120,12 @@ export const env = {
   // โหมดเชื่อมต่อ PaynEat ERP (ticket 25) — URL และ credential ตั้งที่หน้าตั้งค่าของแอป ไม่ใช่ env (DECISIONS #80)
   //   ERP_PULL_INTERVAL_SECONDS — ดึง master data ทุกกี่วินาที (0 = ไม่ดึงเองตามรอบ ดึงเมื่อกดปุ่มเท่านั้น)
   //   ERP_TIMEOUT_MS            — รอคำตอบของ ERP นานสุดต่อคำขอ
+  //   ERP_ALLOW_INSECURE_HTTP   — true = ยอมส่ง credential ผ่าน http:// ที่ไม่ใช่ loopback ได้ เฉพาะเครือข่ายปิด
+  //                               (เช่นเดโมที่ POS กับ ERP อยู่ใน Docker network เดียวกัน) — ticket 32, DECISIONS #82
   erp: {
     pullIntervalSeconds: Math.max(0, toInt(process.env.ERP_PULL_INTERVAL_SECONDS, 300)),
     timeoutMs: Math.max(1000, toInt(process.env.ERP_TIMEOUT_MS, 15000)),
+    allowInsecureHttp: process.env.ERP_ALLOW_INSECURE_HTTP === 'true',
     pageSize: 500,
   },
   // log และ metric ตามสัญญา telemetry v1.1 ของระบบนิเวศ PaynEat (ดู docs/tickets/24-telemetry-contract.md)

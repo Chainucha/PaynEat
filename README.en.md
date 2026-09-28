@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1017%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1046%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1017 automated tests.
+control and 1046 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1017 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,017 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,046 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -702,6 +702,11 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   is created with the ERP's code and Thai name (and recorded in the audit log). If the ERP has just moved an existing branch to that code, the
   existing branch takes the code instead and the button reports that a branch with this code already exists, so no duplicate is created
   (see `docs/DECISIONS.md` #80)
+- In the same PaynEat ERP section, enter the address `http://erp.example.com` with a credential that starts with `pnepos_` and select
+  **Connect** → it is refused with the reason that the address must start with `https://`, so the credential is never sent unencrypted,
+  and no request reaches the ERP. `http://` works only for an ERP on the same machine (`localhost`, `127.x`, `[::1]`), or when the server's
+  administrator sets `ERP_ALLOW_INSECURE_HTTP=true` for a closed network, in which case Settings shows a permanent red warning
+  (see `docs/DECISIONS.md` #82)
 - Request a second tax invoice for the same bill → rejected (only 1 active invoice per bill). After logging in as
   `manager` and tapping **"Void this invoice"** on the same receipt page, a new invoice can be issued for that bill
   with a new running number (see `docs/DECISIONS.md` #19)
@@ -791,8 +796,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 452 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 516 cases — domain / controller / widget
+cd backend && npm test      # 474 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 523 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1010,6 +1015,14 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   - A pull that fails for a reason that retrying cannot resolve (a response that violates the contract, a newer contract, an unusable
     credential) stops scheduled pulls and is reported on screen; once the cause is corrected, selecting "Pull now" resumes scheduled
     pulls. Pull log lines use the event names of the ecosystem's telemetry contract
+  - The credential reaches the ERP only over `https://`, and certificates are always verified (ticket 32, `docs/DECISIONS.md` #82)
+    - An `http://` address is refused when it is saved, except for an ERP on the same machine
+    - A connection saved over `http://` before this update stops sending the credential at once, and Settings offers the address
+      field to save a new `https://` one
+    - A closed network (such as a demo in one Docker network) can use `ERP_ALLOW_INSECURE_HTTP=true`, with a permanent red warning in
+      Settings and a `WARNING` log line when the server starts
+    - An ERP whose certificate comes from the chain's internal CA uses `NODE_EXTRA_CA_CERTS`; a certificate that fails the check is
+      reported on screen with the reason
   - Connected mode can be exited, and the pulled data is retained (see `docs/tickets/25-erp-connected-mode.md`, `docs/DECISIONS.md` #80)
 - **Conditional promotions/discounts** — create/edit/disable 3 promotion types (percent off, amount off,
   buy-one-get-one), with conditions for day/time window, eligible categories/menu items, minimum spend, and
@@ -1281,7 +1294,7 @@ PaynEat/
 │   │   │       └── order.schema.js       # Zod
 │   │   └── routes.js
 │   ├── assets/fonts/                 # Thai font for receivables PDFs
-│   ├── contracts/erp-pos/            # copy of the POS ↔ PaynEat ERP contract v1 1.0.0 (never edited — copied from the ERP)
+│   ├── contracts/erp-pos/            # copy of the POS ↔ PaynEat ERP contract v1 1.0.0 (never edited — copied from the ERP; see ABOUT-THIS-COPY.md)
 │   ├── docs/openapi.yaml
 │   └── tests/
 │
@@ -1440,13 +1453,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 452 cases
-cd app && flutter test      # 516 cases
+cd backend && npm test      # 474 cases
+cd app && flutter test      # 523 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (452 + 516 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (474 + 523 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1501,7 +1514,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (452 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (474 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1707,6 +1720,17 @@ specifies, then maps every case to the `reason` and severity defined by telemetr
 `erp_unreachable`, `rate_limited`, `unexpected_response`, `contract_unsupported` and a reason sent by the ERP itself; ERROR when
 human action is required) (see `docs/DECISIONS.md` #80)
 
+`erp-transport.test.js` (22 cases) covers the HTTPS rule for the credential (ticket 32):
+- a table of accepted and refused addresses, including names that look like loopback or resolve to 127.0.0.1, which do not count;
+- `ERP_ALLOW_INSECURE_HTTP` must be exactly `true`;
+- saving an `http://` address gets a 400 (message in the request's language) with no request sent, while loopback works with no extra setting;
+- with plain HTTP allowed for a closed network, `http://erp:3000` works, the status tells the app to warn, and a `WARNING` line is logged at startup;
+- a connection saved over `http://` before the update sends no request to the ERP at all, logs `master_data.pull.failed` at ERROR
+  (`unexpected_response`), stops scheduled pulls, answers 409 to a manual pull, and pulls normally again once a sendable address is saved;
+- a stub HTTPS ERP with a test CA generated on every run: a CA the machine does not trust is refused before any HTTP request (502 naming
+  `NODE_EXTRA_CA_CERTS`), trusting the CA through `NODE_EXTRA_CA_CERTS` connects, and a certificate for another name is refused
+  (see `docs/DECISIONS.md` #82)
+
 `late-fees-credit-notes.test.js` (7 cases) covers the 15% rate cap / cashiers cannot set the rate / rate changes are
 audited, no rate = no interest, interest charged only on bills past their grace period through today with a second
 run on the same day charging nothing, the next run continuing from where the last one stopped on the principal
@@ -1748,7 +1772,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (516 cases)** — organized into 3 levels:
+**Flutter (523 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1774,7 +1798,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `checkout_controller_test.dart` | (continued) a disabled pay button always states the reason below it (no shift / invalid amount / cash short) and shows nothing once payment is possible (#62) |
 | Controller | `receipt_controller_test.dart` | Loading a receipt by orderId, the `Payment.tendered` rule (a receipt shows the cash the customer handed over, not the amount applied to the bill: tendered − change = amount applied), silently loading the tax invoice when none has been issued yet (404 isn't an error), and tax-invoice void permission (manager role or above) |
 | Controller | `settings_controller_test.dart` | Loading store settings into the correct form fields |
-| Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, saying when scheduled pulls have stopped, the create-branch button (success names the branch actually created / a 409 shows the reason and reloads / not in demo mode), demo mode always standalone, parsing the backend's status, and ERP unit names (unknown codes shown as they are) |
+| Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, saying when scheduled pulls have stopped, the create-branch button (success names the branch actually created / a 409 shows the reason and reloads / not in demo mode), demo mode always standalone, parsing the backend's status (including how the credential travels — an older backend that doesn't send it counts as https), and ERP unit names (unknown codes shown as they are) |
 | Controller | `ingredients_controller_test.dart` | The ingredients page is read-only when connected to the ERP, an unreadable mode keeps the last value, the "low stock" filter is cleared in connected mode, item codes are sent in capitals and an edit sends null to clear one (ticket 25) |
 | Controller | `staff_controller_test.dart` | Filtering staff by role, counting by role |
 | Controller | `order_detail_controller_test.dart` | Order management permissions, moving item status forward |
@@ -1801,6 +1825,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Widget | `cart_panel_locale_test.dart` | The cart must show item names in the selected language (English/Korean), matching the card just tapped, rather than the Thai-only `menuItem.name`; also checks that a weighed line does not overflow with wide glyphs (see `docs/DECISIONS.md` #58) |
 | Core | `formatters_due_date_test.dart` | Due dates render in the current language ("11 Oct 2026" / "2026년 10월 11일") instead of a raw `2026-10-11`, without shifting a day with the device timezone |
 | Widget | `customer_picker_dialog_test.dart` | The customer picker used while taking an order — after a transient network error, a successful new search must restore the list (rather than leaving the error screen displayed), the error state offers a retry button, and the debounce collapses 6 keystrokes into a single search request |
+| Widget | `erp_transport_warning_test.dart` | The ERP connection settings (ticket 32): no warning for https or localhost; plain http allowed by the server's administrator shows a red warning naming the setting in all 3 languages and can still pull; an old http connection says to switch, offers the address field, and disables the buttons that would call the ERP |
 | Core | `app_clock_test.dart` | `AppClock` freezes and restores the clock correctly, preventing a frozen time from leaking across tests |
 | Core | `app_colors_contrast_test.dart` | Computes real WCAG contrast ratios against **every surface actually used**, not just white — standard mode must pass AA (4.5:1), high-contrast mode AAA (7:1), and any colour used as a button/chip fill must carry a white label |
 | Core | `contrast_service_test.dart` | The real toggle path — switching the palette, persisting it, restoring it on next launch, and proving the theme rebuilds its colours instead of caching them once |
@@ -2019,9 +2044,10 @@ Completed work, planned work, and known limitations, with the reasoning for each
   (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
-- [ ] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
-  network the server's operator allows explicitly, with support for a chain's internal CA (see ticket 32 and
-  `docs/DECISIONS.md` #82)
+- [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
+  network the server's operator allows explicitly (with a permanent warning); an old `http://` connection stops sending the credential
+  at once; certificates are always verified, with a chain's internal CA supported through `NODE_EXTRA_CA_CERTS`; and the contract copy
+  follows PaynEat-ERP#61 (see ticket 32 and `docs/DECISIONS.md` #82)
 - [x] **Logs and metrics per the ecosystem telemetry contract** — JSON logs per contract v1.1 (no vendor
   names by default, `LOG_FORMAT=gcp` for Google Cloud), a full `x-request-id` round trip with the request ID
   shown in app error messages, `/metrics` by route template on port 9464, never exposed outside the machine, and

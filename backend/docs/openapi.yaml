@@ -215,7 +215,7 @@ components:
               properties:
                 kind:
                   type: string
-                  enum: [credential_rejected, rate_limited, unavailable, network, unsupported_contract, invalid_response, refused, internal]
+                  enum: [credential_rejected, rate_limited, unavailable, network, unsupported_contract, invalid_response, refused, insecure_transport, untrusted_certificate, internal]
                 status: { type: integer, nullable: true }
                 reason:
                   type: string
@@ -232,6 +232,13 @@ components:
                 true = ดึงตามรอบเวลาหยุดไว้จนกว่าจะมีคนมาจัดการ (reason credential_revoked, credential_unknown, unexpected_response,
                 contract_unsupported หรือบั๊กของ POS — บรรทัด log เป็น ERROR) กดดึงทันทีได้ ดึงสำเร็จหรือบันทึกการเชื่อมต่อใหม่แล้วกลับมาดึงตามรอบ
             retryAfter: { type: string, format: date-time, nullable: true }
+            transport:
+              type: string
+              enum: [https, loopback, insecure_allowed, insecure_blocked]
+              description: >-
+                ช่องทางของ credential (ticket 32) — https; loopback = http ไปเครื่องเดียวกัน; insecure_allowed = http ที่ผู้ดูแลเซิร์ฟเวอร์อนุญาตด้วย
+                ERP_ALLOW_INSECURE_HTTP=true (แอปแสดงคำเตือนถาวร); insecure_blocked = การเชื่อมต่อ http ที่บันทึกไว้ก่อนกติกานี้ ไม่ส่ง credential
+                และไม่มีคำขอไป ERP จนกว่าจะบันทึกที่อยู่ https:// ใหม่
             credentialSaved: { type: boolean }
         branches:
           type: array
@@ -2315,7 +2322,12 @@ paths:
               type: object
               required: [erpUrl, credential]
               properties:
-                erpUrl: { type: string, example: 'https://erp.example.com', description: 'http(s) ไม่มีชื่อผู้ใช้/รหัสผ่าน query หรือ #' }
+                erpUrl:
+                  type: string
+                  example: 'https://erp.example.com'
+                  description: >-
+                    https:// ไม่มีชื่อผู้ใช้/รหัสผ่าน query หรือ # — http:// ได้เฉพาะ loopback (localhost, 127.0.0.0/8, [::1] ตัดสินจากตัวอักษรของ host)
+                    หรือเมื่อเซิร์ฟเวอร์ตั้ง ERP_ALLOW_INSECURE_HTTP=true (ticket 32) ใบรับรอง HTTPS ถูกตรวจเสมอ
                 credential: { type: string, writeOnly: true, pattern: '^pnepos_[A-Za-z0-9_-]{16,200}$' }
       responses:
         '200':
@@ -2327,9 +2339,10 @@ paths:
                 properties:
                   success: { type: boolean }
                   data: { $ref: '#/components/schemas/ErpStatus' }
+        '400': { description: 'ที่อยู่เป็น http:// ที่ไม่ใช่ loopback และเซิร์ฟเวอร์ไม่ได้อนุญาต — code ERP_URL_NOT_HTTPS ไม่มีคำขอไป ERP' }
         '409': { description: 'รหัสสาขาในเครื่องไม่ตรงรูปแบบ — code BRANCH_CODES_INVALID, details บอกสาขาและปัญหา (missing/invalid)' }
         '422': { description: 'ข้อมูลผิดรูปแบบ, ERP ไม่รับ credential (ERP_CREDENTIAL_REJECTED) หรือใช้สัญญา major อื่น (ERP_CONTRACT_UNSUPPORTED)' }
-        '502': { description: 'ติดต่อ ERP ไม่ได้/ERP ตอบผิดสัญญา — code ERP_UNREACHABLE, ERP_UNAVAILABLE, ERP_RATE_LIMITED, ERP_BAD_RESPONSE, ERP_REFUSED' }
+        '502': { description: 'ติดต่อ ERP ไม่ได้/ERP ตอบผิดสัญญา/ใบรับรอง HTTPS ไม่ผ่าน — code ERP_UNREACHABLE, ERP_UNAVAILABLE, ERP_RATE_LIMITED, ERP_BAD_RESPONSE, ERP_REFUSED, ERP_CERTIFICATE_UNTRUSTED' }
     delete:
       tags: [Erp]
       summary: ออกจากโหมดเชื่อมต่อ (admin) — ลบ credential ข้อมูลที่ mirror ไว้ยังอยู่และกลับมาแก้ได้ในโหมดเดี่ยว
@@ -2360,7 +2373,7 @@ paths:
                           skipped: { type: integer, description: entityType ที่ POS รุ่นนี้ไม่รู้จัก (สัญญา 1.x เพิ่มได้) }
                           appliedVersion: { type: integer }
                       status: { $ref: '#/components/schemas/ErpStatus' }
-        '409': { description: ยังไม่ได้เชื่อมต่อ หรือ ERP ไม่รับ credential แล้ว (บันทึกใหม่ก่อน) }
+        '409': { description: 'ยังไม่ได้เชื่อมต่อ, ERP ไม่รับ credential แล้ว (บันทึกใหม่ก่อน) หรือการเชื่อมต่อที่บันทึกไว้ใช้ http:// ที่ส่ง credential ไม่ได้ (ERP_URL_NOT_HTTPS)' }
         '422': { description: ERP เพิ่งปฏิเสธ credential (ERP_CREDENTIAL_REJECTED) }
         '502': { description: ติดต่อ ERP ไม่ได้/ERP ตอบผิดสัญญา — หน้าที่ดึงแล้วยังอยู่ ดึงต่อได้ }
   /erp/branches:

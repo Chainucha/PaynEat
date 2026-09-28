@@ -412,6 +412,133 @@ void main() {
     });
   });
 
+  group('DemoStore ยอดจ่ายแล้วหักยอดคืนเงิน (T06 #82)', () {
+    const manager = 2;
+
+    Map<String, dynamic> openTwoItems() {
+      final table = store.tableList().firstWhere(
+        (t) => t['status'] == 'available',
+      );
+      final order = store.createOrder(
+        type: 'dine_in',
+        tableId: table['id'] as int,
+        guestCount: 2,
+        items: [
+          for (final item in store.menuList().take(2))
+            {'menuItemId': item['id'], 'quantity': 1, 'optionIds': []},
+        ],
+      );
+      return store.findOrder(order['id'] as int);
+    }
+
+    Map<String, dynamic> payCash(Map<String, dynamic> order, double amount) =>
+        store.pay(
+          orderId: order['id'] as int,
+          method: 'cash',
+          amount: amount,
+          received: amount,
+        );
+
+    void refund(Map<String, dynamic> payment, double amount) =>
+        store.refundPayment(
+          paymentId: payment['id'] as int,
+          amount: amount,
+          reason: 'ลูกค้าเปลี่ยนใจ',
+          refundedById: manager,
+        );
+
+    bool isPaid(Map<String, dynamic> order, int itemId) =>
+        (store.findOrder(order['id'] as int)['items'] as List).firstWhere(
+          (item) => item['id'] == itemId,
+        )['isPaid'] ==
+        true;
+
+    test(
+      'จ่าย 50 แล้วคืน 50 → ยอดคงเหลือกลับเป็นยอดเต็ม และต้องเก็บครบตามยอดสุทธิจึงปิดบิล',
+      () {
+        final order = openTwoItems();
+        final total = (order['total'] as num).toDouble();
+        final paid = payCash(order, 50)['payment'] as Map<String, dynamic>;
+        refund(paid, 50);
+
+        var summary = store.paymentSummary(order['id'] as int);
+        expect(summary['paid'], 0);
+        expect(summary['refunded'], 50);
+        expect(summary['remaining'], closeTo(total, 0.001));
+        expect(summary['refunds'], hasLength(1));
+
+        final partial = payCash(order, total - 50);
+        expect(partial['isFullyPaid'], isFalse);
+        expect(partial['remaining'], closeTo(50, 0.001));
+        expect(
+          () => payCash(order, 50.01),
+          throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'statusCode', 400),
+          ),
+        );
+        expect(payCash(order, 50)['isFullyPaid'], isTrue);
+
+        summary = store.paymentSummary(order['id'] as int);
+        expect(summary['paid'], closeTo(total, 0.001));
+        expect(summary['remaining'], 0);
+      },
+    );
+
+    test(
+      'แยกจ่ายตามรายการแล้วคืน payment นั้นครบ → รายการกลับเป็นยังไม่จ่าย คืนบางส่วนยังนับว่าจ่ายแล้ว',
+      () {
+        final order = openTwoItems();
+        final firstId = ((order['items'] as List).first as Map)['id'] as int;
+        final split = store.pay(
+          orderId: order['id'] as int,
+          method: 'card',
+          itemIds: [firstId],
+        );
+        final payment = split['payment'] as Map<String, dynamic>;
+        expect(isPaid(order, firstId), isTrue);
+
+        refund(payment, 1);
+        expect(isPaid(order, firstId), isTrue);
+
+        refund(payment, (payment['amount'] as num).toDouble() - 1);
+        expect(isPaid(order, firstId), isFalse);
+        expect(
+          store.paymentSummary(order['id'] as int)['remaining'],
+          closeTo((order['total'] as num).toDouble(), 0.001),
+        );
+      },
+    );
+
+    test(
+      'คืนเงินหลังปิดบิล → บิลยังปิด ไม่มียอดค้างใหม่ และรายการยังนับว่าจ่ายแล้ว',
+      () {
+        final order = openTwoItems();
+        final ids = [
+          for (final item in order['items'] as List) item['id'] as int,
+        ];
+        final first = store.pay(
+          orderId: order['id'] as int,
+          method: 'card',
+          itemIds: [ids.first],
+        );
+        store.pay(
+          orderId: order['id'] as int,
+          method: 'card',
+          itemIds: [ids.last],
+        );
+        final payment = first['payment'] as Map<String, dynamic>;
+        refund(payment, (payment['amount'] as num).toDouble());
+
+        final after = store.findOrder(order['id'] as int);
+        expect(after['status'], 'paid');
+        expect(isPaid(order, ids.first), isTrue);
+        final summary = store.paymentSummary(order['id'] as int);
+        expect(summary['remaining'], 0);
+        expect(summary['refunded'], payment['amount']);
+      },
+    );
+  });
+
   group(
     'DemoStore payments — ใช้ _findUser ของ auth และ _freeTable ของ tables',
     () {

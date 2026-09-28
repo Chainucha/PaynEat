@@ -7,6 +7,7 @@ import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item.dart';
 import 'package:payneat_pos/features/order/data/models/order_model.dart';
+import 'package:payneat_pos/features/payment/data/models/payment_model.dart';
 import 'package:payneat_pos/features/table/domain/entities/dining_table.dart';
 
 void main() {
@@ -178,6 +179,44 @@ void main() {
       expect(table.hasOpenOrder, isTrue);
       expect(table.isAvailable, isFalse);
       expect(table.statusLabel, 'มีลูกค้า');
+    });
+  });
+
+  group('PaymentSummary (T06 #82)', () {
+    test('อ่านยอดคืนเงินจาก backend และรวมยอดที่คืนแล้วแยกตาม payment', () {
+      final summary = PaymentSummaryModel.fromJson({
+        'orderId': 1,
+        'total': 100.05,
+        'paid': 30,
+        'refunded': 70,
+        'remaining': 70.05,
+        'payments': [
+          {'id': 1, 'orderId': 1, 'method': 'cash', 'amount': 50},
+          {'id': 2, 'orderId': 1, 'method': 'qr', 'amount': 50},
+        ],
+        'refunds': [
+          {'id': 9, 'paymentId': 1, 'orderId': 1, 'amount': 50, 'reason': 'a'},
+          {'id': 10, 'paymentId': 2, 'orderId': 1, 'amount': 20, 'reason': 'b'},
+        ],
+      });
+      expect(summary.paid, 30);
+      expect(summary.refunded, 70);
+      expect(summary.remaining, 70.05);
+      expect(summary.refundedFor(1), 50);
+      expect(summary.refundedFor(2), 20);
+      expect(summary.refundedFor(3), 0);
+      expect(summary.isPartiallyPaid, isTrue);
+    });
+
+    test('backend รุ่นเก่าที่ยังไม่ส่งยอดคืนเงิน → ถือว่าไม่มีการคืน', () {
+      final summary = PaymentSummaryModel.fromJson({
+        'orderId': 1,
+        'total': 100,
+        'paid': 0,
+        'remaining': 100,
+      });
+      expect(summary.refunded, 0);
+      expect(summary.refunds, isEmpty);
     });
   });
 }

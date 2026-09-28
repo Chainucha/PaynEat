@@ -41,7 +41,9 @@ class PaymentSummaryModel extends PaymentSummary {
     required super.total,
     required super.paid,
     required super.remaining,
+    super.refunded,
     super.payments,
+    super.refunds,
   });
 
   factory PaymentSummaryModel.fromJson(Map<String, dynamic> json) =>
@@ -50,9 +52,14 @@ class PaymentSummaryModel extends PaymentSummary {
         total: (json['total'] as num?)?.toDouble() ?? 0,
         paid: (json['paid'] as num?)?.toDouble() ?? 0,
         remaining: (json['remaining'] as num?)?.toDouble() ?? 0,
+        refunded: (json['refunded'] as num?)?.toDouble() ?? 0,
         payments: (json['payments'] as List? ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(PaymentModel.fromJson)
+            .toList(growable: false),
+        refunds: (json['refunds'] as List? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(RefundModel.fromJson)
             .toList(growable: false),
       );
 }

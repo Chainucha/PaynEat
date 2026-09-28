@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1078%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1092%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1078 automated tests.
+control and 1092 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1078 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,078 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,092 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -692,6 +692,11 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   back in the pending column → log in as `waiter1` and open that order → the item has **no remove button** even though it is
   pending (a direct API cancel returns 403) because the system remembers how far the kitchen got → log in as `manager` → the
   item can be cancelled, and the audit log records "kitchen had reached: ready" (see `docs/DECISIONS.md` #86)
+- Log in as `manager` → open an unpaid bill → Checkout, take **50 baht** in cash (a partial payment) → come back to the same bill's
+  checkout and tap **Refund** (↶) next to the 50 baht payment, refunding all 50 → "Refunded 50.00" appears under it and **the amount
+  due goes back to the full bill**, not the full bill − 50. A bill closes only once the net amount (paid − refunded) is collected; on a
+  bill **split by item**, fully refunding an item's payment puts the item back to unpaid so it can be paid again or cancelled
+  (see `docs/DECISIONS.md` #87)
 - Log in as `waiter1` → no "Manage Staff" menu is shown (and a direct API call returns 403)
 - Log in as `admin` → **Menu Management** → switch a menu item off, then return to order taking → the item shows
   "Sold Out" and cannot be selected
@@ -803,8 +808,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 492 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 537 cases — domain / controller / widget
+cd backend && npm test      # 497 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 546 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -962,6 +967,10 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   amounts are automatically subtracted from net sales in reports (manager role or above).
   A **cash** refund requires an open shift (the money leaves that shift's drawer); refunds via QR/card/
   transfer do not
+- **Refunds on bills that are still open, with the amount due adjusted** — "paid" always means payments − refunds. Checkout shows how
+  much of each payment was refunded, a manager can refund straight from there, and a bill closes only once the net amount is
+  collected. Fully refunding a payment made for selected items puts those items back to unpaid; refunding a closed bill never opens a
+  new amount due (see `docs/DECISIONS.md` #87)
 - Change calculation with shortcut buttons (exact / round up to the nearest hundred / 100 / 500 / 1000)
 - **Receipts reconcile as a Thai receipt requires** — each payment line shows the cash tendered by the
   customer, not the amount applied to the bill, so tendered − change equals the bill total exactly, both on
@@ -1468,13 +1477,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 492 cases
-cd app && flutter test      # 537 cases
+cd backend && npm test      # 497 cases
+cd app && flutter test      # 546 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (492 + 537 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (497 + 546 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1529,7 +1538,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (492 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (497 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1568,6 +1577,13 @@ sequence by a manager succeeds, restores stock and writes an `order_item.void` a
 item cannot be edited or removed (409); an item the kitchen never touched can still be cancelled by a waiter without a log; and
 the kitchen can still undo one step while `kitchenReached` never goes down. `migrations.test.js` adds a case that migration 0003
 fills in the stage reached for existing items (see `docs/DECISIONS.md` #86)
+
+`refund-open-bill.test.js` (4 cases) covers net paid (T06): paying 50 then refunding 50 on an open bill puts the amount due back to the full
+bill, paying only the old remainder (bill − 50) does not close it, overpaying the net amount is refused, and paying it in full closes the
+bill; a partial refund raises the amount due by the refund and split-preview agrees; fully refunding a payment made for selected items
+puts them back to unpaid so a waiter can cancel them (a partial refund keeps them paid); and refunding a closed bill leaves it closed with
+nothing due. `migrations.test.js` adds a case that migration 0004 keeps items paid in a split before it as paid (see
+`docs/DECISIONS.md` #87)
 
 `promotion-engine.test.js` (16 cases) tests the pure promotion-matching logic (percent/amount/bogo, day/time/
 minimum-spend/menu-category conditions, `findBestAutoPromotion`, `describeIneligibility`), and
@@ -1718,7 +1734,7 @@ oldest first and never above the amount owed, cash counted into the shift, no vo
 its shift has closed, billing notes (no duplicates/void and reissue/paid status), refunds of a credit bill
 capped at the amount still owed, debt aging, and RBAC — `migrate-credit.test.js` (1 case) builds a
 pre-ticket-20 database and migrates it, verifying that the monetary data, the refunds referencing it, and the
-indexes are all preserved (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (8 cases) covers versioned
+indexes are all preserved (see `docs/DECISIONS.md` #48–#51) — `migrations.test.js` (9 cases) covers versioned
 migrations (T01): each runs once regardless of how often the server starts; one that fails midway is rolled back completely
 (the tables and columns it created are removed, and it is not recorded as applied); one that runs without foreign keys must
 pass `foreign_key_check` before committing; an edited applied migration, or an app older than its database, prevents
@@ -1805,7 +1821,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (537 cases)** — organized into 3 levels:
+**Flutter (546 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1827,7 +1843,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `menu_browse_controller_test.dart` | Menu filtering/search (debounced), counts per category |
 | Controller | `menu_management_controller_test.dart` | Menu filtering on the management screen, counting sold-out items |
 | Controller | `kitchen_controller_test.dart` | Grouping the kitchen queue by status, counting late items, moving status forward |
-| Controller | `checkout_controller_test.dart` | Change/remaining-balance calculation, the `canPay` condition, rounding up to the nearest hundred, the "On credit" method appearing only for customers with a limit + non-waiter users, no paying over the limit, and choosing credit clearing any points (ticket 20) |
+| Controller | `checkout_controller_test.dart` | Change/remaining-balance calculation, the `canPay` condition, rounding up to the nearest hundred, the "On credit" method appearing only for customers with a limit + non-waiter users, no paying over the limit, and choosing credit clearing any points (ticket 20); refunds on an open bill: managers can refund and cashiers cannot, the refundable amount excludes what was already refunded, a refund reloads the amount due from the backend, and a failed refund shows the reason (T06) |
 | Controller | `checkout_controller_test.dart` | (continued) a disabled pay button always states the reason below it (no shift / invalid amount / cash short) and shows nothing once payment is possible (#62) |
 | Controller | `receipt_controller_test.dart` | Loading a receipt by orderId, the `Payment.tendered` rule (a receipt shows the cash the customer handed over, not the amount applied to the bill: tendered − change = amount applied), silently loading the tax invoice when none has been issued yet (404 isn't an error), and tax-invoice void permission (manager role or above) |
 | Controller | `settings_controller_test.dart` | Loading store settings into the correct form fields |
@@ -2076,7 +2092,8 @@ Completed work, planned work, and known limitations, with the reasoning for each
   proportion, and insufficient stock blocks sending to the kitchen unless a manager confirms (see
   `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79), T02 every order change in one
   transaction (`docs/DECISIONS.md` #84), T04 locking the items of closed bills (`docs/DECISIONS.md` #85), T05 cancelling
-  food the kitchen has started needs a manager even after an undo (`docs/DECISIONS.md` #86) and T19 production
+  food the kitchen has started needs a manager even after an undo (`docs/DECISIONS.md` #86), T06 net paid after refunds
+  (`docs/DECISIONS.md` #87) and T19 production
   defaults (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)

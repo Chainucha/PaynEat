@@ -57,14 +57,27 @@ class PaymentSummary {
     required this.total,
     required this.paid,
     required this.remaining,
+    this.refunded = 0,
     this.payments = const [],
+    this.refunds = const [],
   });
 
   final int orderId;
   final double total;
+
+  /// เงินที่ร้านถือไว้สุทธิ = ยอดชำระ − ยอดคืนเงิน (T06 #82, docs/DECISIONS.md #87)
   final double paid;
   final double remaining;
+
+  /// ยอดคืนเงินรวมของออเดอร์นี้ — คืนบนบิลที่ยังเปิดทำให้ยอดคงเหลือเพิ่มขึ้นเท่านี้
+  final double refunded;
   final List<Payment> payments;
+  final List<Refund> refunds;
+
+  /// ยอดที่คืนไปแล้วของ payment นี้
+  double refundedFor(int paymentId) => refunds
+      .where((refund) => refund.paymentId == paymentId)
+      .fold<double>(0, (sum, refund) => sum + refund.amount);
 
   bool get isFullyPaid => remaining <= 0;
   bool get isPartiallyPaid => paid > 0 && remaining > 0;

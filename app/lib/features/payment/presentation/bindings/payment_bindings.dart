@@ -28,6 +28,7 @@ class CheckoutBinding extends Bindings {
         getCustomer: Get.find<GetCustomerUseCase>(),
         getSettings: Get.find<GetSettingsUseCase>(),
         getPromptPayQr: Get.find<GetPromptPayQrUseCase>(),
+        refundPayment: Get.find<RefundPaymentUseCase>(),
         session: Get.find<SessionService>(),
       ),
     );

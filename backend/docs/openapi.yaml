@@ -1450,6 +1450,9 @@ paths:
     post:
       tags: [Payments]
       summary: คืนเงินหลังชำระเงินแล้ว (เต็มจำนวนหรือบางส่วน — manager ขึ้นไป)
+      description: >-
+        คืนบนบิลที่ยังเปิดได้ (T06) ยอดคงเหลือของบิลเพิ่มขึ้นเท่ายอดที่คืน และถ้าคืน payment ที่แยกจ่ายตามรายการครบทั้งจำนวน
+        รายการของ payment นั้นกลับเป็นยังไม่จ่าย (`isPaid: false`) ให้เลือกจ่ายใหม่หรือยกเลิกได้ บิลที่ปิดแล้วไม่เปลี่ยนสถานะ
       requestBody:
         required: true
         content:
@@ -1512,8 +1515,24 @@ paths:
     get:
       tags: [Payments]
       summary: สรุปยอดชำระ/ค้างชำระของออเดอร์
+      description: >-
+        `paid` คือเงินที่ร้านถือไว้สุทธิ = ยอดชำระ − ยอดคืนเงิน (T06) คืนเงินบนบิลที่ยังเปิดทำให้ `remaining` เพิ่มขึ้นตามจริง
+        และบิลปิดได้เมื่อเก็บครบตามยอดสุทธิเท่านั้น บิลที่จ่ายครบแล้ว `remaining` เป็น 0 เสมอ (คืนเงินหลังปิดบิลหักในรายงาน)
       responses:
-        '200': { description: สำเร็จ }
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId: { type: integer }
+                  total: { type: number }
+                  paid: { type: number, description: ยอดชำระ − ยอดคืนเงิน }
+                  refunded: { type: number, description: ยอดคืนเงินรวมของออเดอร์นี้ }
+                  remaining: { type: number }
+                  payments: { type: array, items: { type: object } }
+                  refunds: { type: array, items: { type: object } }
   /payments/order/{id}/receipt:
     parameters:
       - in: path

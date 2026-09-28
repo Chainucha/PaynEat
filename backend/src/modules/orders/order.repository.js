@@ -344,14 +344,26 @@ export const orderRepository = {
       .run(toOrderId, fromOrderId).changes;
   },
 
-  markItemsPaid(itemIds) {
+  /** รายการที่เลือกแยกจ่าย — จำ payment ที่จ่ายไว้ด้วย เพื่อปลดเมื่อ payment นั้นถูกคืนเงินครบ (T06 #82) */
+  markItemsPaid(itemIds, paymentId) {
     if (!itemIds.length) return 0;
     const placeholders = itemIds.map(() => '?').join(',');
     return getDb()
       .prepare(
-        `UPDATE order_items SET is_paid = 1, updated_at = datetime('now') WHERE id IN (${placeholders})`,
+        `UPDATE order_items SET is_paid = 1, paid_by_payment_id = ?, updated_at = datetime('now')
+          WHERE id IN (${placeholders})`,
       )
-      .run(...itemIds).changes;
+      .run(paymentId, ...itemIds).changes;
+  },
+
+  /** payment ที่แยกจ่ายถูกคืนเงินครบบนบิลที่ยังเปิด — รายการของ payment นั้นกลับเป็นยังไม่จ่าย (T06 #82) */
+  releaseItemsPaidBy(paymentId) {
+    return getDb()
+      .prepare(
+        `UPDATE order_items SET is_paid = 0, paid_by_payment_id = NULL, updated_at = datetime('now')
+          WHERE paid_by_payment_id = ?`,
+      )
+      .run(paymentId).changes;
   },
 
   updateMeta(orderId, { guestCount, note }) {

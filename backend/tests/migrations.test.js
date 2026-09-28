@@ -252,7 +252,9 @@ describe('0003 order_item_kitchen_reached (T05 #104)', () => {
       insert.run(order, status, status);
     }
 
-    assert.deepEqual(runMigrations(db), ['0003_order_item_kitchen_reached']);
+    assert.deepEqual(runMigrations(db, MIGRATIONS.slice(0, 3)), [
+      '0003_order_item_kitchen_reached',
+    ]);
     assert.deepEqual(
       db.prepare('SELECT status, kitchen_reached FROM order_items ORDER BY id').all(),
       [
@@ -266,6 +268,34 @@ describe('0003 order_item_kitchen_reached (T05 #104)', () => {
     assert.throws(
       () => db.prepare("UPDATE order_items SET kitchen_reached = 'pending' WHERE id = 1").run(),
       /CHECK constraint failed/,
+    );
+  });
+});
+
+describe('0004 order_item_paid_by_payment (T06 #82)', () => {
+  test('keeps items already paid in a split as paid, with no payment to release them by', () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, MIGRATIONS.slice(0, 3));
+    const order = db
+      .prepare("INSERT INTO orders (code, status) VALUES ('ORD-T06-1', 'in_kitchen')")
+      .run().lastInsertRowid;
+    db.prepare(
+      `INSERT INTO order_items (order_id, name_snapshot, unit_price, quantity, is_paid)
+       VALUES (?, 'split', 5000, 1, 1), (?, 'open', 5000, 1, 0)`,
+    ).run(order, order);
+
+    assert.deepEqual(runMigrations(db), ['0004_order_item_paid_by_payment']);
+    assert.deepEqual(
+      db.prepare('SELECT is_paid, paid_by_payment_id FROM order_items ORDER BY id').all(),
+      [
+        { is_paid: 1, paid_by_payment_id: null },
+        { is_paid: 0, paid_by_payment_id: null },
+      ],
+    );
+    assert.throws(
+      () => db.prepare('UPDATE order_items SET paid_by_payment_id = 999 WHERE id = 1').run(),
+      /FOREIGN KEY constraint failed/,
     );
   });
 });

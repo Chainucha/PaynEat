@@ -14,8 +14,10 @@ import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../order/presentation/widgets/bill_summary.dart';
+import '../../domain/entities/payment.dart';
 import '../controllers/checkout_controller.dart';
 import '../widgets/promptpay_qr_view.dart';
+import '../widgets/refund_dialog.dart';
 import '../../../../core/localization/order_display.dart';
 
 /// หน้าชำระเงิน
@@ -148,6 +150,18 @@ class _NoShiftBanner extends GetView<CheckoutController> {
 class _PaidHistory extends GetView<CheckoutController> {
   const _PaidHistory();
 
+  Future<void> _refund(Payment payment) async {
+    final result = await RefundDialog.show(
+      maxAmount: controller.refundableAmount(payment),
+    );
+    if (result == null) return;
+    await controller.refundPayment(
+      payment: payment,
+      amount: result.amount,
+      reason: result.reason,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final summary = controller.summary.value;
@@ -184,13 +198,42 @@ class _PaidHistory extends GetView<CheckoutController> {
                   ),
                 ),
                 const Spacer(),
-                Text(
-                  Formatters.money(payment.amount),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      Formatters.money(payment.amount),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    // คืนเงินบนบิลที่ยังเปิด ยอดคงเหลือด้านล่างเพิ่มขึ้นเท่ายอดที่คืน (T06 #82)
+                    if (summary.refundedFor(payment.id) > 0)
+                      Text(
+                        'payment_refunded_from_payment'.trParams({
+                          'amount': Formatters.money(
+                            summary.refundedFor(payment.id),
+                          ),
+                        }),
+                        key: ValueKey('checkout-refunded-${payment.id}'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.dangerInk,
+                        ),
+                      ),
+                  ],
                 ),
+                if (controller.canRefund)
+                  IconButton(
+                    key: ValueKey('checkout-refund-${payment.id}'),
+                    tooltip: 'payment_refund_dialog_title'.tr,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.undo_rounded, size: 18),
+                    onPressed: controller.refundableAmount(payment) > 0
+                        ? () => _refund(payment)
+                        : null,
+                  ),
               ],
             ),
           ),

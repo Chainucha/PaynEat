@@ -4,7 +4,7 @@
 **สถานะ (2026-09-27):** ⏳ ยังไม่เริ่ม — รอ 25, 27 และ T02 [#81](https://github.com/SuruchBoss/PaynEat/issues/81) (สัญญา 1.0.0 merge แล้ว)
 **Ref:** [ERP ADR-0002](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/adr/0002-system-boundaries-and-pos-integration.md),
 [สัญญา telemetry v1.2](https://github.com/SuruchBoss/PaynEat-ERP/blob/main/docs/TELEMETRY.md), `docs/DECISIONS.md` #66
-**Blocked by:** `25-erp-connected-mode.md`, `27-erp-menu-pull.md`, ~~[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9)~~ ✅,
+**Blocked by:** `25-erp-connected-mode.md`, `27-erp-menu-pull.md`, `32-erp-https-only.md`, ~~[PaynEat-ERP#9](https://github.com/SuruchBoss/PaynEat-ERP/issues/9)~~ ✅,
 [#81](https://github.com/SuruchBoss/PaynEat/issues/81) (T02 แก้ออเดอร์ใน transaction เดียว — outbox ต้องเขียนใน transaction เดียวกับการชำระ, `docs/DECISIONS.md` #77)
 
 ## ปัญหา

@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1046%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1052%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1046 automated tests.
+control and 1052 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1046 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,046 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,052 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -796,7 +796,7 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 474 cases — including a 17-step end-to-end walkthrough
+cd backend && npm test      # 480 cases — including a 17-step end-to-end walkthrough
 cd app && flutter test      # 523 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
@@ -1453,13 +1453,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 474 cases
+cd backend && npm test      # 480 cases
 cd app && flutter test      # 523 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (474 + 523 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (480 + 523 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1514,7 +1514,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (474 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (480 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1535,6 +1535,12 @@ menu item had no `nameEn`; the query now uses single quotes.
 and rejection when the destination table is occupied, a successful merge (correct combined total, the source
 order cancelled and its table freed) and rejection of merging an order with itself, proportional split-bill
 previews, paying item by item until the bill closes, and rejection of an item that has already been paid for.
+
+`order-transaction.test.js` (6 cases) checks that every order change shares one transaction with recalculating the totals and
+the audit entry (T02): with the recalculation made to fail while opening an order, adding/editing/removing/cancelling an item,
+a discount, redeeming or removing a promotion code, merging bills and cancelling an order already sent to the kitchen, the items,
+totals, stock, table statuses and audit log must all stay exactly as they were; moving a table and sending to the kitchen do not
+recalculate the totals (see `docs/DECISIONS.md` #84)
 
 `promotion-engine.test.js` (16 cases) tests the pure promotion-matching logic (percent/amount/bogo, day/time/
 minimum-spend/menu-category conditions, `findBestAutoPromotion`, `describeIneligibility`), and
@@ -2040,8 +2046,8 @@ Completed work, planned work, and known limitations, with the reasoning for each
   are not published, per `docs/DECISIONS.md` #81), in three rounds through tickets T01–T32 (#80–#110, #117).
   The 12 open decisions have been made; for example, a partial refund on a bill paid partly in points is returned in
   proportion, and insufficient stock blocks sending to the kitchen unless a manager confirms (see
-  `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79) and T19 production defaults
-  (`docs/DECISIONS.md` #83)
+  `docs/DECISIONS.md` #77). Completed: T01 versioned migrations (`docs/DECISIONS.md` #79), T02 every order change in one
+  transaction (`docs/DECISIONS.md` #84) and T19 production defaults (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed

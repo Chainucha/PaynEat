@@ -153,7 +153,7 @@ const resolvePromotionForOrder = (order, items) => {
     : { promotionId: null, name: null, code: null, discountAmount: 0 };
 };
 
-/** คำนวณยอดใหม่ทั้งบิล (รวมประเมินโปรโมชันใหม่) แล้วบันทึกลงฐานข้อมูล */
+/** คำนวณยอดใหม่ทั้งบิล (รวมประเมินโปรโมชันใหม่) แล้วบันทึกลงฐานข้อมูล — เรียกจาก `changeOrder` เท่านั้น */
 const recalculate = (orderId) => {
   const order = orderRepository.findById(orderId);
   const items = orderRepository.findItems(orderId);
@@ -186,6 +186,21 @@ const loadOrder = (id) => {
 };
 
 const buildDto = (orderRow) => toOrderDto(orderRow, orderRepository.findItems(orderRow.id));
+
+/**
+ * ช่องทางกลางของการแก้ออเดอร์ทุกแบบ (T02 #81, DECISIONS #84): เปลี่ยนข้อมูล → คำนวณยอดใหม่ → บันทึก audit ใน transaction เดียว
+ *
+ * `change()` เปลี่ยนข้อมูลและบันทึก audit ของตัวเอง แล้วคืน id ของออเดอร์ที่ต้องคำนวณยอดใหม่ ถ้าขั้นไหน throw รวมถึงการคำนวณยอด
+ * ทุกอย่างของการแก้ครั้งนั้น rollback พร้อมกัน ยอดรวมจึงไม่ค้างค่าเก่าหลังรายการเปลี่ยนไปแล้ว
+ * การแก้ที่ไม่กระทบบิล (ย้ายโต๊ะ, ส่งครัว, ข้อมูลทั่วไป) ส่ง `recalculateTotals: false` เพื่อให้ยอดเหมือนเดิมทุกประการ
+ * guard ที่ต้องเห็นออเดอร์หลังแก้ (T04, T07, T09) ใส่ที่นี่ ก่อน commit
+ * คืนแถวออเดอร์หลังแก้
+ */
+const changeOrder = (change, { recalculateTotals = true } = {}) =>
+  getDb().transaction(() => {
+    const orderId = change();
+    return recalculateTotals ? recalculate(orderId) : orderRepository.findById(orderId);
+  })();
 
 export const orderService = {
   list(filters, currentBranchId) {
@@ -229,7 +244,7 @@ export const orderService = {
 
     const itemRows = (payload.items ?? []).map(buildItemRow);
 
-    const run = getDb().transaction(() => {
+    const created = changeOrder(() => {
       const order = orderRepository.create({
         code: orderRepository.nextCode(),
         type: payload.type,
@@ -264,8 +279,7 @@ export const orderService = {
       return order.id;
     });
 
-    const orderId = run();
-    const dto = buildDto(recalculate(orderId));
+    const dto = buildDto(created);
     emit(EVENTS.ORDER_CREATED, dto);
     if (dto.tableId) emit(EVENTS.TABLE_UPDATED, { id: dto.tableId, status: 'occupied' });
     return dto;
@@ -276,7 +290,7 @@ export const orderService = {
     assertOrderMutable(order);
 
     const itemRows = items.map(buildItemRow);
-    const run = getDb().transaction(() => {
+    const updated = changeOrder(() => {
       for (const item of itemRows) {
         const created = orderRepository.addItem(order.id, item);
         // ออเดอร์ที่ส่งครัวไปแล้ว รายการที่เพิ่มใหม่ถือว่า "ส่งครัว" ทันทีโดยไม่ต้องกดส่งซ้ำ
@@ -312,10 +326,10 @@ export const orderService = {
           })),
         },
       });
+      return order.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     // ถ้าออเดอร์ถูกส่งครัวไปแล้ว รายการที่เพิ่มใหม่ต้องเด้งเข้าครัวทันที
     if (order.status !== 'open') emit(EVENTS.KITCHEN_TICKET, dto, [ROOMS.KITCHEN]);
@@ -336,7 +350,7 @@ export const orderService = {
     }
 
     const quantity = payload.quantity ?? item.quantity;
-    const run = getDb().transaction(() => {
+    const updated = changeOrder(() => {
       orderRepository.updateItem(itemId, {
         quantity,
         note: payload.note,
@@ -371,10 +385,10 @@ export const orderService = {
           },
         });
       }
+      return order.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
   },
@@ -389,7 +403,7 @@ export const orderService = {
       throw ApiError.conflict('ลบไม่ได้ เพราะครัวเริ่มทำรายการนี้แล้ว กรุณาใช้การยกเลิกรายการแทน');
     }
 
-    const run = getDb().transaction(() => {
+    const updated = changeOrder(() => {
       if (item.stock_deducted) ingredientService.restoreForOrderItem(item);
       orderRepository.removeItem(itemId);
       // entityType เป็น 'order' ไม่ใช่ 'order_item' เพราะรายการนี้ถูกลบออกจากฐานข้อมูลจริง
@@ -416,9 +430,9 @@ export const orderService = {
           ...(item.weight_grams ? { weightGrams: item.weight_grams } : {}),
         },
       });
+      return order.id;
     });
-    run();
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
   },
@@ -444,7 +458,7 @@ export const orderService = {
     // docs/tickets/08-audit-log.md
     const isRiskyVoid = status === 'cancelled' && item.status !== 'pending';
 
-    const run = getDb().transaction(() => {
+    const updated = changeOrder(() => {
       orderRepository.updateItem(itemId, { status });
       if (status === 'cancelled' && item.stock_deducted) {
         ingredientService.restoreForOrderItem(item);
@@ -460,22 +474,22 @@ export const orderService = {
           metadata: { orderId: order.id, orderCode: order.code, previousStatus: item.status },
         });
       }
+
+      // ถ้าเสิร์ฟครบทุกรายการแล้ว ให้ออเดอร์ขึ้นสถานะ "เสิร์ฟครบ" อัตโนมัติ
+      const active = orderRepository
+        .findItems(order.id)
+        .filter((row) => row.status !== 'cancelled');
+      if (
+        active.length > 0 &&
+        active.every((row) => row.status === 'served') &&
+        order.status === 'in_kitchen'
+      ) {
+        orderRepository.updateStatus(order.id, 'served');
+      }
+      return order.id;
     });
-    run();
-    recalculate(order.id);
 
-    // ถ้าเสิร์ฟครบทุกรายการแล้ว ให้ออเดอร์ขึ้นสถานะ "เสิร์ฟครบ" อัตโนมัติ
-    const items = orderRepository.findItems(order.id);
-    const active = items.filter((row) => row.status !== 'cancelled');
-    if (
-      active.length > 0 &&
-      active.every((row) => row.status === 'served') &&
-      order.status === 'in_kitchen'
-    ) {
-      orderRepository.updateStatus(order.id, 'served');
-    }
-
-    const dto = buildDto(orderRepository.findById(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_ITEM_UPDATED, {
       orderId: order.id,
       item: toOrderItemDto(orderRepository.findItemById(itemId)),
@@ -492,20 +506,23 @@ export const orderService = {
     const items = orderRepository.findItems(order.id).filter((item) => item.status !== 'cancelled');
     if (items.length === 0) throw ApiError.badRequest('ออเดอร์ยังไม่มีรายการอาหาร');
 
-    const run = getDb().transaction(() => {
-      if (order.status === 'open') orderRepository.updateStatus(order.id, 'in_kitchen');
-      // ตัดสต๊อกเฉพาะรายการที่ยังไม่เคยตัด กัน sendToKitchen ที่ถูกเรียกซ้ำ (เช่น มีรายการเพิ่มมาใหม่)
-      // ไม่ตัดซ้ำรายการเดิมที่ตัดไปแล้วตั้งแต่รอบก่อน
-      for (const item of items) {
-        if (!item.stock_deducted) {
-          ingredientService.deductForOrderItem(item);
-          orderRepository.updateItem(item.id, { stockDeducted: true });
+    const updated = changeOrder(
+      () => {
+        if (order.status === 'open') orderRepository.updateStatus(order.id, 'in_kitchen');
+        // ตัดสต๊อกเฉพาะรายการที่ยังไม่เคยตัด กัน sendToKitchen ที่ถูกเรียกซ้ำ (เช่น มีรายการเพิ่มมาใหม่)
+        // ไม่ตัดซ้ำรายการเดิมที่ตัดไปแล้วตั้งแต่รอบก่อน
+        for (const item of items) {
+          if (!item.stock_deducted) {
+            ingredientService.deductForOrderItem(item);
+            orderRepository.updateItem(item.id, { stockDeducted: true });
+          }
         }
-      }
-    });
-    run();
+        return order.id;
+      },
+      { recalculateTotals: false },
+    );
 
-    const dto = buildDto(orderRepository.findById(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.KITCHEN_TICKET, dto, [ROOMS.KITCHEN]);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
@@ -514,7 +531,14 @@ export const orderService = {
   updateMeta(orderId, payload) {
     const order = loadOrder(orderId);
     assertOrderMutable(order);
-    const dto = buildDto(orderRepository.updateMeta(order.id, payload));
+    const updated = changeOrder(
+      () => {
+        orderRepository.updateMeta(order.id, payload);
+        return order.id;
+      },
+      { recalculateTotals: false },
+    );
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
   },
@@ -527,19 +551,10 @@ export const orderService = {
     const storedValue = type === 'percent' ? Math.round(value * 100) : toSatang(value);
     if (type === 'percent' && value > 100) throw ApiError.badRequest('ส่วนลดเกิน 100% ไม่ได้');
 
-    const run = getDb().transaction(() => {
-      orderRepository.updateTotals(order.id, {
-        subtotal: order.subtotal,
+    const updated = changeOrder(() => {
+      orderRepository.setDiscount(order.id, {
         discountType: type,
         discountValue: type === 'none' ? 0 : storedValue,
-        discountAmount: order.discount_amount,
-        promotionId: order.promotion_id,
-        promotionName: order.promotion_name_snapshot,
-        promotionCode: order.promotion_code_snapshot,
-        promotionDiscountAmount: order.promotion_discount_amount,
-        serviceCharge: order.service_charge,
-        vat: order.vat,
-        total: order.total,
       });
       auditLogService.log({
         actorUser: user,
@@ -559,10 +574,10 @@ export const orderService = {
           newValue: storedValue,
         },
       });
+      return order.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
   },
@@ -581,19 +596,11 @@ export const orderService = {
     const reason = describeIneligibility(promotion, { items, now: new Date() });
     if (reason) throw ApiError.badRequest(reason);
 
-    const run = getDb().transaction(() => {
-      orderRepository.updateTotals(order.id, {
-        subtotal: order.subtotal,
-        discountType: order.discount_type,
-        discountValue: order.discount_value,
-        discountAmount: order.discount_amount,
+    const updated = changeOrder(() => {
+      orderRepository.setPromotion(order.id, {
         promotionId: promotion.id,
         promotionName: promotion.name,
         promotionCode: promotion.code,
-        promotionDiscountAmount: order.promotion_discount_amount,
-        serviceCharge: order.service_charge,
-        vat: order.vat,
-        total: order.total,
       });
       auditLogService.log({
         actorUser: user,
@@ -609,10 +616,10 @@ export const orderService = {
           previousPromotionId: order.promotion_id,
         },
       });
+      return order.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
   },
@@ -622,19 +629,11 @@ export const orderService = {
     const order = loadOrder(orderId);
     assertOrderMutable(order);
 
-    const run = getDb().transaction(() => {
-      orderRepository.updateTotals(order.id, {
-        subtotal: order.subtotal,
-        discountType: order.discount_type,
-        discountValue: order.discount_value,
-        discountAmount: order.discount_amount,
+    const updated = changeOrder(() => {
+      orderRepository.setPromotion(order.id, {
         promotionId: null,
         promotionName: null,
         promotionCode: null,
-        promotionDiscountAmount: 0,
-        serviceCharge: order.service_charge,
-        vat: order.vat,
-        total: order.total,
       });
       auditLogService.log({
         actorUser: user,
@@ -649,10 +648,10 @@ export const orderService = {
           previousPromotionCode: order.promotion_code_snapshot,
         },
       });
+      return order.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     return dto;
   },
@@ -695,27 +694,30 @@ export const orderService = {
 
     const oldTableId = order.table_id;
     const oldTable = tableRepository.findById(oldTableId);
-    const run = getDb().transaction(() => {
-      orderRepository.updateTable(order.id, tableId);
-      tableRepository.setStatus(tableId, 'occupied');
-      tableRepository.setStatus(oldTableId, 'available');
-      auditLogService.log({
-        actorUser: user,
-        action: 'order.move_table',
-        summaryArgs: {
-          code: order.code,
-          fromTable: oldTable?.name ?? oldTableId,
-          toTable: table.name,
-        },
-        entityType: 'order',
-        entityId: order.id,
-        summary: `ย้ายออเดอร์ #${order.code} จากโต๊ะ "${oldTable?.name ?? oldTableId}" ไปโต๊ะ "${table.name}"`,
-        metadata: { orderCode: order.code, fromTableId: oldTableId, toTableId: tableId },
-      });
-    });
-    run();
+    const updated = changeOrder(
+      () => {
+        orderRepository.updateTable(order.id, tableId);
+        tableRepository.setStatus(tableId, 'occupied');
+        tableRepository.setStatus(oldTableId, 'available');
+        auditLogService.log({
+          actorUser: user,
+          action: 'order.move_table',
+          summaryArgs: {
+            code: order.code,
+            fromTable: oldTable?.name ?? oldTableId,
+            toTable: table.name,
+          },
+          entityType: 'order',
+          entityId: order.id,
+          summary: `ย้ายออเดอร์ #${order.code} จากโต๊ะ "${oldTable?.name ?? oldTableId}" ไปโต๊ะ "${table.name}"`,
+          metadata: { orderCode: order.code, fromTableId: oldTableId, toTableId: tableId },
+        });
+        return order.id;
+      },
+      { recalculateTotals: false },
+    );
 
-    const dto = buildDto(loadOrder(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     emit(EVENTS.TABLE_UPDATED, { id: tableId, status: 'occupied' });
     emit(EVENTS.TABLE_UPDATED, { id: oldTableId, status: 'available' });
@@ -733,7 +735,7 @@ export const orderService = {
     assertOrderMutable(source);
 
     const sourceTableId = source.table_id;
-    const run = getDb().transaction(() => {
+    const updated = changeOrder(() => {
       orderRepository.reassignItems(source.id, target.id);
       orderRepository.updateStatus(source.id, 'cancelled', {
         closedAt: new Date().toISOString(),
@@ -749,10 +751,10 @@ export const orderService = {
         summary: `รวมบิล #${source.code} เข้ากับ #${target.code}`,
         metadata: { targetOrderCode: target.code, sourceOrderCode: source.code },
       });
+      return target.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(target.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     emit(EVENTS.ORDER_UPDATED, buildDto(loadOrder(source.id)));
     if (sourceTableId) emit(EVENTS.TABLE_UPDATED, { id: sourceTableId, status: 'available' });
@@ -764,7 +766,7 @@ export const orderService = {
     if (order.status === 'paid') throw ApiError.conflict('ออเดอร์ที่ชำระเงินแล้วยกเลิกไม่ได้');
     if (order.status === 'cancelled') throw ApiError.conflict('ออเดอร์นี้ถูกยกเลิกไปแล้ว');
 
-    const run = getDb().transaction(() => {
+    const updated = changeOrder(() => {
       const items = orderRepository.findItems(order.id);
       for (const item of items) {
         if (item.status !== 'cancelled' && item.stock_deducted) {
@@ -789,10 +791,10 @@ export const orderService = {
         reason,
         metadata: { orderCode: order.code, previousStatus: order.status },
       });
+      return order.id;
     });
-    run();
 
-    const dto = buildDto(recalculate(order.id));
+    const dto = buildDto(updated);
     emit(EVENTS.ORDER_UPDATED, dto);
     if (order.table_id) emit(EVENTS.TABLE_UPDATED, { id: order.table_id, status: 'available' });
     return dto;
@@ -802,8 +804,6 @@ export const orderService = {
   kitchenQueue(statuses = ['pending', 'cooking', 'ready']) {
     return orderRepository.findItemsByStatuses(statuses).map(toOrderItemDto);
   },
-
-  recalculate,
 };
 
 export default orderService;

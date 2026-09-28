@@ -245,6 +245,27 @@ export const orderRepository = {
       .run(toStatus, orderId, fromStatus).changes;
   },
 
+  /** ส่วนลดมือของบิล — ยอดคำนวณใหม่ใน transaction เดียวกันโดย orderService (changeOrder) */
+  setDiscount(orderId, { discountType, discountValue }) {
+    getDb()
+      .prepare(
+        "UPDATE orders SET discount_type = ?, discount_value = ?, updated_at = datetime('now') WHERE id = ?",
+      )
+      .run(discountType, discountValue, orderId);
+  },
+
+  /** โปรโมชันที่ผูกกับบิล (null = ถอด) — ยอดคำนวณใหม่ใน transaction เดียวกันโดย orderService (changeOrder) */
+  setPromotion(orderId, { promotionId, promotionName, promotionCode }) {
+    getDb()
+      .prepare(
+        `UPDATE orders
+            SET promotion_id = ?, promotion_name_snapshot = ?, promotion_code_snapshot = ?,
+                updated_at = datetime('now')
+          WHERE id = ?`,
+      )
+      .run(promotionId ?? null, promotionName ?? null, promotionCode ?? null, orderId);
+  },
+
   updateTotals(orderId, totals) {
     getDb()
       .prepare(

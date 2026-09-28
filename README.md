@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1046%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1052%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1046 automated tests.
+control and 1052 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -34,7 +34,7 @@ control and 1046 automated tests.
 
 ## 🍽 เมนูแก้ปัญหาร้านอาหาร
 
-ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 1,046 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
+ทุกข้อคือปัญหาที่ร้านอาหารขนาดใหญ่เจอจริงทุกวัน และแต่ละข้อแก้ด้วย**หลายฟีเจอร์ที่ทำงานต่อกัน** ไม่ใช่ปุ่มเดียว — ทั้งหมดผ่านเทสต์อัตโนมัติ 1,052 เคสก่อนปล่อย ภาพทุกภาพถ่ายจากแอปจริงด้วย golden test ([`story_test.dart`](app/tool/screenshots/story_test.dart)) ลองกดเองได้ที่ **[เดโมบนเว็บ](https://suruchboss.github.io/PaynEat/app/)** หรืออ่านแบบหน้าเว็บที่ **[หน้า Landing](https://suruchboss.github.io/PaynEat/)**
 
 | # | ปัญหาของร้าน | ชุดที่แก้ | ได้อะไร |
 |---|---|---|---|
@@ -727,7 +727,7 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 ### 🧪 การรันเทสต์
 
 ```bash
-cd backend && npm test      # 474 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
+cd backend && npm test      # 480 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
 cd app && flutter test      # 523 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
@@ -1315,13 +1315,13 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 ## 🧪 การทดสอบ
 
 ```bash
-cd backend && npm test      # 474 เคส
+cd backend && npm test      # 480 เคส
 cd app && flutter test      # 523 เคส
 cd app && flutter test test_e2e   # 49 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
-badge นับเฉพาะเทสต์ของ backend และแอป (474 + 523 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (480 + 523 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (49 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1364,7 +1364,7 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 เพื่อยืนยันว่า API ตอบ `/health`, เข้าสู่ระบบได้, ตาชั่งจำลองทำงานอยู่ และเว็บตอบ 200 — เมื่อผ่านแล้วจึงอัปโหลดเป็น release `demo` ของทางเลือก D
 (job นี้ป้องกันไม่ให้ Dockerfile ที่ build ไม่ผ่านหลุดรอดโดยไม่มีการแจ้งเตือน ดู `docs/DECISIONS.md` #63, #65)
 
-**Backend (474 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
+**Backend (480 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
 เทสต์หลักคือ `tests/order-flow.test.js` ซึ่งครอบคลุมเส้นทางการทำงานของร้านตั้งแต่ต้นจนจบใน 17 ขั้น:
 
 > เลือกโต๊ะ → เปิดออเดอร์พร้อมตัวเลือกเสริม → ตรวจว่ายอดคำนวณถูกต้อง → โต๊ะเปลี่ยนเป็นไม่ว่าง →
@@ -1391,6 +1391,10 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 ย้ายโต๊ะสำเร็จ + ปฏิเสธเมื่อโต๊ะปลายทางไม่ว่าง, รวมบิลสำเร็จ (ยอดรวมถูกต้อง ต้นทางถูกยกเลิกและ
 คืนโต๊ะ) + ปฏิเสธการรวมกับตนเอง, พรีวิวยอดแยกบิลตามสัดส่วน, จ่ายทีละรายการจนครบและปิดบิล,
 ปฏิเสธการเลือกรายการที่จ่ายไปแล้วซ้ำ
+
+`order-transaction.test.js` (6 เคส) ยืนยันว่าการแก้ออเดอร์ทุกแบบอยู่ใน transaction เดียวกับการคำนวณยอดใหม่และ audit (T02): จำลองให้การคำนวณยอด
+ล้มระหว่างเปิดออเดอร์, เพิ่ม/แก้/ลบ/ยกเลิกรายการ, ส่วนลด, ใส่/ถอดโค้ดส่วนลด, รวมบิล และยกเลิกออเดอร์ที่ส่งครัวแล้ว — รายการ ยอดรวม สต๊อก
+สถานะโต๊ะ และ audit log ต้องเท่าเดิมทุกค่า ส่วนย้ายโต๊ะและส่งครัวไม่คำนวณยอดใหม่ (ดู `docs/DECISIONS.md` #84)
 
 `ingredients.test.js` (9 เคส) ทดสอบ CRUD วัตถุดิบ, RBAC (พนักงานเสิร์ฟสร้าง/แก้ไขไม่ได้), validation,
 การปรับสต๊อกแล้ว `isLowStock` เปลี่ยนถูกต้อง, filter `lowStockOnly`, ลบไม่ได้หากยังผูกกับเมนูอยู่ และ
@@ -1821,7 +1825,8 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   รายงานใช้วันทำการของร้าน และแก้ข้อค้นพบด้านความปลอดภัยเรื่องค่าเริ่มต้น สิทธิ์ และการแยกสาขา (T19–T24, T32 — ไม่เผยแพร่
   รายละเอียดตาม `docs/DECISIONS.md` #81) ภายใน 3 รอบ ตาม ticket T01–T32 (#80–#110, #117) โดยมีข้อตัดสินใจ 12 ข้อที่กำหนดทางเลือกไว้แล้ว
   เช่น การคืนเงินบางส่วนของบิลที่ใช้แต้มให้คืนตามสัดส่วน และห้ามส่งครัวเมื่อสต๊อกไม่พอเว้นแต่ผู้จัดการยืนยัน (ดู `docs/DECISIONS.md` #77)
-  — เสร็จแล้ว: T01 migration แบบมีเวอร์ชัน (#80, `docs/DECISIONS.md` #79) และ T19 ค่าเริ่มต้นสำหรับ production (`docs/DECISIONS.md` #83)
+  — เสร็จแล้ว: T01 migration แบบมีเวอร์ชัน (#80, `docs/DECISIONS.md` #79), T02 การแก้ออเดอร์ทุกแบบใน transaction เดียว (#81, `docs/DECISIONS.md` #84)
+  และ T19 ค่าเริ่มต้นสำหรับ production (`docs/DECISIONS.md` #83)
 - [ ] **ภาพแชร์ลิงก์และไอคอนเว็บแอปตรงกับระบบจริง** — ภาพตัวอย่างเมื่อแชร์ลิงก์ไม่มีตัวเลขที่ล้าสมัย และไอคอนเมื่อติดตั้งเว็บแอปเป็นโลโก้ PaynEat (ดู ticket 31)
 - [x] **เชื่อมต่อ PaynEat ERP ผ่าน HTTPS เท่านั้น** — ที่อยู่ ERP ต้องเป็น `https://` ยกเว้น `localhost` หรือเครือข่ายปิดที่ผู้ดูแลเซิร์ฟเวอร์อนุญาตเอง
   (มีคำเตือนถาวร) การเชื่อมต่อ `http://` เดิมหยุดส่ง credential ทันที ตรวจใบรับรองเสมอและรองรับ CA ภายในของเชนผ่าน `NODE_EXTRA_CA_CERTS`

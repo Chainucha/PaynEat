@@ -6,6 +6,7 @@ import { ApiError } from '../../core/ApiError.js';
 import { mailer } from '../../core/mailer.js';
 import { getDb } from '../../db/index.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
+import { MIN_POINT_RATE_BAHT } from '../customers/loyalty.js';
 import { settingsRepository } from './settings.repository.js';
 
 const NUMBER_KEYS = new Set([
@@ -85,6 +86,21 @@ export const settingsService = {
     const weightDigits = 12 - prefix.length - pluDigits;
     if (weightDigits < 4 || weightDigits > 6) {
       throw ApiError.badRequest('รูปแบบฉลากตาชั่ง: prefix + PLU ต้องเหลือหลักน้ำหนัก 4–6 หลัก');
+    }
+
+    // เงินเป็นสตางค์ อัตราต่ำกว่า 0.01 บาทจึงเป็น 0 สตางค์ ใช้คิดแต้มไม่ได้ (T15 #84) — ตรวจที่นี่แทน schema
+    // ให้ได้ 400 พร้อมข้อความที่บอกขั้นต่ำเป็นภาษาของผู้ใช้ ไม่ใช่ 422 "ข้อมูลไม่ถูกต้อง" แบบรวม ๆ
+    if (
+      payload.pointsEarnRateBaht !== undefined &&
+      !(payload.pointsEarnRateBaht >= MIN_POINT_RATE_BAHT)
+    ) {
+      throw ApiError.badRequest('ยอดซื้อต่อ 1 แต้มต้องอย่างน้อย 0.01 บาท');
+    }
+    if (
+      payload.pointsRedeemValueBaht !== undefined &&
+      !(payload.pointsRedeemValueBaht >= MIN_POINT_RATE_BAHT)
+    ) {
+      throw ApiError.badRequest('มูลค่า 1 แต้มต้องอย่างน้อย 0.01 บาท');
     }
 
     getDb().transaction(() => {

@@ -285,7 +285,9 @@ describe('0004 order_item_paid_by_payment (T06 #82)', () => {
        VALUES (?, 'split', 5000, 1, 1), (?, 'open', 5000, 1, 0)`,
     ).run(order, order);
 
-    assert.deepEqual(runMigrations(db), ['0004_order_item_paid_by_payment']);
+    assert.deepEqual(runMigrations(db, MIGRATIONS.slice(0, 4)), [
+      '0004_order_item_paid_by_payment',
+    ]);
     assert.deepEqual(
       db.prepare('SELECT is_paid, paid_by_payment_id FROM order_items ORDER BY id').all(),
       [
@@ -296,6 +298,114 @@ describe('0004 order_item_paid_by_payment (T06 #82)', () => {
     assert.throws(
       () => db.prepare('UPDATE order_items SET paid_by_payment_id = 999 WHERE id = 1').run(),
       /FOREIGN KEY constraint failed/,
+    );
+  });
+});
+
+describe('0005 repair_customer_points (T15 #84)', () => {
+  test('resets broken points earned, rebuilds broken balances from history, and audits each repair', () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, MIGRATIONS.slice(0, 4));
+    const customer = (name, phone, balance) =>
+      db
+        .prepare('INSERT INTO customers (name, phone, points_balance) VALUES (?, ?, ?)')
+        .run(name, phone, balance).lastInsertRowid;
+    const order = (customerId, pointsEarned) =>
+      db
+        .prepare(
+          "INSERT INTO orders (code, status, total, customer_id, points_earned) VALUES (?, 'paid', 10000, ?, ?)",
+        )
+        .run(`ORD-T15-${pointsEarned}-${customerId}`, customerId, pointsEarned).lastInsertRowid;
+    const redeem = (orderId, points) =>
+      db
+        .prepare(
+          "INSERT INTO payments (order_id, method, amount, points_redeemed) VALUES (?, 'cash', 10000, ?)",
+        )
+        .run(orderId, points);
+
+    // สะสมปกติ 40 + 10 แต้ม ใช้ไป 15 แล้วขายด้วยอัตราที่ปัดเป็น 0 สตางค์ ยอดกลายเป็น Infinity แล้วแลกต่อได้เรื่อย ๆ
+    const broken = customer('ลูกค้าแต้มเสีย', '0800000001', 55);
+    redeem(order(broken, 40), 15);
+    order(broken, 10);
+    const badOrder = order(broken, 0);
+    db.prepare('UPDATE orders SET points_earned = ? WHERE id = ?').run(Infinity, badOrder);
+    db.prepare('UPDATE customers SET points_balance = points_balance + ? WHERE id = ?').run(
+      Infinity,
+      broken,
+    );
+    redeem(badOrder, 211);
+    // ใช้แต้มตอนยอดเสียไปเกินกว่าที่สะสมมาจริง → เหลือ 0 ไม่ติดลบ
+    const overspent = customer('ใช้เกิน', '0800000002', 0);
+    db.prepare('UPDATE customers SET points_balance = ? WHERE id = ?').run(Infinity, overspent);
+    redeem(order(overspent, 20), 500);
+    // ลูกค้าที่ยอดปกติไม่ถูกแตะ แม้ยอดจะไม่ตรงกับประวัติ (เช่นแต้มยกมาจากระบบเก่า)
+    const healthy = customer('ปกติ', '0800000003', 999);
+    order(healthy, 30);
+    const typeOf = (table, column, id) =>
+      db.prepare(`SELECT typeof(${column}) AS t FROM ${table} WHERE id = ?`).get(id).t;
+    assert.equal(typeOf('customers', 'points_balance', broken), 'real');
+
+    assert.deepEqual(runMigrations(db, MIGRATIONS.slice(0, 5)), ['0005_repair_customer_points']);
+    const balance = (id) =>
+      db.prepare('SELECT points_balance FROM customers WHERE id = ?').get(id).points_balance;
+    // ได้ 40 + 10 (บิลที่อัตราเสียได้ 0) ใช้ไป 15 + 211 → ติดลบ จึงเหลือ 0
+    assert.equal(balance(broken), 0);
+    assert.equal(balance(overspent), 0);
+    assert.equal(balance(healthy), 999);
+    assert.equal(
+      db.prepare('SELECT points_earned FROM orders WHERE id = ?').get(badOrder).points_earned,
+      0,
+    );
+    assert.equal(
+      db.prepare("SELECT COUNT(*) AS c FROM orders WHERE typeof(points_earned) != 'integer'").get()
+        .c,
+      0,
+    );
+    assert.equal(typeOf('customers', 'points_balance', broken), 'integer');
+
+    const logs = db
+      .prepare(
+        "SELECT actor_user_id, actor_name, entity_id, summary, metadata_json FROM audit_logs WHERE action = 'customer.points_repair' ORDER BY id",
+      )
+      .all();
+    assert.deepEqual(
+      logs.map((log) => [log.entity_id, log.actor_user_id, log.actor_name]),
+      [
+        [broken, null, 'ระบบ'],
+        [overspent, null, 'ระบบ'],
+      ],
+    );
+    assert.equal(
+      logs[1].summary,
+      'ซ่อมยอดแต้มของลูกค้า "ใช้เกิน" ที่เสีย เป็น 0 แต้ม (คิดใหม่จากประวัติ: ได้ 20 ใช้ไป 500)',
+    );
+    assert.deepEqual(JSON.parse(logs[0].metadata_json), {
+      resetOrderIds: [badOrder],
+      summaryArgs: { name: 'ลูกค้าแต้มเสีย', points: 0, earned: 50, redeemed: 226 },
+    });
+  });
+
+  test('a customer who only spent within what they earned keeps the rest', () => {
+    const db = new Database(':memory:');
+    runMigrations(db, MIGRATIONS.slice(0, 4));
+    const id = db
+      .prepare("INSERT INTO customers (name, phone) VALUES ('สะสมมา', '0800000009')")
+      .run().lastInsertRowid;
+    const orderId = db
+      .prepare(
+        "INSERT INTO orders (code, status, total, customer_id, points_earned) VALUES ('ORD-T15-K', 'paid', 10000, ?, 120)",
+      )
+      .run(id).lastInsertRowid;
+    db.prepare(
+      "INSERT INTO payments (order_id, method, amount, points_redeemed) VALUES (?, 'cash', 10000, 20)",
+    ).run(orderId);
+    db.prepare('UPDATE customers SET points_balance = ? WHERE id = ?').run(Infinity, id);
+
+    runMigrations(db, MIGRATIONS.slice(0, 5));
+    assert.equal(
+      db.prepare('SELECT points_balance FROM customers WHERE id = ?').get(id).points_balance,
+      100,
     );
   });
 });

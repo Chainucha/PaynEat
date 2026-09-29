@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../core/widgets/app_dialogs.dart';
+import '../../../customer/domain/services/loyalty_points.dart';
 import '../../domain/entities/store_settings.dart';
 import '../../domain/usecases/settings_usecases.dart';
 
@@ -87,9 +88,8 @@ class SettingsController extends GetxController {
         storeTaxIdController.text = data.storeTaxId ?? '';
         storeAddressController.text = data.storeAddress ?? '';
         storeBranchController.text = data.storeBranch ?? '';
-        pointsEarnRateController.text = data.pointsEarnRateBaht.toStringAsFixed(
-          0,
-        );
+        // อัตราต่ำสุด 0.01 บาท — แสดงทศนิยมตามจริง ปัดเป็นจำนวนเต็มแล้วกดบันทึกจะเปลี่ยนค่าเอง (T15 #84)
+        pointsEarnRateController.text = _trimZeros(data.pointsEarnRateBaht);
         pointsRedeemValueController.text = data.pointsRedeemValueBaht
             .toStringAsFixed(2);
         promptPayIdController.text = data.promptPayId ?? '';
@@ -120,11 +120,12 @@ class SettingsController extends GetxController {
     final pointsRedeemValue = double.tryParse(
       pointsRedeemValueController.text.trim(),
     );
-    if (pointsEarnRate == null || pointsEarnRate <= 0) {
+    // ขั้นต่ำ 0.01 บาทเท่ากับ backend (T15 #84) — ต่ำกว่านี้เป็น 0 สตางค์ ใช้คิดแต้มไม่ได้
+    if (!isValidPointRate(pointsEarnRate)) {
       AppDialogs.error('settings_points_earn_rate_error'.tr);
       return;
     }
-    if (pointsRedeemValue == null || pointsRedeemValue < 0) {
+    if (!isValidPointRate(pointsRedeemValue)) {
       AppDialogs.error('settings_points_redeem_value_error'.tr);
       return;
     }

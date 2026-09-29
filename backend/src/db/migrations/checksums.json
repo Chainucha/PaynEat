@@ -2,5 +2,6 @@
   "0001_baseline": "af22d36a48c59e5434824d45eedf7f41d9cec09a820f8f03cc5cd0e8d0c83931",
   "0002_erp_connection": "c3214082da19cc2d5b1f084f770d0062ac7f08ba9c0fe2e23dd4f3fdd59ebf8f",
   "0003_order_item_kitchen_reached": "08c7a967845eefa618603b73bb520d77451578278caff2dce54cd006109b196f",
-  "0004_order_item_paid_by_payment": "63560104b9599dae5449b79461947827c6fb6a7b436bdfec7f15e5978f04459e"
+  "0004_order_item_paid_by_payment": "63560104b9599dae5449b79461947827c6fb6a7b436bdfec7f15e5978f04459e",
+  "0005_repair_customer_points": "fd860b622f9d8689a107380cacdf33ac22ac69beeb5d537d9ad04ed4b1217aea"
 }

@@ -18,8 +18,9 @@ const updateSettingsSchema = z
     storeAddress: z.string().trim().max(500).optional(),
     storeBranch: z.string().trim().max(80).optional(),
     promptPayId: z.string().trim().max(20).optional(),
-    pointsEarnRateBaht: z.number().positive().optional(),
-    pointsRedeemValueBaht: z.number().min(0).optional(),
+    // ขั้นต่ำ 0.01 บาทตรวจใน settings.service.js ให้ได้ข้อความที่บอกขั้นต่ำ (T15 #84)
+    pointsEarnRateBaht: z.number().optional(),
+    pointsRedeemValueBaht: z.number().optional(),
     // รูปแบบฉลากตาชั่ง (EAN-13 ขึ้นต้นด้วย 2 — ดู docs/tickets/19-barcode-scale.md): prefix 1–3 หลัก
     // + PLU 4–6 หลัก + น้ำหนักกรัม (หลักที่เหลือ ต้องได้ 4–6 หลัก) + check digit — ตรวจความยาวรวมที่นี่
     scaleLabelPrefix: z

@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:get/get.dart';
 
+import '../../features/customer/domain/services/loyalty_points.dart';
 import '../../features/order/domain/services/bill_calculator.dart';
 import '../../features/order/domain/services/promotion_engine.dart';
 import '../../features/order/domain/services/split_share.dart';

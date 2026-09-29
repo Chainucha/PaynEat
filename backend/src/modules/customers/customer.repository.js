@@ -76,6 +76,8 @@ export const customerRepository = {
 
   /** บวก/ลบแต้มสะสม (delta ติดลบ = ใช้แต้ม, บวก = สะสมแต้ม) — ทางเดียวที่แก้ points_balance ได้ */
   adjustPoints(id, delta) {
+    // SQLite เก็บ Infinity ลงคอลัมน์ INTEGER ได้ แล้วยอดแต้มจะเสียถาวร — ให้ล้มทั้ง transaction แทน (T15 #84)
+    if (!Number.isSafeInteger(delta)) throw new Error(`Points delta must be an integer: ${delta}`);
     getDb()
       .prepare(
         `

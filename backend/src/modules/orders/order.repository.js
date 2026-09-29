@@ -322,6 +322,8 @@ export const orderRepository = {
 
   /** บันทึกแต้มสะสมที่ลูกค้าได้รับตอนออเดอร์นี้จ่ายครบ (ครั้งเดียว ดู payment.service.js#pay) */
   setPointsEarned(orderId, points) {
+    if (!Number.isSafeInteger(points))
+      throw new Error(`Points earned must be an integer: ${points}`);
     getDb()
       .prepare("UPDATE orders SET points_earned = ?, updated_at = datetime('now') WHERE id = ?")
       .run(points, orderId);

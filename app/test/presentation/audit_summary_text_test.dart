@@ -109,6 +109,31 @@ void main() {
     },
   );
 
+  test(
+    'ซ่อมยอดแต้มตอนอัปเกรดฐานข้อมูล — ภาษาไทยตรงกับประโยคที่ migration 0005 บันทึก (T15 #84)',
+    () {
+      // backend: `ซ่อมยอดแต้มของลูกค้า "${name}" ที่เสีย เป็น ${points} แต้ม (คิดใหม่จากประวัติ: ได้ ${earned} ใช้ไป ${redeemed})`
+      final repaired = log('customer.points_repair', {
+        'name': 'คุณแต้ม',
+        'points': 35,
+        'earned': 50,
+        'redeemed': 15,
+      });
+      expect(
+        AuditSummaryText.render(repaired, lookup('th_TH')),
+        'ซ่อมยอดแต้มของลูกค้า "คุณแต้ม" ที่เสีย เป็น 35 แต้ม (คิดใหม่จากประวัติ: ได้ 50 ใช้ไป 15)',
+      );
+      expect(
+        AuditSummaryText.render(repaired, lookup('en_US')),
+        'Repaired the broken points balance of "คุณแต้ม" to 35 points '
+        '(rebuilt from history: earned 50, redeemed 15)',
+      );
+      final korean = AuditSummaryText.render(repaired, lookup('ko_KR'))!;
+      expect(korean, contains('35'));
+      expect(korean, isNot(contains('@')));
+    },
+  );
+
   test('อีเมลปลายทางมี @ — แทนค่ารอบเดียว ไม่เอาไปแทนซ้ำ', () {
     final sent = log('receivable.document_email', {
       'document': 'billing_note',

@@ -49,6 +49,7 @@ const Map<String, String> auditLogTranslationsTh = {
 
   // ขายตามน้ำหนัก/บาร์โค้ด/ขายเชื่อ (tickets 18–20)
   'audit_log_action_customer_credit_update': 'ตั้งวงเงินเครดิต',
+  'audit_log_action_customer_points_repair': 'ซ่อมยอดแต้มลูกค้า',
   'audit_log_action_receivable_receipt': 'รับชำระหนี้',
   'audit_log_action_receivable_receipt_void': 'ยกเลิกใบเสร็จรับชำระหนี้',
   'audit_log_action_receivable_billing_note': 'ออกใบวางบิล',
@@ -95,6 +96,8 @@ const Map<String, String> auditLogTranslationsTh = {
       'ปรับสต๊อก "@name" ตัดออก @qty @unit (@from → @to)',
   'audit_summary_customer_credit_update':
       'ตั้งวงเงินเครดิต "@name" @fromLimit → @toLimit บาท เครดิต @fromDays → @toDays วัน',
+  'audit_summary_customer_points_repair':
+      'ซ่อมยอดแต้มของลูกค้า "@name" ที่เสีย เป็น @points แต้ม (คิดใหม่จากประวัติ: ได้ @earned ใช้ไป @redeemed)',
   'audit_summary_receivable_billing_note':
       'ออกใบวางบิล @noteNo ให้ "@customer" @count บิล รวม @total บาท',
   'audit_summary_receivable_billing_note_void':
@@ -180,6 +183,7 @@ const Map<String, String> auditLogTranslationsEn = {
       'CSV export is only supported on the web (this page is admin/web-only)',
 
   'audit_log_action_customer_credit_update': 'Credit terms change',
+  'audit_log_action_customer_points_repair': 'Points balance repair',
   'audit_log_action_receivable_receipt': 'Debt collected',
   'audit_log_action_receivable_receipt_void': 'Debt receipt voided',
   'audit_log_action_receivable_billing_note': 'Billing note issued',
@@ -226,6 +230,8 @@ const Map<String, String> auditLogTranslationsEn = {
       'Adjusted stock of "@name": removed @qty @unit (@from → @to)',
   'audit_summary_customer_credit_update':
       'Set the credit limit of "@name" from @fromLimit to @toLimit baht, terms @fromDays → @toDays days',
+  'audit_summary_customer_points_repair':
+      'Repaired the broken points balance of "@name" to @points points (rebuilt from history: earned @earned, redeemed @redeemed)',
   'audit_summary_receivable_billing_note':
       'Issued billing note @noteNo to "@customer" (bills: @count, total @total baht)',
   'audit_summary_receivable_billing_note_void':
@@ -308,6 +314,7 @@ const Map<String, String> auditLogTranslationsKo = {
       'CSV 내보내기는 웹에서만 지원됩니다 (이 화면은 관리자 웹 전용입니다)',
 
   'audit_log_action_customer_credit_update': '신용 조건 변경',
+  'audit_log_action_customer_points_repair': '적립금 잔액 복구',
   'audit_log_action_receivable_receipt': '외상 수금',
   'audit_log_action_receivable_receipt_void': '수금 영수증 취소',
   'audit_log_action_receivable_billing_note': '청구서 발행',
@@ -346,6 +353,8 @@ const Map<String, String> auditLogTranslationsKo = {
       '"@name" 재고 조정: @qty @unit 차감 (@from → @to)',
   'audit_summary_customer_credit_update':
       '"@name" 신용 한도 @fromLimit → @toLimit바트, 결제 기한 @fromDays → @toDays일로 설정',
+  'audit_summary_customer_points_repair':
+      '"@name"의 손상된 적립금 잔액을 @points포인트로 복구 (내역으로 재계산: 적립 @earned, 사용 @redeemed)',
   'audit_summary_receivable_billing_note':
       '"@customer"에 청구서 @noteNo 발행 (@count건, 합계 @total바트)',
   'audit_summary_receivable_billing_note_void': '"@customer"의 청구서 @noteNo 취소',

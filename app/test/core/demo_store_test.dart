@@ -3108,4 +3108,133 @@ void main() {
       },
     );
   });
+
+  group('DemoStore อัตราแต้มขั้นต่ำ 0.01 บาท ไม่มีแต้ม Infinity (T15 #84)', () {
+    const b2b = 900;
+    const manager = 2;
+    const cashier = 6;
+
+    Matcher rejected(String key) => throwsA(
+      isA<ApiException>()
+          .having((e) => e.statusCode, 'statusCode', 400)
+          .having((e) => e.message, 'message', key.tr),
+    );
+
+    Map<String, dynamic> paidOrder(int customerId, {int pointsToRedeem = 0}) {
+      final order = store.createOrder(
+        type: 'takeaway',
+        guestCount: 1,
+        customerId: customerId,
+        items: [
+          {'menuItemId': store.menuList().first['id'], 'quantity': 3},
+        ],
+      );
+      final total = (order['total'] as num).toDouble();
+      return store.pay(
+        orderId: order['id'] as int,
+        method: 'card',
+        amount: total,
+        pointsToRedeem: pointsToRedeem,
+      );
+    }
+
+    int balance(int id) =>
+        (store.findCustomer(id)['pointsBalance'] as num).toInt();
+
+    test(
+      'ตั้งอัตราสะสมหรือมูลค่าแต้มต่ำกว่า 0.01 บาท → 400 และค่าเดิมไม่เปลี่ยน',
+      () {
+        final before = Map<String, dynamic>.of(store.settings);
+        for (final rate in [0.004, 0.0, -1.0]) {
+          expect(
+            () => store.updateSettings({
+              'storeName': 'ไม่ควรถูกบันทึก',
+              'pointsEarnRateBaht': rate,
+            }),
+            rejected('settings_points_earn_rate_error'),
+          );
+          expect(
+            () => store.updateSettings({'pointsRedeemValueBaht': rate}),
+            rejected('settings_points_redeem_value_error'),
+          );
+        }
+        expect(store.settings, before);
+
+        store.updateSettings({
+          'pointsEarnRateBaht': 0.01,
+          'pointsRedeemValueBaht': 0.01,
+        });
+        expect(store.settings['pointsEarnRateBaht'], 0.01);
+        expect(store.settings['pointsRedeemValueBaht'], 0.01);
+      },
+    );
+
+    test(
+      'อัตราสะสมที่บันทึกไว้เป็น 0 อยู่แล้ว → ขายได้ ได้ 0 แต้ม ไม่ใช่ Infinity',
+      () {
+        final customer = store.createCustomer(
+          name: 'คุณแต้ม',
+          phone: '0811111111',
+        );
+        final id = customer['id'] as int;
+        for (final stored in [0.0, 0.004]) {
+          store.settings['pointsEarnRateBaht'] = stored;
+          final result = paidOrder(id);
+          expect(result['isFullyPaid'], isTrue);
+          expect((result['order'] as Map)['pointsEarned'] ?? 0, 0);
+          expect(balance(id), 0);
+        }
+      },
+    );
+
+    test('ขายเชื่อแล้วรับชำระหนี้ครบตอนอัตราเป็น 0 → รับชำระได้ ได้ 0 แต้ม', () {
+      final order = store.createOrder(
+        type: 'takeaway',
+        guestCount: 1,
+        customerId: b2b,
+        items: [
+          {'menuItemId': 26, 'quantity': 1, 'weightGrams': 1500},
+        ],
+      );
+      final total = (order['total'] as num).toDouble();
+      store.pay(
+        orderId: order['id'] as int,
+        method: 'credit',
+        amount: total,
+        cashierId: cashier,
+      );
+      final before = balance(b2b);
+      store.settings['pointsEarnRateBaht'] = 0.0;
+      // รับชำระตัดบิลเก่าสุดก่อน (seed มีบิลค้างอยู่) — รับยอดค้างทั้งหมด บิลนี้จึงชำระครบแน่นอน
+      store.createArReceipt({
+        'customerId': b2b,
+        'amount': store.creditOutstanding(b2b),
+        'method': 'transfer',
+      }, actorId: manager);
+      expect(store.creditOutstanding(b2b), 0);
+      expect(store.findOrder(order['id'] as int)['pointsEarned'] ?? 0, 0);
+      expect(balance(b2b), before);
+    });
+
+    test(
+      'มูลค่าแต้มที่บันทึกไว้เป็น 0 → แลกแต้มไม่ได้ (400) แต้มไม่ถูกหัก',
+      () {
+        final customer = store.createCustomer(
+          name: 'คุณแลก',
+          phone: '0822222222',
+        );
+        final id = customer['id'] as int;
+        paidOrder(id);
+        final points = balance(id);
+        expect(points, greaterThan(0));
+
+        store.settings['pointsRedeemValueBaht'] = 0.0;
+        expect(
+          () => paidOrder(id, pointsToRedeem: points),
+          rejected('payment_error_points_value_not_set'),
+        );
+        expect(balance(id), points);
+      },
+    );
+  });
 }

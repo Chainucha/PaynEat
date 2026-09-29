@@ -2127,6 +2127,10 @@ Completed work, planned work, and known limitations, with the reasoning for each
   minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89) and T19 production defaults (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
+- [ ] **Automatic backups the owner can restore without a developer (ticket 33)** — a backup at every shift close, every six
+  hours and before every database upgrade, each one checked for integrity; an optional second copy on another disk; a warning for
+  the owner when no backup has succeeded for 26 hours; and a one-command restore. Required before the first real shop
+  (see `docs/DECISIONS.md` #90)
 - [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
   network the server's operator allows explicitly (with a permanent warning); an old `http://` connection stops sending the credential
   at once; certificates are always verified, with a chain's internal CA supported through `NODE_EXTRA_CA_CERTS`; and the contract copy

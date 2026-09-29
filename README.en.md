@@ -268,7 +268,7 @@ Each item is a problem big restaurants really face every day, and each is fixed 
 >
 > For search engines and AI assistants, the same script writes `docs/landing/sitemap.xml` (9 pages, with their other-language
 > links and `x-default`) and adds schema.org structured data (`SoftwareApplication` + `WebSite` + the author) to the three home
-> pages — only what the page actually shows, no review ratings (see `docs/DECISIONS.md` #90)
+> pages — only what the page actually shows, no review ratings (see `docs/DECISIONS.md` #91)
 
 > 🤖 **Live demo of the AI ask-your-data assistant (real Claude API call, not a mock)**
 >
@@ -2131,6 +2131,10 @@ Completed work, planned work, and known limitations, with the reasoning for each
   minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89) and T19 production defaults (`docs/DECISIONS.md` #83)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
+- [ ] **Automatic backups the owner can restore without a developer (ticket 33)** — a backup at every shift close, every six
+  hours and before every database upgrade, each one checked for integrity; an optional second copy on another disk; a warning for
+  the owner when no backup has succeeded for 26 hours; and a one-command restore. Required before the first real shop
+  (see `docs/DECISIONS.md` #90)
 - [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
   network the server's operator allows explicitly (with a permanent warning); an old `http://` connection stops sending the credential
   at once; certificates are always verified, with a chain's internal CA supported through `NODE_EXTRA_CA_CERTS`; and the contract copy
@@ -2192,7 +2196,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   job-application use (key figures and highlights, considerably shorter than this README)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — a 30-page document covering every screen with explanations (Thai)
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — English edition, rewritten for business audiences (30 pages)
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 81 design decisions and their accepted trade-offs (e.g. why
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 91 design decisions and their accepted trade-offs (e.g. why
   amounts are stored in satang, why the billing logic is intentionally implemented twice, why SQLite is used)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards derived from a code-quality audit
   covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure; the

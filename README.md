@@ -263,7 +263,7 @@ control and 1127 automated tests.
 >
 > สำหรับ search engine และผู้ช่วย AI: สคริปต์เดียวกันสร้าง `docs/landing/sitemap.xml` (9 หน้า พร้อมลิงก์ภาษาอื่นและ `x-default`)
 > และใส่ข้อมูลโครงสร้าง schema.org (`SoftwareApplication` + `WebSite` + ผู้สร้าง) ในหน้าหลักทั้งสามภาษา เฉพาะสิ่งที่หน้าแสดงจริง
-> ไม่มีคะแนนรีวิว — ดู `docs/DECISIONS.md` #90
+> ไม่มีคะแนนรีวิว — ดู `docs/DECISIONS.md` #91
 
 > 🤖 **ตัวอย่างการทำงานจริงของผู้ช่วย AI ถามตอบข้อมูลร้าน (เรียก Claude API จริง ไม่ใช่ mock)**
 >
@@ -1894,6 +1894,9 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   (#83, `docs/DECISIONS.md` #88), T15 อัตราแต้มขั้นต่ำ 0.01 บาทและซ่อมยอดแต้มที่เสีย (#84, `docs/DECISIONS.md` #89)
   และ T19 ค่าเริ่มต้นสำหรับ production (`docs/DECISIONS.md` #83)
 - [ ] **ภาพแชร์ลิงก์และไอคอนเว็บแอปตรงกับระบบจริง** — ภาพตัวอย่างเมื่อแชร์ลิงก์ไม่มีตัวเลขที่ล้าสมัย และไอคอนเมื่อติดตั้งเว็บแอปเป็นโลโก้ PaynEat (ดู ticket 31)
+- [ ] **สำรองข้อมูลอัตโนมัติและกู้คืนได้เอง (ticket 33)** — สำรองทุกครั้งที่ปิดกะ ทุก 6 ชั่วโมง และก่อนอัปเดตฐานข้อมูล ตรวจความสมบูรณ์ของทุกไฟล์
+  เก็บชุดที่สองบนอีกดิสก์ได้ เจ้าของร้านเห็นแถบเตือนเมื่อไม่ได้สำรองเกิน 26 ชั่วโมง และกู้คืนได้ด้วยคำสั่งเดียว ต้องเสร็จก่อนร้านจริงร้านแรก
+  (ดู `docs/DECISIONS.md` #90)
 - [x] **เชื่อมต่อ PaynEat ERP ผ่าน HTTPS เท่านั้น** — ที่อยู่ ERP ต้องเป็น `https://` ยกเว้น `localhost` หรือเครือข่ายปิดที่ผู้ดูแลเซิร์ฟเวอร์อนุญาตเอง
   (มีคำเตือนถาวร) การเชื่อมต่อ `http://` เดิมหยุดส่ง credential ทันที ตรวจใบรับรองเสมอและรองรับ CA ภายในของเชนผ่าน `NODE_EXTRA_CA_CERTS`
   และสำเนาสัญญาอัปเดตตาม PaynEat-ERP#61 (ดู ticket 32 และ `docs/DECISIONS.md` #82)
@@ -1944,7 +1947,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   (ตัวเลขสำคัญและจุดเด่น กระชับกว่า README ฉบับนี้)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — เอกสาร 30 หน้า รวมทุกหน้าจอพร้อมคำอธิบาย
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — ฉบับภาษาอังกฤษ เรียบเรียงใหม่สำหรับลูกค้าธุรกิจ
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — บันทึกการตัดสินใจเชิงออกแบบ 81 ข้อ พร้อมข้อเสียที่ยอมรับ
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — บันทึกการตัดสินใจเชิงออกแบบ 91 ข้อ พร้อมข้อเสียที่ยอมรับ
   (เช่น เหตุผลที่เก็บเงินเป็นสตางค์, เหตุผลที่เขียนตรรกะคิดบิล 2 ภาษา, เหตุผลที่เลือก SQLite)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — มาตรฐานการเขียนโค้ดจากผลตรวจ Clean Code /
   State Management / Clean Architecture / Technical Debt / โครงสร้างโฟลเดอร์ ใช้เป็นแนวทางการพัฒนาต่อไป

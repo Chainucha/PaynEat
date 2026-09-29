@@ -25,7 +25,7 @@ SITE = 'https://suruchboss.github.io/PaynEat/'
 DEMO = 'app/'
 REPO = 'https://github.com/SuruchBoss/PaynEat'
 
-# ข้อมูลสำหรับ search engine / ผู้ช่วย AI (docs/DECISIONS.md #90) — ใส่เฉพาะสิ่งที่หน้าแสดงจริง
+# ข้อมูลสำหรับ search engine / ผู้ช่วย AI (docs/DECISIONS.md #91) — ใส่เฉพาะสิ่งที่หน้าแสดงจริง
 OG_LOCALE = {'th': 'th_TH', 'en': 'en_US', 'ko': 'ko_KR'}
 AUTHOR = {
     '@type': 'Person',

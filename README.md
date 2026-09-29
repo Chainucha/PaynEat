@@ -260,6 +260,10 @@ control and 1127 automated tests.
 > [เมนูแก้ปัญหาร้านอาหาร](#-เมนูแก้ปัญหาร้านอาหาร) ใน README ทั้งสามภาษาพร้อมกัน ภาพอยู่ที่ `docs/landing/img/story/` (WebP
 > 39 ไฟล์ รวมประมาณ 1.5 MB ถ่ายใหม่ด้วย `app/tool/screenshots/story_test.dart` และย่อขนาดด้วย `publish_story.py`) GIF ผู้ช่วย AI
 > อยู่ที่ `docs/ai-demo/` ซึ่ง `deploy-pages.yml` คัดลอกเข้า site ขณะ deploy
+>
+> สำหรับ search engine และผู้ช่วย AI: สคริปต์เดียวกันสร้าง `docs/landing/sitemap.xml` (9 หน้า พร้อมลิงก์ภาษาอื่นและ `x-default`)
+> และใส่ข้อมูลโครงสร้าง schema.org (`SoftwareApplication` + `WebSite` + ผู้สร้าง) ในหน้าหลักทั้งสามภาษา เฉพาะสิ่งที่หน้าแสดงจริง
+> ไม่มีคะแนนรีวิว — ดู `docs/DECISIONS.md` #90
 
 > 🤖 **ตัวอย่างการทำงานจริงของผู้ช่วย AI ถามตอบข้อมูลร้าน (เรียก Claude API จริง ไม่ใช่ mock)**
 >

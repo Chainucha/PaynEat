@@ -11,6 +11,7 @@
 #
 # แก้เนื้อหาที่ content.py แล้วรันใหม่ — อย่าแก้ไฟล์ HTML ที่สร้างออกมาตรง ๆ เพราะจะถูกเขียนทับ
 # ภาพประกอบมาจาก app/tool/screenshots/story_test.dart → publish_story.py → docs/landing/img/story/
+import json
 from html import escape
 from pathlib import Path
 
@@ -23,6 +24,16 @@ OUT = ROOT / 'docs' / 'landing'
 SITE = 'https://suruchboss.github.io/PaynEat/'
 DEMO = 'app/'
 REPO = 'https://github.com/SuruchBoss/PaynEat'
+
+# ข้อมูลสำหรับ search engine / ผู้ช่วย AI (docs/DECISIONS.md #90) — ใส่เฉพาะสิ่งที่หน้าแสดงจริง
+OG_LOCALE = {'th': 'th_TH', 'en': 'en_US', 'ko': 'ko_KR'}
+AUTHOR = {
+    '@type': 'Person',
+    '@id': SITE + '#author',
+    'name': 'Suruch Chakrapeesirisuk',
+    'url': 'https://github.com/SuruchBoss',
+    'sameAs': ['https://www.linkedin.com/in/suruchboss'],
+}
 
 # ขนาดจริงของไฟล์ WebP ที่ publish_story.py ย่อไว้ — ใส่ width/height ให้เบราว์เซอร์จองที่ไว้ก่อนภาพโหลด
 SIZES = {'phone': (780, 1688), 'tablet': (1600, 1118), 'desktop': (1600, 1000)}
@@ -631,7 +642,55 @@ PAGES = ('index.html', 'index.en.html', 'index.ko.html')
 INSTALL_PAGES = ('install.html', 'install.en.html', 'install.ko.html')
 
 
-def document(code, file, pages, title, description, og_image, body, css=CSS, script=''):
+def url_of(file):
+    return SITE + ('' if file == 'index.html' else file)
+
+
+def structured_data(c):
+    """JSON-LD ของหน้าหลัก: เว็บไซต์ + ตัวแอป + ผู้สร้าง
+    ใส่เฉพาะสิ่งที่หน้าแสดงจริง — ราคา ฿0 (ตะกร้า), ฟีเจอร์ 9 ชุด, ภาพหน้าจอจริง, ผู้สร้างในส่วนท้าย ไม่มี rating/review
+    เพราะไม่มีรีวิวจริงบนหน้า (ใส่ของปลอมเสี่ยงโดน manual action)"""
+    code = c['code']
+    install = INSTALL_PAGES[('th', 'en', 'ko').index(code)]
+    shots = [f"{SITE}img/story/{c['shot']}-{story['shots'][0][0]}.webp" for story in c['stories'][:4]]
+    return {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'WebSite',
+                '@id': SITE + '#website',
+                'url': SITE,
+                'name': 'PaynEat POS',
+                'inLanguage': ['th', 'en', 'ko'],
+                'publisher': {'@id': AUTHOR['@id']},
+            },
+            {
+                '@type': 'SoftwareApplication',
+                '@id': SITE + '#software',
+                'name': 'PaynEat POS',
+                'url': url_of(c['file']),
+                'description': c['description'],
+                'inLanguage': code,
+                'applicationCategory': 'BusinessApplication',
+                'applicationSubCategory': 'Restaurant point of sale (POS)',
+                'operatingSystem': 'Web browser, Windows, macOS, Linux',
+                'isAccessibleForFree': True,
+                'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'THB'},
+                'license': REPO + '/blob/main/LICENSE',
+                'image': SITE + c['og_image'],
+                'screenshot': shots,
+                'featureList': [story['title'] for story in c['stories']],
+                'softwareHelp': {'@type': 'CreativeWork', 'url': url_of(install)},
+                'sameAs': [REPO],
+                'author': {'@id': AUTHOR['@id']},
+                'isPartOf': {'@id': SITE + '#website'},
+            },
+            AUTHOR,
+        ],
+    }
+
+
+def document(code, file, pages, title, description, og_image, body, css=CSS, script='', jsonld=None):
     """<head> ร่วมของทุกหน้าใน docs/landing — ฟอนต์, og, hreflang ไปหน้าเดียวกันของภาษาอื่น"""
     fonts = (
         'https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700;800&family=Anuphan:wght@400;500;600'
@@ -648,12 +707,24 @@ def document(code, file, pages, title, description, og_image, body, css=CSS, scr
     else:
         font_vars = "--font-display:'Kanit',system-ui,sans-serif;--font-body:'Anuphan',system-ui,sans-serif"
     alternates = ''.join(
-        f'<link rel="alternate" hreflang="{lang}" href="{SITE}{"" if other == "index.html" else other}">'
-        for lang, other in zip(('th', 'en', 'ko'), pages)
+        f'<link rel="alternate" hreflang="{lang}" href="{url_of(other)}">' for lang, other in zip(('th', 'en', 'ko'), pages)
     )
-    url = SITE + ('' if file == 'index.html' else file)
+    # ภาษาอื่นนอกจาก 3 ภาษานี้ไปหน้าอังกฤษ
+    alternates += f'<link rel="alternate" hreflang="x-default" href="{url_of(pages[1])}">'
+    locales = ''.join(
+        f'\n<meta property="og:locale:alternate" content="{OG_LOCALE[other]}">' for other in OG_LOCALE if other != code
+    )
+    url = url_of(file)
     og = SITE + og_image
     js = f'\n<script>{script}</script>' if script else ''
+    # "</" ในข้อความทำให้ปิด <script> ก่อนเวลา
+    ld = (
+        '\n<script type="application/ld+json">'
+        + json.dumps(jsonld, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+        + '</script>'
+        if jsonld
+        else ''
+    )
     return f"""<!doctype html>
 <!-- สร้างจาก docs/generator/landing/build_landing.py — แก้เนื้อหาที่ content.py / install_content.py แล้วรันใหม่ อย่าแก้ไฟล์นี้ตรง ๆ -->
 <html lang="{code}">
@@ -666,6 +737,8 @@ def document(code, file, pages, title, description, og_image, body, css=CSS, scr
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(description)}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="PaynEat POS">
+<meta property="og:locale" content="{OG_LOCALE[code]}">{locales}
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{og}">
 <meta property="og:image:width" content="1200">
@@ -673,7 +746,7 @@ def document(code, file, pages, title, description, og_image, body, css=CSS, scr
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{og}">
 <link rel="canonical" href="{url}">
-{alternates}
+{alternates}{ld}
 <link rel="icon" href="{FAVICON}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -702,7 +775,9 @@ def page(c):
         '</main>',
         footer(c),
     ])
-    return document(c['code'], c['file'], PAGES, c['title'], c['description'], c['og_image'], body)
+    return document(
+        c['code'], c['file'], PAGES, c['title'], c['description'], c['og_image'], body, jsonld=structured_data(c)
+    )
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1112,6 +1187,27 @@ def update_readme(c):
     print(f"{c['readme']['file']}  หัวข้อเมนูแก้ปัญหา {len(c['stories'])} เรื่อง")
 
 
+def sitemap():
+    """sitemap.xml ของทุกหน้าที่ควรติด index พร้อมลิงก์ภาษาอื่น — ไม่ใส่ lastmod เพราะไม่มีวันที่แก้เนื้อหาที่เชื่อถือได้
+    (lastmod ที่ไม่ตรงจริงถูก search engine เมินอยู่แล้ว) ไม่ใส่ app/ เพราะเป็นแอป Flutter ที่ไม่มีข้อความใน HTML"""
+    entries = []
+    for pages in (PAGES, INSTALL_PAGES, PRIVACY_PAGES):
+        links = ''.join(
+            f'\n    <xhtml:link rel="alternate" hreflang="{lang}" href="{url_of(other)}"/>'
+            for lang, other in zip(('th', 'en', 'ko', 'x-default'), (*pages, pages[1]))
+        )
+        entries += [f'  <url>\n    <loc>{url_of(file)}</loc>{links}\n  </url>' for file in pages]
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<!-- สร้างจาก docs/generator/landing/build_landing.py — อย่าแก้ตรง ๆ -->\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+        + '\n'.join(entries)
+        + '\n</urlset>\n'
+    )
+    (OUT / 'sitemap.xml').write_text(xml, encoding='utf-8')
+    print(f'docs/landing/sitemap.xml  {len(entries)} URL')
+
+
 def main():
     for c in LANGS:
         html = page(c).replace('{tests}', f'{TESTS:,}')
@@ -1126,6 +1222,7 @@ def main():
         html = privacy_page(c, pc)
         (OUT / pc['file']).write_text(html, encoding='utf-8')
         print(f"docs/landing/{pc['file']}  {len(html.encode('utf-8')) // 1024} KB")
+    sitemap()
 
 
 if __name__ == '__main__':

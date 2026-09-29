@@ -723,9 +723,9 @@ export const ERROR_MESSAGES = [
 
   // ---------------------------------------------------------------- พนักงาน
   {
-    th: 'ต้องมีสิทธิ์ admin สำหรับบัญชีนี้',
-    en: 'Only an admin can change this account',
-    ko: '이 계정은 관리자만 변경할 수 있습니다',
+    th: 'ผู้จัดการจัดการได้เฉพาะบัญชีพนักงานเสิร์ฟ ครัว และแคชเชียร์',
+    en: 'Managers can only manage waiter, kitchen and cashier accounts',
+    ko: '매니저는 홀 직원, 주방, 캐셔 계정만 관리할 수 있습니다',
   },
   { th: 'ไม่พบผู้ใช้งานนี้', en: 'User not found', ko: '사용자를 찾을 수 없습니다' },
   {

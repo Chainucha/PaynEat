@@ -3237,4 +3237,94 @@ void main() {
       },
     );
   });
+
+  group('DemoStore ผู้จัดการจัดการได้เฉพาะพนักงานระดับต่ำกว่า (T22 #86)', () {
+    const admin = 1;
+    const manager = 2;
+
+    Matcher forbidden() => throwsA(
+      isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403),
+    );
+
+    int idOf(String role) =>
+        store.users.firstWhere((row) => row['role'] == role)['id'] as int;
+
+    test(
+      'รายชื่อของผู้จัดการมีเฉพาะเสิร์ฟ/แคชเชียร์/ครัว ส่วนแอดมินเห็นทุกคน',
+      () {
+        final roles = store
+            .staff(actorId: manager)
+            .map((row) => row['role'])
+            .toSet();
+        expect(roles, UserRole.staffRoles.toSet());
+        expect(store.staff(actorId: admin).length, store.users.length);
+      },
+    );
+
+    test(
+      'ผู้จัดการตั้งรหัสใหม่/ปิดบัญชี/เปลี่ยน role ของผู้จัดการคนอื่นหรือแอดมิน → 403 และบัญชีไม่เปลี่ยน',
+      () {
+        final other = store.createStaff(
+          name: 'ผู้จัดการอีกคน',
+          username: 'mgr2_${DateTime.now().microsecondsSinceEpoch}',
+          password: 'test1234',
+          role: UserRole.manager,
+          actorId: admin,
+        );
+        for (final target in [other['id'] as int, admin]) {
+          for (final change in [
+            {'password': 'takeover1'},
+            {'isActive': false},
+            {'role': UserRole.waiter},
+          ]) {
+            expect(
+              () => store.updateStaff(target, change, actorId: manager),
+              forbidden(),
+            );
+          }
+        }
+        final row = store.users.firstWhere((u) => u['id'] == other['id']);
+        expect(row['isActive'], isTrue);
+        expect(row['role'], UserRole.manager);
+        expect(row['password'], 'test1234');
+      },
+    );
+
+    test(
+      'ผู้จัดการสร้าง/เลื่อนเป็นผู้จัดการไม่ได้ ลบบัญชีไม่ได้ แต่จัดการพนักงานได้',
+      () {
+        expect(
+          () => store.createStaff(
+            name: 'ผู้จัดการใหม่',
+            username: 'mgr3_${DateTime.now().microsecondsSinceEpoch}',
+            password: 'test1234',
+            role: UserRole.manager,
+            actorId: manager,
+          ),
+          forbidden(),
+        );
+        final waiterId = idOf(UserRole.waiter);
+        expect(
+          () => store.updateStaff(waiterId, {
+            'role': UserRole.manager,
+          }, actorId: manager),
+          forbidden(),
+        );
+        expect(
+          () => store.deleteStaff(waiterId, actorId: manager),
+          forbidden(),
+        );
+
+        final changed = store.updateStaff(waiterId, {
+          'role': UserRole.cashier,
+        }, actorId: manager);
+        expect(changed['role'], UserRole.cashier);
+        store.updateStaff(waiterId, {'isActive': false}, actorId: manager);
+        expect(
+          store.users.firstWhere((u) => u['id'] == waiterId)['isActive'],
+          isFalse,
+        );
+      },
+    );
+  });
 }

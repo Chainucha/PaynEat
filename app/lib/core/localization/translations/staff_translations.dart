@@ -22,6 +22,8 @@ const Map<String, String> staffTranslationsTh = {
   'staff_deactivated_success': 'ปิดการใช้งานบัญชีแล้ว',
   'staff_activated_success': 'เปิดการใช้งานบัญชีแล้ว',
   'staff_cannot_delete_self': 'ลบบัญชีของตัวเองไม่ได้',
+  'staff_error_manager_scope':
+      'ผู้จัดการจัดการได้เฉพาะบัญชีพนักงานเสิร์ฟ ครัว และแคชเชียร์',
   'staff_delete_title': 'ลบพนักงาน',
   'staff_delete_confirm': 'ต้องการลบบัญชีของ @name ใช่หรือไม่?',
   'staff_deleted_success': 'ลบบัญชีแล้ว',
@@ -59,6 +61,8 @@ const Map<String, String> staffTranslationsEn = {
   'staff_deactivated_success': 'Account deactivated',
   'staff_activated_success': 'Account activated',
   'staff_cannot_delete_self': "You can't delete your own account",
+  'staff_error_manager_scope':
+      'Managers can only manage waiter, kitchen and cashier accounts',
   'staff_delete_title': 'Remove staff',
   'staff_delete_confirm': 'Remove @name\'s account?',
   'staff_deleted_success': 'Account deleted',
@@ -96,6 +100,7 @@ const Map<String, String> staffTranslationsKo = {
   'staff_deactivated_success': '계정을 사용 중지했습니다',
   'staff_activated_success': '계정을 사용 재개했습니다',
   'staff_cannot_delete_self': '본인 계정은 삭제할 수 없습니다',
+  'staff_error_manager_scope': '매니저는 홀 직원, 주방, 캐셔 계정만 관리할 수 있습니다',
   'staff_delete_title': '직원 삭제',
   'staff_delete_confirm': '@name 님의 계정을 삭제할까요?',
   'staff_deleted_success': '계정을 삭제했습니다',

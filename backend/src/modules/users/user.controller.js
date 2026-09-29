@@ -6,9 +6,13 @@ import { ok, created, noContent } from '../../core/response.js';
 import { userService } from './user.service.js';
 
 export const userController = {
-  list: asyncHandler(async (req, res) => ok(res, userService.list(req.validated?.query ?? {}))),
+  list: asyncHandler(async (req, res) =>
+    ok(res, userService.list(req.validated?.query ?? {}, req.user)),
+  ),
 
-  detail: asyncHandler(async (req, res) => ok(res, userService.getById(req.validated.params.id))),
+  detail: asyncHandler(async (req, res) =>
+    ok(res, userService.getById(req.validated.params.id, req.user)),
+  ),
 
   create: asyncHandler(async (req, res) =>
     created(res, userService.create(req.body, req.user, req.branchId)),

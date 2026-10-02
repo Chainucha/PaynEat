@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- สร้างจาก docs/generator/landing/build_landing.py — อย่าแก้ตรง ๆ -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/index.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/index.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/index.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/index.en.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/index.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/index.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/index.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/index.ko.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/index.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/index.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/index.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/install.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/install.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/install.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/install.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/install.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/install.en.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/install.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/install.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/install.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/install.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/install.ko.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/install.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/install.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/install.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/install.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/privacy.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/privacy.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/privacy.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/privacy.en.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/privacy.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/privacy.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/privacy.en.html"/>
+  </url>
+  <url>
+    <loc>https://suruchboss.github.io/PaynEat/privacy.ko.html</loc>
+    <xhtml:link rel="alternate" hreflang="th" href="https://suruchboss.github.io/PaynEat/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://suruchboss.github.io/PaynEat/privacy.en.html"/>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://suruchboss.github.io/PaynEat/privacy.ko.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://suruchboss.github.io/PaynEat/privacy.en.html"/>
+  </url>
+</urlset>

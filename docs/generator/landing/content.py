@@ -393,6 +393,7 @@ TH = {
     },
     'footer': {
         'paras_html': [
+            'สร้างและดูแลโดย Suruch Chakrapeesirisuk',
             'PaynEat POS — Flutter (GetX) + Node.js/Express + SQLite · เผยแพร่ภายใต้ '
             '<a href="https://github.com/SuruchBoss/PaynEat/blob/main/LICENSE">Apache License 2.0</a>',
             'ภาพหน้าจอทุกภาพถ่ายจากแอปจริงด้วย golden test ยกเว้นภาพผู้ช่วย AI ที่บันทึกจากการเรียก Claude API จริง '
@@ -438,8 +439,8 @@ EN = {
     'shot': 'en',
     'og_image': 'og-image-en.png',
     'title': 'PaynEat POS — point of sale for big, busy restaurants',
-    'description': 'A restaurant POS built around the problems of a busy floor: order overload, short staff, slow payment, '
-    'cash leakage, stock-outs and owners who cannot see the day. Open source, free, try the demo now.',
+    'description': 'A restaurant POS for busy floors: order overload, short staff, slow payment, cash leaks and '
+    'stock-outs in one system. Open source, free — try the demo now.',
     'skip': 'Skip to the problem menu',
     'promo': 'The full demo runs in your browser · no sign-up · a fictional restaurant ready to tap',
     'promo_link': 'Try it →',
@@ -807,6 +808,7 @@ EN = {
     },
     'footer': {
         'paras_html': [
+            'Built and maintained by Suruch Chakrapeesirisuk',
             'PaynEat POS — Flutter (GetX) + Node.js/Express + SQLite · released under the '
             '<a href="https://github.com/SuruchBoss/PaynEat/blob/main/LICENSE">Apache License 2.0</a>',
             'Every screenshot is captured from the real app by golden tests, except the AI assistant animation, recorded from '
@@ -1218,6 +1220,7 @@ KO = {
     },
     'footer': {
         'paras_html': [
+            '제작·관리: Suruch Chakrapeesirisuk',
             'PaynEat POS — Flutter (GetX) + Node.js/Express + SQLite · '
             '<a href="https://github.com/SuruchBoss/PaynEat/blob/main/LICENSE">Apache License 2.0</a>',
             '모든 스크린샷은 골든 테스트로 실제 앱에서 캡처했습니다. 단, AI 어시스턴트 애니메이션은 실제 Claude API 호출을 녹화한 것입니다 '

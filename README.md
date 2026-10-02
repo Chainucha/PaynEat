@@ -260,6 +260,10 @@ control and 1127 automated tests.
 > [เมนูแก้ปัญหาร้านอาหาร](#-เมนูแก้ปัญหาร้านอาหาร) ใน README ทั้งสามภาษาพร้อมกัน ภาพอยู่ที่ `docs/landing/img/story/` (WebP
 > 39 ไฟล์ รวมประมาณ 1.5 MB ถ่ายใหม่ด้วย `app/tool/screenshots/story_test.dart` และย่อขนาดด้วย `publish_story.py`) GIF ผู้ช่วย AI
 > อยู่ที่ `docs/ai-demo/` ซึ่ง `deploy-pages.yml` คัดลอกเข้า site ขณะ deploy
+>
+> สำหรับ search engine และผู้ช่วย AI: สคริปต์เดียวกันสร้าง `docs/landing/sitemap.xml` (9 หน้า พร้อมลิงก์ภาษาอื่นและ `x-default`)
+> และใส่ข้อมูลโครงสร้าง schema.org (`SoftwareApplication` + `WebSite` + ผู้สร้าง) ในหน้าหลักทั้งสามภาษา เฉพาะสิ่งที่หน้าแสดงจริง
+> ไม่มีคะแนนรีวิว — ดู `docs/DECISIONS.md` #91
 
 > 🤖 **ตัวอย่างการทำงานจริงของผู้ช่วย AI ถามตอบข้อมูลร้าน (เรียก Claude API จริง ไม่ใช่ mock)**
 >
@@ -1943,7 +1947,7 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
   (ตัวเลขสำคัญและจุดเด่น กระชับกว่า README ฉบับนี้)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — เอกสาร 30 หน้า รวมทุกหน้าจอพร้อมคำอธิบาย
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — ฉบับภาษาอังกฤษ เรียบเรียงใหม่สำหรับลูกค้าธุรกิจ
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — บันทึกการตัดสินใจเชิงออกแบบ 81 ข้อ พร้อมข้อเสียที่ยอมรับ
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — บันทึกการตัดสินใจเชิงออกแบบ 91 ข้อ พร้อมข้อเสียที่ยอมรับ
   (เช่น เหตุผลที่เก็บเงินเป็นสตางค์, เหตุผลที่เขียนตรรกะคิดบิล 2 ภาษา, เหตุผลที่เลือก SQLite)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — มาตรฐานการเขียนโค้ดจากผลตรวจ Clean Code /
   State Management / Clean Architecture / Technical Debt / โครงสร้างโฟลเดอร์ ใช้เป็นแนวทางการพัฒนาต่อไป

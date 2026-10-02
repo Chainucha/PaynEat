@@ -265,6 +265,10 @@ Each item is a problem big restaurants really face every day, and each is fixed 
 > `python3 docs/generator/landing/build_landing.py` writes `docs/landing/index*.html`, `docs/landing/install*.html` and the [problem menu](#-the-problem-menu) section of all three READMEs. Images are stored in
 > `docs/landing/img/story/` (39 WebP files, about 1.5 MB; recapture them with `app/tool/screenshots/story_test.dart`, then compress them with
 > `publish_story.py`). The AI assistant GIF is stored in `docs/ai-demo/`, which `deploy-pages.yml` copies into the site.
+>
+> For search engines and AI assistants, the same script writes `docs/landing/sitemap.xml` (9 pages, with their other-language
+> links and `x-default`) and adds schema.org structured data (`SoftwareApplication` + `WebSite` + the author) to the three home
+> pages — only what the page actually shows, no review ratings (see `docs/DECISIONS.md` #91)
 
 > 🤖 **Live demo of the AI ask-your-data assistant (real Claude API call, not a mock)**
 >
@@ -2192,7 +2196,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   job-application use (key figures and highlights, considerably shorter than this README)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — a 30-page document covering every screen with explanations (Thai)
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — English edition, rewritten for business audiences (30 pages)
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 81 design decisions and their accepted trade-offs (e.g. why
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 91 design decisions and their accepted trade-offs (e.g. why
   amounts are stored in satang, why the billing logic is intentionally implemented twice, why SQLite is used)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards derived from a code-quality audit
   covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure; the

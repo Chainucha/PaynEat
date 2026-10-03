@@ -50,7 +50,7 @@ class StaffPage extends GetView<StaffController> {
                     color: AppColors.textSecondary,
                     onTap: () => controller.filterByRole(null),
                   ),
-                  ...UserRole.all.map(
+                  ...controller.assignableRoles.map(
                     (role) => _RoleChip(
                       label:
                           '${UserRole.label(role)} (${controller.countByRole[role] ?? 0})',
@@ -149,7 +149,7 @@ class StaffPage extends GetView<StaffController> {
                     decoration: InputDecoration(
                       labelText: 'staff_role_label'.tr,
                     ),
-                    items: UserRole.all
+                    items: controller.assignableRoles
                         .map(
                           (value) => DropdownMenuItem(
                             value: value,
@@ -309,7 +309,7 @@ class _StaffRow extends GetView<StaffController> {
                 dense: true,
               ),
             )
-          else
+          else if (controller.canManage(user))
             PopupMenuButton<String>(
               tooltip: 'staff_actions_tooltip'.tr,
               icon: const Icon(Icons.more_vert_rounded, size: 20),
@@ -324,7 +324,7 @@ class _StaffRow extends GetView<StaffController> {
                 }
               },
               itemBuilder: (context) => [
-                ...UserRole.all
+                ...controller.assignableRoles
                     .where((role) => role != user.role)
                     .map(
                       (role) => PopupMenuItem(
@@ -345,13 +345,14 @@ class _StaffRow extends GetView<StaffController> {
                         : 'staff_activate_action'.tr,
                   ),
                 ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text(
-                    'staff_delete_account'.tr,
-                    style: TextStyle(color: AppColors.dangerInk),
+                if (controller.canDelete)
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'staff_delete_account'.tr,
+                      style: TextStyle(color: AppColors.dangerInk),
+                    ),
                   ),
-                ),
               ],
             ),
         ],

@@ -789,14 +789,17 @@ paths:
   /users:
     get:
       tags: [Users]
-      summary: รายชื่อพนักงาน (admin/manager)
+      summary: >-
+        รายชื่อพนักงาน (admin/manager) — manager เห็นเฉพาะ waiter/kitchen/cashier ที่มีสิทธิ์ในสาขาเดียวกับตัวเองอย่างน้อยหนึ่งสาขา
+        admin เห็นทุกคน (T22 #86)
       responses:
         '200': { description: สำเร็จ }
     post:
       tags: [Users]
-      summary: เพิ่มพนักงาน (admin/manager)
+      summary: เพิ่มพนักงาน (admin/manager) — manager สร้างได้เฉพาะ role waiter/kitchen/cashier ในสาขาที่กำลังทำงานอยู่
       responses:
         '201': { description: สร้างสำเร็จ }
+        '403': { description: manager สร้างบัญชี manager หรือ admin }
   /users/{id}:
     parameters:
       - in: path
@@ -808,11 +811,17 @@ paths:
       summary: ข้อมูลพนักงานรายคน
       responses:
         '200': { description: สำเร็จ }
+        '403': { description: manager เปิดบัญชี manager/admin (รวมบัญชีตัวเอง) — บัญชีระดับนี้เป็นของ admin เท่านั้น }
+        '404': { description: ไม่พบ หรือ manager เปิดพนักงานที่ไม่มีสิทธิ์ในสาขาของตัวเอง }
     patch:
       tags: [Users]
-      summary: แก้ไขพนักงาน
+      summary: >-
+        แก้ไขพนักงาน — manager แก้ได้เฉพาะ waiter/kitchen/cashier ในสาขาของตัวเอง และเปลี่ยน role ได้เฉพาะภายในสามบทบาทนี้
+        (กฎเดียวกันใช้กับ POST /users/{id}/reset-password)
       responses:
         '200': { description: สำเร็จ }
+        '403': { description: manager แก้บัญชี manager/admin หรือเลื่อน role เป็น manager/admin }
+        '404': { description: ไม่พบ หรือพนักงานไม่มีสิทธิ์ในสาขาของ manager }
     delete:
       tags: [Users]
       summary: ลบพนักงาน (admin)

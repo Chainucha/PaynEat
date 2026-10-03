@@ -113,6 +113,37 @@ void main() {
       expect(controller.currentUserId, 7);
     });
 
+    test(
+      'ผู้จัดการ: ตั้ง/เปลี่ยนได้เฉพาะเสิร์ฟ แคชเชียร์ ครัว ไม่มีเมนูของผู้จัดการ/แอดมิน และลบไม่ได้ (T22 #86)',
+      () {
+        session.start(
+          user: _user(2, role: UserRole.manager),
+          token: 't',
+        );
+
+        expect(controller.assignableRoles, UserRole.staffRoles);
+        expect(controller.canDelete, isFalse);
+        for (final role in UserRole.staffRoles) {
+          expect(controller.canManage(_user(9, role: role)), isTrue);
+        }
+        expect(controller.canManage(_user(9, role: UserRole.manager)), isFalse);
+        expect(controller.canManage(_user(9, role: UserRole.admin)), isFalse);
+      },
+    );
+
+    test('แอดมิน: ทุกบทบาท จัดการทุกบัญชี และลบได้เหมือนเดิม', () {
+      session.start(
+        user: _user(1, role: UserRole.admin),
+        token: 't',
+      );
+
+      expect(controller.assignableRoles, UserRole.all);
+      expect(controller.canDelete, isTrue);
+      for (final role in UserRole.all) {
+        expect(controller.canManage(_user(9, role: role)), isTrue);
+      }
+    });
+
     test('roleLabel แปลบทบาทเป็นป้ายภาษาไทย', () {
       expect(
         controller.roleLabel(UserRole.manager),

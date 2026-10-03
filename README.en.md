@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1127%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1139%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1127 automated tests.
+control and 1139 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1127 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,127 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,139 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -497,7 +497,7 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 | Role | username | password | Access |
 |---|---|---|---|
 | Admin | `admin` | `admin123` | Everything (dashboard, menu management, staff, reports, settings) |
-| Manager | `manager` | `manager123` | Same as admin, except deleting user accounts |
+| Manager | `manager` | `manager123` | Same as admin, but manages only waiter, kitchen and cashier accounts in their own branches (manager/admin accounts and deleting accounts are admin-only) |
 | Waiter | `waiter1` | `waiter123` | Table map, orders, kitchen display |
 | Kitchen | `kitchen` | `kitchen123` | Kitchen display only |
 | Cashier | `cashier` | `cashier123` | Table map, orders, reports |
@@ -680,6 +680,10 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   deactivation, but only after a confirmation dialog that describes the effect. Deleting `cashier` (which has already
   opened a shift) is refused with a request to deactivate the account instead, so financial history still shows who
   performed each action (a direct API call returns 409)
+- Log in as `manager` → **Staff** → the list holds only waiter, kitchen and cashier accounts that share a branch with the
+  manager (no admin or manager accounts) → the ⋮ menu offers only those three roles and no delete, and **Add staff** offers
+  only those three roles too. Resetting the password of, deactivating or changing the role of a manager or admin is for
+  `admin` only (a direct API call returns 403, and staff who only have other branches return 404) (see `docs/DECISIONS.md` #92)
 - Open an order → ⋮ → **Cancel order** → the confirm button remains disabled until a reason is entered. Add items
   to the cart and press back → a confirmation is required before the items are discarded. **Merge bills** → after
   the other order is selected, one further confirmation is required (a merge cannot be undone)
@@ -822,8 +826,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 511 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 567 cases — domain / controller / widget
+cd backend && npm test      # 516 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 574 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1029,7 +1033,8 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   require confirmation, and users cannot demote or deactivate their own account (so a single mistaken tap
   cannot cause a lockout — see `docs/DECISIONS.md` #62). An account with shift or transaction history cannot be
   deleted and is deactivated instead, so financial history always identifies who performed each action
-  (`docs/DECISIONS.md` #83)
+  (`docs/DECISIONS.md` #83). A manager sees and manages only waiter, kitchen and cashier accounts in their own branches;
+  manager/admin accounts and deleting accounts are admin-only (`docs/DECISIONS.md` #92)
 - **Store settings** — store name, VAT, Service Charge, VAT-inclusive pricing mode, tax ID/address/
   branch (for issuing tax invoices — optional if the store is not VAT-registered), the loyalty
   points exchange rate (baht spent per point earned / point value when redeemed — both at least 0.01 baht, checked by the
@@ -1452,7 +1457,7 @@ Interactive documentation (Swagger UI) is available at **http://localhost:3000/d
 | GET | `/reports/dashboard` | Management | Dashboard data |
 | GET | `/reports/summary` | Management | Sales summary for a date range |
 | GET/PATCH | `/settings` | Anyone / admin | Store settings |
-| GET/POST/PATCH/DELETE | `/users` | admin, manager | Staff management |
+| GET/POST/PATCH/DELETE | `/users` | admin, manager (DELETE: admin) | Staff management — a manager only for waiter/kitchen/cashier in their own branches |
 | GET | `/audit-logs` | admin | Log of front-of-house-fraud-risk actions (filterable) |
 | GET/POST | `/customers` | waiter and up | Search/create customers (by name or phone) |
 | GET | `/customers/:id` | waiter and up | A single customer's details (including points balance) |
@@ -1494,13 +1499,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 511 cases
-cd app && flutter test      # 567 cases
+cd backend && npm test      # 516 cases
+cd app && flutter test      # 574 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (511 + 567 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (516 + 574 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1555,7 +1560,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (511 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (516 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1615,6 +1620,13 @@ Infinity in the database); with a stored point value of 0, points can't be redee
 that isn't an integer is refused before it reaches the database. `migrations.test.js` adds 2 cases for migration 0005, which
 repairs broken balances: rebuilt from history (earned − redeemed, never below 0), broken points on a bill become 0, healthy
 balances are left alone, and each repair is audited as `customer.points_repair` (see `docs/DECISIONS.md` #89)
+
+`manager-staff-scope.test.js` (5 cases) covers what a manager can manage (T22): the list holds only waiter/kitchen/cashier
+accounts sharing a branch (including staff with several branches) and no admin, manager, or staff who only have other
+branches; resetting the password of, deactivating, changing the role or name of, or opening another manager's account
+returns 403 in the same branch and across branches (message in the user's language, account untouched); staff who only
+have other branches return 404; a manager can still create, re-role and reset staff in the branch but cannot create or
+promote a manager/admin; and admin can still do everything (see `docs/DECISIONS.md` #92)
 
 `promotion-engine.test.js` (16 cases) tests the pure promotion-matching logic (percent/amount/bogo, day/time/
 minimum-spend/menu-category conditions, `findBestAutoPromotion`, `describeIneligibility`), and
@@ -1852,7 +1864,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (567 cases)** — organized into 3 levels:
+**Flutter (574 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1863,7 +1875,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Domain | `entities_test.dart` | Role-based permissions, order-item status transitions, an item the kitchen started and then undid still cannot be edited or removed (T05), PaymentSummary/SplitPreview read refunds, included VAT and the adjustment line from the backend (T06, T10) |
 | Domain | `loyalty_points_test.dart` | App-side loyalty points (mirrors the backend): computed in satang and rounded down, a rate of 0 / below 0.01 / NaN / Infinity gives 0 points instead of an exception, a point value below 0.01 baht can't be redeemed, and 0.01 baht is the lowest rate that can be set (T15) |
 | Domain | `split_share_test.dart` | The app-side split share (mirrors the backend): 50% off on 160 + 320 gives 94.16/188.32 whoever pays first, included VAT on 160 + 80 gives 176/88, and a property test over 2,000 random bills adds up to the bill (T10) |
-| Domain | `demo_store_test.dart` | Verifies `demo_store.dart`, split into 20 files, still works correctly across domains, including the full auto/code/remove/eligible-list promotion flow, the full stock-deduction / auto sold-out flow, the tax-invoice issue/void/reissue flow with running numbers, the audit-log flow covering every risky action (ticket 08), the customer/loyalty flow: creating/searching customers, linking `customerId` at order creation, earning points exactly once when fully paid (including split-payment rounds), redeeming points for a discount without changing the order's `amount`, and rejecting every invalid redemption (ticket 09), and the takeaway queue number: only assigned for `type=takeaway`, running correctly per day even with dine-in/delivery orders interleaved (ticket 10), and the financial/accounting audit flow: menu price changes only log when the price actually changes, promotion create/edit/delete, manual ingredient stock adjustments, and `auditLogExportCsv` returning CSV correctly filtered by action (ticket 14), and every table having a unique `qrToken`, `resolveTableByQrToken` finding the right table / rejecting a bad token or a deactivated table, and `regenerateQrToken` invalidating the old token immediately (ticket 17), selling by weight/duplicate codes/kg stock deduction on payment/QR self-order hiding weighed items (tickets 18–19), credit sales/payments applied oldest first/cash into the shift/no voiding a receipt after its shift closed/billing notes/credit reduction/debt aging (ticket 20), and late interest on the seeded bill (8 days at 12%, no double charge)/no voiding paid interest/the 15% cap/credit notes + VAT on the difference/simulated e-mail defaulting to the customer's address and refusing voided documents (tickets 21, 23), and credit-sale points earned on full payment / taken back on a void as far as possible / withheld while interest is owed / net of credit notes (#59), and closed bills or items paid in a split cannot have an item cancelled while the kitchen can still move them on (T04), and an item the kitchen started then undid: only a manager can cancel it (403 for waiters/kitchen), the audit names the stage reached and matches the backend letter for letter, it cannot be edited or removed, and the stage reached never goes down (T05), and split by item in Demo Mode gives the backend's figures for 50% off and for included VAT, with the adjustment line after a fixed-amount payment (T10), and a points rate below 0.01 baht can't be set, a stored rate of 0 earns 0 points on a cash sale or a fully collected credit sale, and a stored point value of 0 can't be redeemed (T15) |
+| Domain | `demo_store_test.dart` | Verifies `demo_store.dart`, split into 20 files, still works correctly across domains, including the full auto/code/remove/eligible-list promotion flow, the full stock-deduction / auto sold-out flow, the tax-invoice issue/void/reissue flow with running numbers, the audit-log flow covering every risky action (ticket 08), the customer/loyalty flow: creating/searching customers, linking `customerId` at order creation, earning points exactly once when fully paid (including split-payment rounds), redeeming points for a discount without changing the order's `amount`, and rejecting every invalid redemption (ticket 09), and the takeaway queue number: only assigned for `type=takeaway`, running correctly per day even with dine-in/delivery orders interleaved (ticket 10), and the financial/accounting audit flow: menu price changes only log when the price actually changes, promotion create/edit/delete, manual ingredient stock adjustments, and `auditLogExportCsv` returning CSV correctly filtered by action (ticket 14), and every table having a unique `qrToken`, `resolveTableByQrToken` finding the right table / rejecting a bad token or a deactivated table, and `regenerateQrToken` invalidating the old token immediately (ticket 17), selling by weight/duplicate codes/kg stock deduction on payment/QR self-order hiding weighed items (tickets 18–19), credit sales/payments applied oldest first/cash into the shift/no voiding a receipt after its shift closed/billing notes/credit reduction/debt aging (ticket 20), and late interest on the seeded bill (8 days at 12%, no double charge)/no voiding paid interest/the 15% cap/credit notes + VAT on the difference/simulated e-mail defaulting to the customer's address and refusing voided documents (tickets 21, 23), and credit-sale points earned on full payment / taken back on a void as far as possible / withheld while interest is owed / net of credit notes (#59), and closed bills or items paid in a split cannot have an item cancelled while the kitchen can still move them on (T04), and an item the kitchen started then undid: only a manager can cancel it (403 for waiters/kitchen), the audit names the stage reached and matches the backend letter for letter, it cannot be edited or removed, and the stage reached never goes down (T05), and split by item in Demo Mode gives the backend's figures for 50% off and for included VAT, with the adjustment line after a fixed-amount payment (T10), and a points rate below 0.01 baht can't be set, a stored rate of 0 earns 0 points on a cash sale or a fully collected credit sale, and a stored point value of 0 can't be redeemed (T15), and a manager sees only waiter/cashier/kitchen accounts and cannot touch manager/admin accounts, create or promote a manager, or delete an account (403), while still managing staff (T22) |
 | Controller | `cart_controller_test.dart` | Cart logic, using a fake repository, including the case of no `Get.arguments` at all (coming straight from the "New takeaway/delivery" button) still defaulting to takeaway rather than dine-in (ticket 10), weighed items sending `weightGrams` to the backend/no quantity edits but re-weighing allowed, scanning labels/barcodes into the cart, and a bad scan leaving the cart unchanged (tickets 18–19) |
 | Controller | `request_id_error_test.dart` | The request ID on error messages, through the real ApiClient → repository → controller chain: 500/409 give the backend's translated message + "Request ID: …" matching what was sent, 422 gets no ID, every request gets a fresh `x-request-id` in the format the backend accepts, `ServerFailure.requestId` (ticket 24) |
 | Controller | `receivable_controllers_test.dart` | Totals of what's owed/overdue, splitting open bills/unbilled bills/open billing notes, document voiding limited to managers and up, a successful payment sending the chosen billing note then reloading / a failed one not reloading (ticket 20), late interest/credit notes limited to managers and up and reloading on success, e-mail with no recipient using the customer's address (tickets 21, 23) |
@@ -1883,7 +1895,8 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Widget | `settings_points_form_test.dart` | The settings form warns about an earn rate or point value below 0.01 baht before sending (no API call), exactly 0.01 sends, and a rate of 0.5 shows as 0.5 instead of being rounded to 1 and saved over (T15) |
 | Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, saying when scheduled pulls have stopped, the create-branch button (success names the branch actually created / a 409 shows the reason and reloads / not in demo mode), demo mode always standalone, parsing the backend's status (including how the credential travels — an older backend that doesn't send it counts as https), and ERP unit names (unknown codes shown as they are) |
 | Controller | `ingredients_controller_test.dart` | The ingredients page is read-only when connected to the ERP, an unreadable mode keeps the last value, the "low stock" filter is cleared in connected mode, item codes are sent in capitals and an edit sends null to clear one (ticket 25) |
-| Controller | `staff_controller_test.dart` | Filtering staff by role, counting by role |
+| Controller | `staff_controller_test.dart` | Filtering staff by role, counting by role; a manager can assign only waiter/cashier/kitchen, has no menu on manager/admin accounts and cannot delete, while admin manages every role (T22) |
+| Widget | `staff_page_permissions_test.dart` | The staff page for a manager: the ⋮ menu only on staff rows, no delete, no promote to manager/admin, and no admin filter chip; admin sees the menu on every row but their own, with delete (T22) |
 | Controller | `order_detail_controller_test.dart` | Order management permissions, moving item status forward |
 | Controller | `dashboard_controller_test.dart` | Loading today's sales summary + live counters |
 | Controller | `report_controller_test.dart` | Selecting a report date range, silently swallowing topItems/dailySales errors |
@@ -2128,7 +2141,8 @@ Completed work, planned work, and known limitations, with the reasoning for each
   transaction (`docs/DECISIONS.md` #84), T04 locking the items of closed bills (`docs/DECISIONS.md` #85), T05 cancelling
   food the kitchen has started needs a manager even after an undo (`docs/DECISIONS.md` #86), T06 net paid after refunds
   (`docs/DECISIONS.md` #87), T10 split by item sharing promotions and included VAT correctly (`docs/DECISIONS.md` #88), T15 a 0.01-baht
-  minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89) and T19 production defaults (`docs/DECISIONS.md` #83)
+  minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89), T19 production defaults (`docs/DECISIONS.md` #83)
+  and T22 managers manage only lower-role staff in their own branches (`docs/DECISIONS.md` #92) — **round 1 is complete**
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [ ] **Automatic backups the owner can restore without a developer (ticket 33)** — a backup at every shift close, every six
@@ -2196,7 +2210,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   job-application use (key figures and highlights, considerably shorter than this README)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — a 30-page document covering every screen with explanations (Thai)
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — English edition, rewritten for business audiences (30 pages)
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 91 design decisions and their accepted trade-offs (e.g. why
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 92 design decisions and their accepted trade-offs (e.g. why
   amounts are stored in satang, why the billing logic is intentionally implemented twice, why SQLite is used)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards derived from a code-quality audit
   covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure; the

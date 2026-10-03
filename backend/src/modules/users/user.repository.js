@@ -6,12 +6,24 @@ import { getDb } from '../../db/index.js';
 const BASE_COLUMNS = 'id, name, username, role, is_active, created_at, updated_at';
 
 export const userRepository = {
-  findAll({ role, isActive } = {}) {
+  /** `roles`/`branchIds` จำกัดรายการของผู้จัดการ (user.service.js) — ต้องมีสิทธิ์อย่างน้อยหนึ่งใน `branchIds` */
+  findAll({ role, isActive, roles, branchIds } = {}) {
     const clauses = [];
     const params = [];
     if (role) {
       clauses.push('role = ?');
       params.push(role);
+    }
+    if (roles) {
+      clauses.push(`role IN (${roles.map(() => '?').join(', ') || 'NULL'})`);
+      params.push(...roles);
+    }
+    if (branchIds) {
+      clauses.push(
+        `EXISTS (SELECT 1 FROM user_branches ub WHERE ub.user_id = users.id
+                  AND ub.branch_id IN (${branchIds.map(() => '?').join(', ') || 'NULL'}))`,
+      );
+      params.push(...branchIds);
     }
     if (isActive !== undefined) {
       clauses.push('is_active = ?');
@@ -25,6 +37,18 @@ export const userRepository = {
 
   findById(id) {
     return getDb().prepare(`SELECT ${BASE_COLUMNS} FROM users WHERE id = ?`).get(id);
+  },
+
+  /** user คนนี้มีสิทธิ์เข้าอย่างน้อยหนึ่งสาขาใน `branchIds` ไหม */
+  inBranches(id, branchIds) {
+    if (branchIds.length === 0) return false;
+    return Boolean(
+      getDb()
+        .prepare(
+          `SELECT 1 FROM user_branches WHERE user_id = ? AND branch_id IN (${branchIds.map(() => '?').join(', ')})`,
+        )
+        .get(id, ...branchIds),
+    );
   },
 
   findByUsername(username) {

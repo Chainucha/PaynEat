@@ -38,15 +38,44 @@ extension DemoStoreAuth on DemoStore {
     return _publicUser(user);
   }
 
-  List<Map<String, dynamic>> staff() =>
-      users.map(_publicUser).toList(growable: false);
+  /// mirror ของ user.service.js (T22 #86) — ผู้จัดการจัดการได้เฉพาะเสิร์ฟ/แคชเชียร์/ครัว บัญชีผู้จัดการและแอดมินเป็นของแอดมิน
+  /// โหมดสาธิตมีสาขาเดียว จึงเหลือแค่กฎเรื่องบทบาท (backend ตรวจสาขาด้วย)
+  String? _actorRole(int? actorId) =>
+      actorId == null ? null : _findUser(actorId)['role'] as String?;
+
+  void _assertStaffScope(int? actorId, Iterable<Object?> roles) {
+    final actorRole = _actorRole(actorId);
+    if (actorRole == null || actorRole == UserRole.admin) return;
+    if (roles.any(
+      (role) => role != null && !UserRole.staffRoles.contains(role),
+    )) {
+      throw ApiException(
+        message: 'staff_error_manager_scope'.tr,
+        statusCode: 403,
+      );
+    }
+  }
+
+  List<Map<String, dynamic>> staff({int? actorId}) {
+    final actorRole = _actorRole(actorId);
+    return users
+        .where(
+          (row) =>
+              actorRole == null ||
+              UserRole.canManage(actorRole, row['role'] as String),
+        )
+        .map(_publicUser)
+        .toList(growable: false);
+  }
 
   Map<String, dynamic> createStaff({
     required String name,
     required String username,
     required String password,
     required String role,
+    int? actorId,
   }) {
+    _assertStaffScope(actorId, [role]);
     if (users.any((row) => row['username'] == username)) {
       throw ApiException(message: 'auth_username_taken'.tr, statusCode: 409);
     }
@@ -70,6 +99,7 @@ extension DemoStoreAuth on DemoStore {
     final user = _findUser(id);
     final previousRole = user['role'];
     final previousActive = user['isActive'];
+    _assertStaffScope(actorId, [previousRole, changes['role']]);
 
     // mirror ของ user.service.js#update — ห้ามลดสิทธิ์/ปิดบัญชีตัวเอง (DECISIONS #62)
     if (actorId != null && actorId == id) {
@@ -147,6 +177,11 @@ extension DemoStoreAuth on DemoStore {
 
   void deleteStaff(int id, {int? actorId}) {
     final user = _findUser(id);
+    // ลบบัญชีเป็นของแอดมินเท่านั้น (DELETE /users/:id authorize('admin'))
+    final actorRole = _actorRole(actorId);
+    if (actorRole != null && actorRole != UserRole.admin) {
+      throw ApiException(message: 'error_forbidden'.tr, statusCode: 403);
+    }
     // เหมือน backend (T19): บัญชีที่มีประวัติกะหรือคืนเงินลบไม่ได้ ประวัติการเงินต้องบอกได้ว่าใครทำ — ปิดการใช้งานแทน
     final hasHistory =
         shifts.any((row) => row['openedBy'] == id || row['closedBy'] == id) ||

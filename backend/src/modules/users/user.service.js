@@ -9,32 +9,55 @@ import { branchRepository } from '../branches/branch.repository.js';
 import { userRepository } from './user.repository.js';
 import { toUserDto } from './user.mapper.js';
 
-// เฉพาะ admin เท่านั้นที่แตะบัญชีระดับ admin ได้ (สร้างใหม่/แก้ไข/ตั้งรหัสใหม่ให้)
-// กัน manager ยกระดับตัวเองเป็น admin ผ่าน role หรือ reset รหัสผ่านของ admin คนอื่นแล้วสวมรอย
-// (ดูรายงาน security review — privilege escalation ผ่าน PATCH /users/:id และ reset-password)
-const assertAdminBoundary = (actingUser, { targetRole, newRole } = {}) => {
-  if (actingUser.role === 'admin') return;
-  if (targetRole === 'admin' || newRole === 'admin') {
-    throw ApiError.forbidden('ต้องมีสิทธิ์ admin สำหรับบัญชีนี้');
+// ผู้จัดการจัดการได้เฉพาะพนักงานเสิร์ฟ ครัว และแคชเชียร์ ที่มีสิทธิ์ในสาขาเดียวกับตัวเองอย่างน้อยหนึ่งสาขา
+// บัญชีผู้จัดการและแอดมิน (รวมบัญชีตัวเอง) เป็นของแอดมินเท่านั้น (T22 #86, docs/DECISIONS.md #77 D9, #92)
+export const STAFF_ROLES = ['waiter', 'kitchen', 'cashier'];
+const STAFF_ONLY = 'ผู้จัดการจัดการได้เฉพาะบัญชีพนักงานเสิร์ฟ ครัว และแคชเชียร์';
+
+const isAdmin = (user) => user?.role === 'admin';
+const managedBranchIds = (user) => branchRepository.listForUser(user).map((branch) => branch.id);
+
+/** บทบาทที่ผู้ทำรายการตั้งให้คนอื่นได้ */
+const assertAssignableRole = (actingUser, role) => {
+  if (role !== undefined && !isAdmin(actingUser) && !STAFF_ROLES.includes(role)) {
+    throw ApiError.forbidden(STAFF_ONLY);
   }
 };
 
+/** บัญชีระดับผู้จัดการขึ้นไป = 403 ทุกสาขา ส่วนพนักงานนอกสาขาของผู้จัดการ = 404 เหมือนไม่มีอยู่ในรายการที่เขาเห็น */
+const assertCanManage = (actingUser, target) => {
+  if (isAdmin(actingUser)) return;
+  if (!STAFF_ROLES.includes(target.role)) throw ApiError.forbidden(STAFF_ONLY);
+  if (!userRepository.inBranches(target.id, managedBranchIds(actingUser))) {
+    throw ApiError.notFound('ไม่พบผู้ใช้งานนี้');
+  }
+};
+
+const findTarget = (id) => {
+  const user = userRepository.findById(id);
+  if (!user) throw ApiError.notFound('ไม่พบผู้ใช้งานนี้');
+  return toUserDto(user);
+};
+
 export const userService = {
-  list(filters) {
-    return userRepository.findAll(filters).map(toUserDto);
+  list(filters, actingUser) {
+    const scope = isAdmin(actingUser)
+      ? {}
+      : { roles: STAFF_ROLES, branchIds: managedBranchIds(actingUser) };
+    return userRepository.findAll({ ...filters, ...scope }).map(toUserDto);
   },
 
-  getById(id) {
-    const user = userRepository.findById(id);
-    if (!user) throw ApiError.notFound('ไม่พบผู้ใช้งานนี้');
-    return toUserDto(user);
+  getById(id, actingUser) {
+    const target = findTarget(id);
+    assertCanManage(actingUser, target);
+    return target;
   },
 
   // currentBranchId มาจาก req.branchId ของผู้สร้าง (null เฉพาะ admin โหมด "ทุกสาขา" ดู
   // docs/DECISIONS.md #36) — พนักงานใหม่ต้องมีสิทธิ์เข้าอย่างน้อย 1 สาขาเสมอ ไม่งั้นจะล็อกอินไม่ได้
   // เลย (สาขาว่างเปล่า) จึงต้องระบุ branchId มาทาง payload แทนตอนสร้างในโหมดนี้
   create({ name, username, password, role, branchId }, actingUser, currentBranchId) {
-    assertAdminBoundary(actingUser, { newRole: role });
+    assertAssignableRole(actingUser, role);
     if (userRepository.findByUsername(username)) {
       throw ApiError.conflict('username นี้ถูกใช้งานแล้ว');
     }
@@ -56,8 +79,8 @@ export const userService = {
   },
 
   update(id, payload, actingUser) {
-    const target = this.getById(id);
-    assertAdminBoundary(actingUser, { targetRole: target.role, newRole: payload.role });
+    const target = this.getById(id, actingUser);
+    assertAssignableRole(actingUser, payload.role);
     // ห้ามลดสิทธิ์/ปิดบัญชีตัวเอง — กดพลาดครั้งเดียวแล้วล็อกตัวเองออกจากหน้าจัดการพนักงานทันที
     // (เหลือ admin คนเดียวในร้าน = ไม่มีใครเปิดคืนให้ได้) ดู docs/DECISIONS.md #62
     if (Number(id) === Number(actingUser.id)) {
@@ -101,8 +124,7 @@ export const userService = {
   },
 
   resetPassword(id, password, actingUser) {
-    const target = this.getById(id);
-    assertAdminBoundary(actingUser, { targetRole: target.role });
+    const target = this.getById(id, actingUser);
 
     const run = getDb().transaction(() => {
       const updated = userRepository.updatePassword(id, bcrypt.hashSync(password, 10));
@@ -124,7 +146,7 @@ export const userService = {
     if (Number(id) === Number(actingUser.id)) {
       throw ApiError.badRequest('ไม่สามารถลบบัญชีของตัวเองได้');
     }
-    const target = this.getById(id);
+    const target = this.getById(id, actingUser);
 
     const run = getDb().transaction(() => {
       userRepository.remove(id);

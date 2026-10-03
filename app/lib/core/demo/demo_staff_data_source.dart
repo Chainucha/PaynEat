@@ -12,7 +12,7 @@ class DemoStaffDataSource implements StaffRemoteDataSource {
   @override
   Future<List<UserModel>> getStaff({String? role}) => _delayed(
     () => _store
-        .staff()
+        .staff(actorId: _auth.currentUserId)
         .where((user) => role == null || user['role'] == role)
         .map(UserModel.fromJson)
         .toList(growable: false),
@@ -31,6 +31,7 @@ class DemoStaffDataSource implements StaffRemoteDataSource {
         username: username,
         password: password,
         role: role,
+        actorId: _auth.currentUserId,
       ),
     ),
   );

@@ -26,6 +26,19 @@ class UserRole {
   static String label(String role) => (_keys[role] ?? role).tr;
 
   static bool isManagement(String role) => role == admin || role == manager;
+
+  /// บัญชีที่ผู้จัดการจัดการได้ — ผู้จัดการและแอดมินเป็นของแอดมินเท่านั้น
+  /// (mirror ของ user.service.js STAFF_ROLES, T22 #86)
+  static const List<String> staffRoles = [waiter, cashier, kitchen];
+
+  /// บทบาทที่ [actorRole] ตั้งให้บัญชีอื่นได้
+  static List<String> assignableBy(String? actorRole) =>
+      actorRole == admin ? all : staffRoles;
+
+  /// [actorRole] แก้/ปิด/ตั้งรหัสใหม่ให้บัญชีบทบาท [targetRole] ได้ไหม (สาขาตรวจที่ backend)
+  static bool canManage(String? actorRole, String targetRole) =>
+      actorRole == admin ||
+      (actorRole == manager && staffRoles.contains(targetRole));
   static bool canTakeOrder(String role) =>
       role == admin || role == manager || role == waiter || role == cashier;
   static bool canCollectPayment(String role) =>

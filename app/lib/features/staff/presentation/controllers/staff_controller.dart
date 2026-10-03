@@ -43,6 +43,17 @@ class StaffController extends GetxController {
 
   int? get currentUserId => _session.currentUser?.id;
 
+  String? get _currentRole => _session.currentUser?.role;
+
+  /// บทบาทที่ตั้งให้พนักงานได้ — ผู้จัดการตั้งได้เฉพาะเสิร์ฟ/แคชเชียร์/ครัว (T22 #86)
+  List<String> get assignableRoles => UserRole.assignableBy(_currentRole);
+
+  /// มีเมนูจัดการบัญชีนี้ไหม — backend กรองรายการตามสาขาและตรวจซ้ำทุกคำขอ
+  bool canManage(User user) => UserRole.canManage(_currentRole, user.role);
+
+  /// ลบบัญชีได้เฉพาะแอดมิน (DELETE /users/:id เป็นของ admin)
+  bool get canDelete => _currentRole == UserRole.admin;
+
   List<User> get filteredStaff => roleFilter.value == null
       ? staff
       : staff

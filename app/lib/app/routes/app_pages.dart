@@ -26,12 +26,28 @@ import '../../features/self_order/presentation/bindings/self_order_binding.dart'
 import '../../features/self_order/presentation/pages/self_order_page.dart';
 import '../../features/shift/presentation/pages/shift_page.dart';
 import 'app_routes.dart';
+import 'session_guard.dart';
 
 /// ตารางเส้นทางของแอป — ผูก route → หน้าจอ → binding (DI เฉพาะของหน้านั้น)
 class AppPages {
   const AppPages._();
 
+  /// หน้าที่เปิดได้โดยไม่ต้องมีเซสชันพนักงาน — ที่เหลือผ่าน [SessionGuard]
+  static const _publicRoutes = {
+    AppRoutes.splash,
+    AppRoutes.login,
+    AppRoutes.branchSelection,
+    AppRoutes.selfOrder,
+  };
+
   static final List<GetPage<dynamic>> pages = [
+    for (final page in _routes)
+      _publicRoutes.contains(page.name)
+          ? page
+          : page.copy(middlewares: [SessionGuard()]),
+  ];
+
+  static final List<GetPage<dynamic>> _routes = [
     GetPage<void>(name: AppRoutes.splash, page: () => const SplashPage()),
     GetPage<void>(name: AppRoutes.login, page: () => const LoginPage()),
     GetPage<void>(

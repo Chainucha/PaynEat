@@ -39,6 +39,10 @@ tags:
   - name: Receivables
   - name: Scale
     description: ตาชั่งต่อสาย อ่านน้ำหนักสด (ดู docs/tickets/22-live-scale-camera-scan.md)
+  - name: Backups
+    description: >-
+      สำรองข้อมูลอัตโนมัติ — สถานะและปุ่มสำรองตอนนี้ ไม่มี endpoint ดาวน์โหลดหรือกู้คืน กู้คืนด้วย npm run db:restore
+      บนเครื่องเซิร์ฟเวอร์เท่านั้น (ดู docs/tickets/33-automatic-backup.md, docs/DECISIONS.md #90, #94)
   - name: Erp
     description: >-
       โหมดเชื่อมต่อ PaynEat ERP — ลงทะเบียน ดึง master data ตามเวอร์ชัน และหน้าจัดการเป็นอ่านอย่างเดียว
@@ -51,6 +55,68 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    BackupRunResult:
+      type: object
+      description: ผลของการสำรองหนึ่งครั้ง — ok=false ไม่ทำให้คำขอล้ม (ปิดกะยังสำเร็จ)
+      properties:
+        ok: { type: boolean }
+        file: { type: string, example: payneat-2026-09-29T221530+0700-shift-close.sqlite }
+        sizeBytes: { type: integer }
+        copy:
+          type: object
+          nullable: true
+          description: ผลของที่เก็บชุดที่สอง (BACKUP_COPY_DIR) — null ถ้าไม่ได้ตั้ง
+          properties:
+            ok: { type: boolean }
+            file: { type: string }
+            code: { type: string }
+            message: { type: string }
+        code: { type: string, description: 'เมื่อ ok=false เช่น EACCES, ENOSPC, INTEGRITY_CHECK_FAILED' }
+        message: { type: string }
+    BackupRecord:
+      type: object
+      nullable: true
+      properties:
+        at: { type: string, format: date-time }
+        file: { type: string }
+        sizeBytes: { type: integer, nullable: true }
+        reason: { type: string, enum: [shift-close, scheduled, pre-migration, manual, pre-restore] }
+    BackupFailure:
+      type: object
+      nullable: true
+      properties:
+        at: { type: string, format: date-time }
+        reason: { type: string }
+        code: { type: string }
+        message: { type: string }
+    BackupStatus:
+      type: object
+      properties:
+        enabled: { type: boolean, description: 'false เมื่อ DATABASE_FILE=:memory:' }
+        running: { type: boolean }
+        warning:
+          type: string
+          nullable: true
+          enum: [failed, never, stale]
+          description: แถบเตือนของ admin/manager — stale = ไม่ได้สำรองสำเร็จเกิน staleAfterHours ชั่วโมง
+        staleAfterHours: { type: integer, example: 26 }
+        lowDiskSpace: { type: boolean }
+        primary:
+          type: object
+          properties:
+            dir: { type: string }
+            fileCount: { type: integer }
+            lastSuccess: { $ref: '#/components/schemas/BackupRecord' }
+            lastFailure: { $ref: '#/components/schemas/BackupFailure' }
+        copy:
+          type: object
+          properties:
+            configured: { type: boolean }
+            dir: { type: string, nullable: true }
+            fileCount: { type: integer }
+            lastSuccess: { $ref: '#/components/schemas/BackupRecord' }
+            lastFailure: { $ref: '#/components/schemas/BackupFailure' }
+            failing: { type: boolean }
     ApiError:
       type: object
       properties:
@@ -1653,7 +1719,9 @@ paths:
                 note: { type: string, maxLength: 300 }
       responses:
         '200':
-          description: ปิดกะสำเร็จ (data มี expectedCash/countedCash/difference ให้เทียบ)
+          description: >-
+            ปิดกะสำเร็จ (data มี expectedCash/countedCash/difference ให้เทียบ) และ data.backup = ผลของการสำรองหลังปิดกะ
+            (BackupRunResult) — สำรองล้มเหลวไม่ทำให้การปิดกะล้ม (ticket 33)
 
   /reports/dashboard:
     get:
@@ -2655,3 +2723,38 @@ paths:
         '409': { description: เมนูปิดขายอยู่ / ตัวเลือกไม่ครบตามที่กำหนด }
         '422': { description: ข้อมูลที่ส่งมาไม่ถูกต้อง }
         '429': { description: ทำรายการถี่เกินไป }
+
+  /backups/status:
+    get:
+      tags: [Backups]
+      summary: สถานะการสำรองข้อมูล (admin, manager) — เวลา ขนาด จำนวนไฟล์ของที่เก็บทั้งสองที่ ไม่มีเนื้อหาของไฟล์
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data: { $ref: '#/components/schemas/BackupStatus' }
+        '403': { description: ไม่ใช่ admin หรือ manager }
+  /backups:
+    post:
+      tags: [Backups]
+      summary: สำรองข้อมูลตอนนี้ (admin) — ตอบหลังสำรองเสร็จ สำรองไม่สำเร็จยังตอบ 200 โดยบอกใน result
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      result: { $ref: '#/components/schemas/BackupRunResult' }
+                      status: { $ref: '#/components/schemas/BackupStatus' }
+        '403': { description: ไม่ใช่ admin }

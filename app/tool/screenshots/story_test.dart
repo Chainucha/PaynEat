@@ -13,9 +13,11 @@ import 'package:payneat_pos/app/routes/app_routes.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/core/demo/demo_store.dart';
 import 'package:payneat_pos/core/localization/locale_service.dart';
+import 'package:payneat_pos/features/backup/presentation/widgets/backup_card.dart';
 import 'package:payneat_pos/features/home/presentation/controllers/home_controller.dart';
 import 'package:payneat_pos/features/menu/presentation/controllers/menu_controller.dart';
 import 'package:payneat_pos/features/payment/presentation/controllers/checkout_controller.dart';
+import 'package:payneat_pos/features/settings/presentation/pages/settings_page.dart';
 import 'package:payneat_pos/features/shift/presentation/widgets/z_report_dialog.dart';
 
 import 'screenshot_harness.dart';
@@ -254,6 +256,27 @@ void main() {
         await ScreenshotHarness.loginAs(tester, 'admin', 'admin123');
         await openTab(tester, 'home_nav_audit_log');
         await shot(tester, 'cash-audit');
+      });
+
+      // --- คู่มือติดตั้ง หัวข้อสำรองและกู้คืนข้อมูล (ticket 33): ส่วนสำรองข้อมูลในหน้าตั้งค่า --------
+      testWidgets('$lang สำรองข้อมูล', (tester) async {
+        await launch(tester, ScreenshotHarness.desktop);
+        await ScreenshotHarness.loginAs(tester, 'admin', 'admin123');
+        await openTab(tester, 'home_nav_settings');
+        // หน้าตั้งค่าเป็น ListView ที่สร้างเฉพาะส่วนบนจอ — เลื่อนลงจนเห็นการ์ดสำรองข้อมูลทั้งการ์ด
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('backup-now')),
+          300,
+          scrollable: find
+              .descendant(
+                of: find.byType(SettingsPage),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        await tester.ensureVisible(find.byType(BackupCard));
+        await ScreenshotHarness.settle(tester);
+        await shot(tester, 'backup-settings');
       });
 
       // ปิดกะจริงในข้อมูลสาธิต จึงต้องอยู่ท้ายกลุ่ม — หลังจากนี้ร้านไม่มีกะเปิด รับเงินไม่ได้

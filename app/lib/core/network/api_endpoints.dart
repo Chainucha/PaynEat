@@ -150,6 +150,10 @@ class ApiEndpoints {
   static const String erpPull = '/erp/pull';
   static const String erpBranches = '/erp/branches';
 
+  // สำรองข้อมูล (ดู docs/tickets/33-automatic-backup.md) — ไม่มี endpoint ดาวน์โหลดหรือกู้คืน
+  static const String backups = '/backups';
+  static const String backupStatus = '/backups/status';
+
   // AI assistant
   static const String aiAssistantAsk = '/ai/ask';
 

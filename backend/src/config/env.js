@@ -50,6 +50,10 @@ export const jwtSecretProblem = (secret, nodeEnv) => {
 const jwtProblem = jwtSecretProblem(process.env.JWT_SECRET, process.env.NODE_ENV);
 if (jwtProblem) throw new Error(jwtProblem);
 
+const databaseFile = process.env.DATABASE_FILE
+  ? path.resolve(rootDir, process.env.DATABASE_FILE)
+  : path.resolve(rootDir, 'data/payneat.sqlite');
+
 export const env = {
   rootDir,
   nodeEnv: process.env.NODE_ENV ?? 'development',
@@ -59,9 +63,7 @@ export const env = {
   isTest: process.env.NODE_ENV === 'test',
   port: toInt(process.env.PORT, 3000),
   host: process.env.HOST ?? '0.0.0.0',
-  databaseFile: process.env.DATABASE_FILE
-    ? path.resolve(rootDir, process.env.DATABASE_FILE)
-    : path.resolve(rootDir, 'data/payneat.sqlite'),
+  databaseFile,
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN ?? '12h',
@@ -140,6 +142,19 @@ export const env = {
     metricsPort: toInt(process.env.METRICS_PORT, 9464),
     // ค่าเริ่มต้นฟังเฉพาะเครื่องนี้ — ตัวเก็บ metric ในเครื่องอื่น (เช่น compose network) ตั้ง METRICS_HOST เอง
     metricsHost: process.env.METRICS_HOST || '127.0.0.1',
+  },
+  // สำรองข้อมูลอัตโนมัติ (ticket 33, DECISIONS #90)
+  //   BACKUP_DIR       — ที่เก็บชุดแรก ค่าเริ่มต้นคือ backups/ ข้างไฟล์ฐานข้อมูล
+  //   BACKUP_COPY_DIR  — ที่เก็บชุดที่สอง (ไม่บังคับ) ควรเป็นอีกดิสก์ เช่น USB drive หรือโฟลเดอร์บน NAS ในร้าน
+  //   BACKUP_KEEP_DAYS — เก็บไฟล์ล่าสุดของแต่ละวันย้อนหลังกี่วัน (ไฟล์ใน 48 ชั่วโมงล่าสุดเก็บทุกไฟล์เสมอ)
+  backup: {
+    dir: process.env.BACKUP_DIR
+      ? path.resolve(rootDir, process.env.BACKUP_DIR)
+      : path.join(path.dirname(databaseFile), 'backups'),
+    copyDir: process.env.BACKUP_COPY_DIR
+      ? path.resolve(rootDir, process.env.BACKUP_COPY_DIR)
+      : undefined,
+    keepDays: Math.max(0, toInt(process.env.BACKUP_KEEP_DAYS, 30)),
   },
 };
 

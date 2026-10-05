@@ -109,6 +109,51 @@ const ensureDefaultSettings = (db) => {
   for (const [key, value] of Object.entries(defaults)) upsert.run(key, value);
 };
 
+/**
+ * migration ที่ยังไม่เคยรันบนฐานข้อมูลนี้ — อ่านอย่างเดียว ไม่สร้างตาราง ไม่รัน ใช้ตัดสินว่าต้องสำรองก่อนไหม
+ * ฐานข้อมูลใหม่เอี่ยม (ยังไม่มีตารางใดเลย) คืน [] เพราะไม่มีข้อมูลให้สำรอง
+ */
+export const pendingMigrations = (db, migrations = MIGRATIONS) => {
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    .all()
+    .map((row) => row.name);
+  if (tables.length === 0) return [];
+  const applied = tables.includes('schema_migrations')
+    ? new Set(
+        db
+          .prepare('SELECT version FROM schema_migrations')
+          .all()
+          .map((row) => row.version),
+      )
+    : new Set();
+  return migrations.filter((migration) => !applied.has(migration.version)).map(label);
+};
+
+/**
+ * เปิดเครื่อง: ถ้ามี migration ที่ยังไม่รันบนฐานข้อมูลที่มีข้อมูลอยู่ ให้สำรองก่อน (ticket 33, DECISIONS #79, #90)
+ * สำรองไม่สำเร็จ = โยน error และไม่รัน migration ใดเลย ทางถอยเวอร์ชันของ #79 จึงมีไฟล์รองรับเสมอ
+ */
+export const migrateWithBackup = async ({ migrations = MIGRATIONS, backup } = {}) => {
+  const db = getDb();
+  const pending = pendingMigrations(db, migrations);
+  if (pending.length > 0) {
+    const createBackup =
+      backup ?? (await import('../modules/backups/backup.service.js')).backupService.createBackup;
+    const result = await createBackup('pre-migration', { db });
+    if (!result.ok) {
+      throw new Error(
+        `Backup before updating the database failed (${result.message}). No migration was run and ` +
+          `the database is unchanged. Make sure BACKUP_DIR (${env.backup.dir}) exists on a disk ` +
+          'with free space and that this server can write to it, then start the server again. ' +
+          `Pending: ${pending.join(', ')}.`,
+      );
+    }
+    logger.info(`Backed up before migrating: ${result.file}`);
+  }
+  return migrate({ migrations });
+};
+
 export const migrate = ({ migrations = MIGRATIONS } = {}) => {
   const db = getDb();
   runMigrations(db, migrations);
@@ -117,8 +162,13 @@ export const migrate = ({ migrations = MIGRATIONS } = {}) => {
 };
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  migrate();
-  logger.info(`Migration finished: ${env.databaseFile}`);
+  try {
+    await migrateWithBackup();
+    logger.info(`Migration finished: ${env.databaseFile}`);
+  } catch (error) {
+    logger.critical(error.message);
+    process.exitCode = 1;
+  }
 }
 
 export default migrate;

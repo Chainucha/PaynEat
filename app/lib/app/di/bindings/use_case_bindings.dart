@@ -16,6 +16,8 @@ import '../../../features/auth/domain/usecases/get_profile_usecase.dart';
 import '../../../features/auth/domain/usecases/login_usecase.dart';
 import '../../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../../features/auth/domain/usecases/select_branch_usecase.dart';
+import '../../../features/backup/domain/repositories/backup_repository.dart';
+import '../../../features/backup/domain/usecases/backup_usecases.dart';
 import '../../../features/customer/domain/repositories/customer_repository.dart';
 import '../../../features/customer/domain/usecases/customer_usecases.dart';
 import '../../../features/erp_connection/domain/repositories/erp_connection_repository.dart';
@@ -525,6 +527,16 @@ void bindUseCases() {
   );
   Get.lazyPut(
     () => CreateServedBranchUseCase(Get.find<ErpConnectionRepository>()),
+    fenix: true,
+  );
+
+  // สำรองข้อมูล (ดู docs/tickets/33-automatic-backup.md)
+  Get.lazyPut(
+    () => GetBackupStatusUseCase(Get.find<BackupRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => BackupNowUseCase(Get.find<BackupRepository>()),
     fenix: true,
   );
 }

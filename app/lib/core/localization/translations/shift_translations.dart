@@ -37,6 +37,8 @@ const Map<String, String> shiftTranslationsTh = {
   'shift_close_confirm_message':
       'ปิดกะนี้แล้วจะแก้ไขไม่ได้ ต้องการดำเนินการต่อหรือไม่?',
   'shift_close_success': 'ปิดกะเรียบร้อย',
+  'shift_close_backup_failed':
+      'ปิดกะเรียบร้อยแล้ว แต่สำรองข้อมูลหลังปิดกะไม่สำเร็จ แจ้งเจ้าของร้านให้ตรวจส่วนสำรองข้อมูลในหน้าตั้งค่า',
 
   'shift_error_already_open': 'มีกะที่เปิดอยู่แล้ว ต้องปิดกะเดิมก่อนเปิดกะใหม่',
   'shift_error_not_found': 'ไม่พบกะนี้',
@@ -97,6 +99,8 @@ const Map<String, String> shiftTranslationsEn = {
   'shift_close_confirm_message':
       'Once closed, this shift cannot be edited. Do you want to continue?',
   'shift_close_success': 'Shift closed successfully',
+  'shift_close_backup_failed':
+      'The shift is closed, but the backup after closing it failed. Ask the shop owner to check Backups in Settings',
 
   'shift_error_already_open':
       'A shift is already open. Close it before opening a new one.',
@@ -149,6 +153,8 @@ const Map<String, String> shiftTranslationsKo = {
   'shift_close_confirm_title': '근무 마감 확인',
   'shift_close_confirm_message': '마감한 근무는 수정할 수 없습니다. 계속하시겠습니까?',
   'shift_close_success': '근무를 마감했습니다',
+  'shift_close_backup_failed':
+      '근무는 마감되었지만 마감 후 백업에 실패했습니다. 매장 주인에게 설정의 백업을 확인해 달라고 하세요',
   'shift_error_already_open': '이미 진행 중인 근무가 있습니다. 마감한 뒤 새로 시작해 주세요.',
   'shift_error_not_found': '근무 기록을 찾을 수 없습니다',
   'shift_error_already_closed': '이미 마감된 근무입니다',

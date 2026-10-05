@@ -31,6 +31,165 @@ ACCOUNTS = [
     ('waiter2', 'waiter123'),
 ]
 
+# หัวข้อสำรองและกู้คืนข้อมูล (ticket 33) — ใช้ได้กับทุกทางติดตั้ง จึงต่อท้ายหัวข้อของแต่ละทาง
+RESTORE_FILE = 'payneat-2026-09-29T221530+0700-shift-close.sqlite'
+DEMO_COMPOSE = '-f "$env:USERPROFILE\\PaynEat-Demo\\docker-compose.yml"'
+
+BACKUP_TH = {
+    'id': 'backup', 'icon': '💾', 'kick': 'หลังติดตั้ง · ทุกทาง',
+    'title': 'สำรองและกู้คืนข้อมูล',
+    'intro': 'ข้อมูลทั้งร้านอยู่ในไฟล์เดียวบนเครื่องเซิร์ฟเวอร์ ระบบสำรองให้เองหลังปิดกะ ทุก 6 ชั่วโมงที่มีข้อมูลเปลี่ยน และก่อนอัปเดต '
+    'ดูสถานะได้ที่หน้าตั้งค่าของผู้ดูแลระบบ ถ้าไม่ได้สำรองสำเร็จเกิน 26 ชั่วโมง เจ้าของร้านและผู้จัดการจะเห็นแถบเตือนบนหน้าหลัก',
+    'facts': [('เก็บที่ไหน', 'data/backups ข้างฐานข้อมูล และที่เก็บชุดที่สองที่คุณตั้ง'),
+              ('เก็บนานแค่ไหน', 'ทุกไฟล์ใน 48 ชั่วโมง และวันละไฟล์ย้อนหลัง 30 วัน'),
+              ('กู้คืนอย่างไร', 'พิมพ์คำสั่งบนเครื่องเซิร์ฟเวอร์ ไม่มีปุ่มกู้คืนในแอป')],
+    'image': ('img/story/th-backup-settings.webp', 'ส่วนสำรองข้อมูลในหน้าตั้งค่า แสดงเวลาที่สำรองล่าสุด ที่เก็บทั้งสองที่ และปุ่มสำรองข้อมูลตอนนี้',
+              'ผู้ดูแลระบบ → ตั้งค่า → สำรองข้อมูล'),
+    'steps': [
+        {'title': 'ตั้งที่เก็บชุดที่สองบนอีกดิสก์',
+         'html': 'ชุดแรกอยู่ดิสก์เดียวกับฐานข้อมูล ถ้าดิสก์เสียจะเสียทั้งคู่ เสียบ USB drive หรือใช้โฟลเดอร์บน NAS ในร้าน '
+         'แล้วเพิ่มบรรทัดนี้ในไฟล์ <code>backend/.env</code> (เปลี่ยนเป็นโฟลเดอร์ของคุณ) แล้วเปิดเซิร์ฟเวอร์ใหม่',
+         'code': 'BACKUP_COPY_DIR=E:\\PaynEat-backup', 'lang': 'backend/.env (รันจากโค้ด)'},
+        {'title': 'Docker: ให้ชุดที่สองออกไปนอกคอนเทนเนอร์',
+         'html': 'เปิดบรรทัด <code>- /mnt/usb-backup/payneat:/backup-copy</code> ใต้ <code>volumes:</code> ของ <code>api</code> ใน '
+         '<code>docker-compose.yml</code> (เปลี่ยนส่วนหน้าเครื่องหมาย <code>:</code> เป็นโฟลเดอร์ของคุณ บน Linux ให้ผู้ใช้ uid 1000 เขียนได้: '
+         '<code>sudo chown 1000:1000 /mnt/usb-backup/payneat</code>) เพิ่มบรรทัดนี้ในไฟล์ <code>.env</code> แล้วรัน <code>docker compose up -d</code>',
+         'code': 'BACKUP_COPY_DIR=/backup-copy', 'lang': '.env (Docker)'},
+        {'title': 'ลองสำรองหนึ่งครั้ง',
+         'html': 'เข้าสู่ระบบด้วยบัญชีผู้ดูแลระบบ ไปที่ <b>ตั้งค่า → สำรองข้อมูล</b> แล้วกด <b>สำรองข้อมูลตอนนี้</b> '
+         'ที่เก็บทั้งสองที่ต้องขึ้นเครื่องหมายถูกสีเขียว'},
+        {'title': 'กู้คืน: หยุดเซิร์ฟเวอร์ก่อน',
+         'html': 'คำสั่งกู้คืนไม่ยอมทำงานระหว่างเซิร์ฟเวอร์เปิดอยู่ · รันจากโค้ด: กด <kbd>Ctrl</kbd>+<kbd>C</kbd> ในหน้าต่างเซิร์ฟเวอร์ · '
+         'Docker: ใช้คำสั่งด้านล่างในโฟลเดอร์โค้ด',
+         'code': 'docker compose stop api', 'lang': 'Terminal (Docker)'},
+        {'title': 'เลือกไฟล์ที่จะกู้',
+         'html': 'ชื่อไฟล์บอกเวลาและเหตุผล เช่น <code>' + RESTORE_FILE + '</code> คือไฟล์หลังปิดกะ 22:15 น. ของวันที่ 29 · '
+         'รันจากโค้ด: ดูในโฟลเดอร์ <code>backend/data/backups</code> · Docker: ดูรายชื่อด้วยคำสั่งนี้',
+         'code': 'docker compose run --rm api ls data/backups', 'lang': 'Terminal (Docker)'},
+        {'title': 'สั่งกู้คืน',
+         'html': 'รันจากโค้ด: <code>cd backend</code> แล้ว <code>npm run db:restore -- data/backups/&lt;ชื่อไฟล์&gt;</code> · Docker: คำสั่งด้านล่าง · '
+         'ระบบตรวจว่าไฟล์ไม่เสียก่อน และสำรองข้อมูลปัจจุบันเป็นไฟล์ <code>pre-restore</code> ไว้ให้เสมอ ถ้ากู้ผิดไฟล์จึงย้อนกลับได้',
+         'code': 'docker compose run --rm api npm run db:restore -- data/backups/' + RESTORE_FILE, 'lang': 'Terminal (Docker)'},
+        {'title': 'เปิดเซิร์ฟเวอร์อีกครั้ง',
+         'html': 'รันจากโค้ด: <code>npm start</code> (หรือ <code>npm run dev</code>) · Docker: คำสั่งด้านล่าง',
+         'code': 'docker compose start api', 'lang': 'Terminal (Docker)'},
+    ],
+    'ok_html': 'คำสั่งกู้คืนพิมพ์ <b>Restored … from …</b> พร้อมชื่อไฟล์ <code>pre-restore</code> และหน้าประวัติการทำรายการมีรายการ '
+    '<b>กู้คืนข้อมูลจากไฟล์สำรอง</b>',
+    'after_title': 'ถ้าคำสั่งไม่ยอมกู้คืน',
+    'after': [
+        ('The PaynEat server is still running', 'หยุดเซิร์ฟเวอร์ก่อน ถ้าเครื่องเพิ่งดับไปเอง (เช่น ไฟดับ) รอ 30 วินาทีแล้วลองใหม่'),
+        ('The backup file is damaged', 'ไฟล์นี้เสีย เลือกไฟล์ก่อนหน้า หรือไฟล์ชื่อเดียวกันจากที่เก็บชุดที่สอง'),
+        ('made by a newer PaynEat', 'ไฟล์มาจาก PaynEat รุ่นใหม่กว่า อัปเดต PaynEat ก่อนแล้วกู้อีกครั้ง'),
+    ],
+    'note_html': '🔒 ไฟล์สำรองมีเบอร์โทรลูกค้าและรหัสผ่านพนักงานที่เข้ารหัสแล้ว เก็บ USB drive ไว้ในที่ล็อกได้ อย่าแชร์หรืออัปโหลดขึ้นคลาวด์ '
+    '· ตัวติดตั้ง Windows บรรทัดเดียว (เดโม): ใช้คำสั่ง Docker ชุดเดียวกันใน PowerShell โดยเพิ่ม <code>' + DEMO_COMPOSE.replace('"', '&quot;') + '</code> '
+    'ต่อจาก <code>docker compose</code>',
+}
+
+BACKUP_EN = {
+    'id': 'backup', 'icon': '💾', 'kick': 'After installing · every way',
+    'title': 'Back up and restore',
+    'intro': 'All of the shop\'s data is in one file on the server. PaynEat backs it up by itself after each shift close, '
+    'every 6 hours when data changed, and before an update. The status is in Settings for the admin; if no backup has succeeded '
+    'for more than 26 hours, the owner and managers see a warning on the home screen.',
+    'facts': [('Where', 'data/backups next to the database, plus a second location you set'),
+              ('How long', 'Every file for 48 hours, then one a day for 30 days'),
+              ('Restoring', 'A command on the server; the app has no restore button')],
+    'image': ('img/story/en-backup-settings.webp', 'The Backups section in Settings: last backup time, both locations and the Back up now button',
+              'Admin → Settings → Backups'),
+    'steps': [
+        {'title': 'Set a second location on another disk',
+         'html': 'The first copy is on the same disk as the database, so a failed disk loses both. Plug in a USB drive or use a folder on a NAS in the shop, '
+         'add this line to <code>backend/.env</code> (with your folder) and restart the server',
+         'code': 'BACKUP_COPY_DIR=E:\\PaynEat-backup', 'lang': 'backend/.env (running from code)'},
+        {'title': 'Docker: keep the second copy outside the container',
+         'html': 'Uncomment <code>- /mnt/usb-backup/payneat:/backup-copy</code> under <code>volumes:</code> of <code>api</code> in '
+         '<code>docker-compose.yml</code> (change the part before <code>:</code> to your folder; on Linux let uid 1000 write to it: '
+         '<code>sudo chown 1000:1000 /mnt/usb-backup/payneat</code>), add this line to <code>.env</code>, then run <code>docker compose up -d</code>',
+         'code': 'BACKUP_COPY_DIR=/backup-copy', 'lang': '.env (Docker)'},
+        {'title': 'Make one backup to check',
+         'html': 'Sign in as the admin, open <b>Settings → Backups</b> and press <b>Back up now</b>. Both locations should show a green tick'},
+        {'title': 'Restoring: stop the server first',
+         'html': 'The restore command refuses to run while the server is up · From code: press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the server window · '
+         'Docker: run this in the code folder',
+         'code': 'docker compose stop api', 'lang': 'Terminal (Docker)'},
+        {'title': 'Pick the file to restore',
+         'html': 'The name says when and why, e.g. <code>' + RESTORE_FILE + '</code> is the one after the 22:15 shift close on the 29th · '
+         'From code: look in <code>backend/data/backups</code> · Docker: list them with this command',
+         'code': 'docker compose run --rm api ls data/backups', 'lang': 'Terminal (Docker)'},
+        {'title': 'Restore it',
+         'html': 'From code: <code>cd backend</code>, then <code>npm run db:restore -- data/backups/&lt;file name&gt;</code> · Docker: the command below · '
+         'PaynEat checks the file first and always keeps the current data as a <code>pre-restore</code> file, so a wrong pick can be undone',
+         'code': 'docker compose run --rm api npm run db:restore -- data/backups/' + RESTORE_FILE, 'lang': 'Terminal (Docker)'},
+        {'title': 'Start the server again',
+         'html': 'From code: <code>npm start</code> (or <code>npm run dev</code>) · Docker: the command below',
+         'code': 'docker compose start api', 'lang': 'Terminal (Docker)'},
+    ],
+    'ok_html': 'The restore command prints <b>Restored … from …</b> with the name of the <code>pre-restore</code> file, and the Audit Log shows '
+    '<b>Restore from a backup</b>',
+    'after_title': 'If the command refuses',
+    'after': [
+        ('The PaynEat server is still running', 'Stop the server first. If the machine just went down by itself (a power cut), wait 30 seconds and try again'),
+        ('The backup file is damaged', 'Pick an earlier file, or the file of the same name from the second location'),
+        ('made by a newer PaynEat', 'The file comes from a newer PaynEat. Update PaynEat first, then restore again'),
+    ],
+    'note_html': '🔒 A backup holds customer phone numbers and staff password hashes. Keep the USB drive somewhere locked and never share or upload it to a cloud '
+    '· One-line Windows installer (demo): use the same Docker commands in PowerShell, adding <code>' + DEMO_COMPOSE.replace('"', '&quot;') + '</code> '
+    'after <code>docker compose</code>',
+}
+
+BACKUP_KO = {
+    'id': 'backup', 'icon': '💾', 'kick': '설치 후 · 모든 방법 공통',
+    'title': '백업과 복원',
+    'intro': '매장의 모든 데이터는 서버의 파일 하나에 있습니다. PaynEat이 교대 마감 후, 데이터가 바뀐 경우 6시간마다, 그리고 업데이트 전에 '
+    '자동으로 백업합니다. 상태는 관리자 설정 화면에서 볼 수 있고, 26시간 넘게 백업에 성공하지 못하면 매장 주인과 매니저의 홈 화면에 경고가 뜹니다.',
+    'facts': [('보관 위치', '데이터베이스 옆 data/backups와 직접 지정한 두 번째 위치'),
+              ('보관 기간', '48시간 동안 모든 파일, 그 뒤 30일 동안 하루 한 개'),
+              ('복원 방법', '서버에서 명령어 실행 (앱에는 복원 버튼이 없음)')],
+    'image': ('img/story/ko-backup-settings.webp', '설정의 백업 섹션: 마지막 백업 시각, 두 보관 위치, 지금 백업 버튼',
+              '관리자 → 설정 → 백업'),
+    'steps': [
+        {'title': '다른 디스크에 두 번째 위치 지정',
+         'html': '첫 번째 백업은 데이터베이스와 같은 디스크에 있어 디스크가 고장 나면 둘 다 잃습니다. USB 드라이브를 꽂거나 매장 NAS의 폴더를 쓰고, '
+         '<code>backend/.env</code>에 아래 줄을 추가(폴더는 본인 것으로)한 뒤 서버를 다시 시작하세요',
+         'code': 'BACKUP_COPY_DIR=E:\\PaynEat-backup', 'lang': 'backend/.env (코드에서 실행)'},
+        {'title': 'Docker: 두 번째 백업을 컨테이너 밖에 두기',
+         'html': '<code>docker-compose.yml</code>의 <code>api</code> 아래 <code>volumes:</code>에서 <code>- /mnt/usb-backup/payneat:/backup-copy</code> '
+         '줄의 주석을 풀고(<code>:</code> 앞부분을 본인 폴더로, Linux에서는 uid 1000이 쓸 수 있게: <code>sudo chown 1000:1000 /mnt/usb-backup/payneat</code>) '
+         '<code>.env</code>에 아래 줄을 추가한 뒤 <code>docker compose up -d</code>를 실행하세요',
+         'code': 'BACKUP_COPY_DIR=/backup-copy', 'lang': '.env (Docker)'},
+        {'title': '한 번 백업해서 확인',
+         'html': '관리자로 로그인해 <b>설정 → 백업</b>에서 <b>지금 백업</b>을 누르세요. 두 위치 모두 초록색 체크가 떠야 합니다'},
+        {'title': '복원: 먼저 서버 멈추기',
+         'html': '서버가 켜져 있으면 복원 명령이 실행되지 않습니다 · 코드에서 실행: 서버 창에서 <kbd>Ctrl</kbd>+<kbd>C</kbd> · '
+         'Docker: 코드 폴더에서 아래 명령 실행',
+         'code': 'docker compose stop api', 'lang': 'Terminal (Docker)'},
+        {'title': '복원할 파일 고르기',
+         'html': '파일 이름에 시각과 이유가 있습니다. 예: <code>' + RESTORE_FILE + '</code>는 29일 22:15 교대 마감 후 파일입니다 · '
+         '코드에서 실행: <code>backend/data/backups</code> 폴더 확인 · Docker: 아래 명령으로 목록 보기',
+         'code': 'docker compose run --rm api ls data/backups', 'lang': 'Terminal (Docker)'},
+        {'title': '복원하기',
+         'html': '코드에서 실행: <code>cd backend</code> 후 <code>npm run db:restore -- data/backups/&lt;파일 이름&gt;</code> · Docker: 아래 명령 · '
+         'PaynEat이 파일을 먼저 검사하고, 현재 데이터를 항상 <code>pre-restore</code> 파일로 남기므로 잘못 골라도 되돌릴 수 있습니다',
+         'code': 'docker compose run --rm api npm run db:restore -- data/backups/' + RESTORE_FILE, 'lang': 'Terminal (Docker)'},
+        {'title': '서버 다시 켜기',
+         'html': '코드에서 실행: <code>npm start</code> (또는 <code>npm run dev</code>) · Docker: 아래 명령',
+         'code': 'docker compose start api', 'lang': 'Terminal (Docker)'},
+    ],
+    'ok_html': '복원 명령이 <code>pre-restore</code> 파일 이름과 함께 <b>Restored … from …</b>을 출력하고, 변경 이력에 <b>백업에서 복원</b> 항목이 생깁니다',
+    'after_title': '명령이 복원을 거부하면',
+    'after': [
+        ('The PaynEat server is still running', '먼저 서버를 멈추세요. 정전처럼 기계가 갑자기 꺼졌다면 30초 기다린 뒤 다시 시도하세요'),
+        ('The backup file is damaged', '이전 파일이나 두 번째 위치에 있는 같은 이름의 파일을 고르세요'),
+        ('made by a newer PaynEat', '더 새로운 PaynEat에서 만든 파일입니다. PaynEat을 먼저 업데이트한 뒤 다시 복원하세요'),
+    ],
+    'note_html': '🔒 백업 파일에는 고객 전화번호와 직원 비밀번호 해시가 있습니다. USB 드라이브는 잠기는 곳에 두고, 공유하거나 클라우드에 올리지 마세요 '
+    '· Windows 한 줄 설치(데모): PowerShell에서 같은 Docker 명령을 쓰되 <code>docker compose</code> 뒤에 '
+    '<code>' + DEMO_COMPOSE.replace('"', '&quot;') + '</code>를 붙이세요',
+}
+
+
 TH = {
     'code': 'th',
     'file': 'install.html',
@@ -40,7 +199,7 @@ TH = {
     'description': 'ติดตั้ง PaynEat POS ทีละขั้น — ลองในเบราว์เซอร์ทันที, ติดตั้งบน Windows ด้วยบรรทัดเดียว, '
     'รันด้วย Docker ให้หลายเครื่องในร้านใช้ร่วมกัน หรือรันจากโค้ดสำหรับนักพัฒนา',
     'skip': 'ข้ามไปที่การเลือกวิธีติดตั้ง',
-    'nav': [('#choose', 'เลือกวิธี'), ('#accounts', 'บัญชีทดลอง'), ('#live', 'ก่อนใช้จริง'), ('#help', 'แก้ปัญหา')],
+    'nav': [('#choose', 'เลือกวิธี'), ('#backup', 'สำรองข้อมูล'), ('#accounts', 'บัญชีทดลอง'), ('#live', 'ก่อนใช้จริง'), ('#help', 'แก้ปัญหา')],
     'home_label': 'หน้าแรก',
     'copy': 'คัดลอก',
     'copied': 'คัดลอกแล้ว',
@@ -178,6 +337,7 @@ TH = {
             ],
             'note_html': 'รายละเอียดสถาปัตยกรรม API และเทสต์ทั้งหมดอยู่ใน <a href="' + REPO + '#readme">README</a>',
         },
+        BACKUP_TH,
     ],
     'accounts': {
         'kick': 'บัญชีทดลอง',
@@ -207,7 +367,8 @@ TH = {
             'ตั้งรหัสผ่านบัญชีเริ่มต้นเองครบทั้ง 6 ตัว (<code>SEED_ADMIN_PASSWORD</code> … <code>SEED_CASHIER_PASSWORD</code>) '
             'หรือปิด <code>AUTO_SEED</code> แล้วสร้างบัญชีพนักงานจริงเอง',
             'ตั้ง <code>CORS_ORIGIN</code> เป็นที่อยู่จริงของร้านแทน <code>*</code>',
-            'เก็บไฟล์ฐานข้อมูลและไฟล์ <code>.env</code> ไว้ในเครื่องร้าน อย่าอัปโหลดหรือแชร์ออกไป และสำรองข้อมูลสม่ำเสมอ',
+            'เก็บไฟล์ฐานข้อมูลและไฟล์ <code>.env</code> ไว้ในเครื่องร้าน อย่าอัปโหลดหรือแชร์ออกไป · ตั้ง <code>BACKUP_COPY_DIR</code> ไปที่อีกดิสก์ '
+            'และลองกู้คืนหนึ่งครั้งก่อนเปิดร้าน ตาม<a href="#backup">หัวข้อสำรองและกู้คืนข้อมูล</a>',
             'ไม่ใช้ตัวติดตั้งบรรทัดเดียวบน Windows กับร้านจริง เพราะตั้งค่าไว้สำหรับทดลอง',
             'ถ้าเชื่อมต่อ PaynEat ERP ใช้ที่อยู่ <code>https://</code> — ระบบไม่ส่ง credential ของเครื่องผ่าน <code>http://</code> '
             'ยกเว้นไปเครื่องเดียวกัน และห้ามตั้ง <code>ERP_ALLOW_INSECURE_HTTP</code> นอกเครือข่ายปิด '
@@ -259,7 +420,7 @@ EN = {
     'description': 'Set up PaynEat POS step by step: try it in the browser, install on Windows with one line, '
     'run it with Docker so every device in the restaurant shares it, or run it from source.',
     'skip': 'Skip to choosing how to install',
-    'nav': [('#choose', 'Choose'), ('#accounts', 'Demo accounts'), ('#live', 'Before going live'), ('#help', 'Troubleshooting')],
+    'nav': [('#choose', 'Choose'), ('#backup', 'Backups'), ('#accounts', 'Demo accounts'), ('#live', 'Before going live'), ('#help', 'Troubleshooting')],
     'home_label': 'Home',
     'copy': 'Copy',
     'copied': 'Copied',
@@ -398,6 +559,7 @@ EN = {
             ],
             'note_html': 'Architecture, the API and every test are described in the <a href="' + REPO + '/blob/main/README.en.md">README</a>.',
         },
+        BACKUP_EN,
     ],
     'accounts': {
         'kick': 'Demo accounts',
@@ -428,7 +590,8 @@ EN = {
             'Set your own passwords for all six starting accounts (<code>SEED_ADMIN_PASSWORD</code> … <code>SEED_CASHIER_PASSWORD</code>), '
             'or turn off <code>AUTO_SEED</code> and create real staff accounts yourself.',
             'Set <code>CORS_ORIGIN</code> to the restaurant’s real address instead of <code>*</code>.',
-            'Keep the database file and <code>.env</code> on the restaurant’s machine — never upload or share them — and back up regularly.',
+            'Keep the database file and <code>.env</code> on the restaurant’s machine — never upload or share them. Set <code>BACKUP_COPY_DIR</code> to another disk '
+            'and try one restore before opening, as in <a href="#backup">Back up and restore</a>.',
             'Don’t use the one-line Windows installer for a real shop: it is set up for trying things out.',
             'If you connect PaynEat ERP, use its <code>https://</code> address. The POS never sends its credential over '
             '<code>http://</code> except to the same machine, and <code>ERP_ALLOW_INSECURE_HTTP</code> is only for a closed network. '
@@ -481,7 +644,7 @@ KO = {
     'description': 'PaynEat POS를 단계별로 설치하세요 — 브라우저에서 바로 체험, Windows에 한 줄로 설치, '
     'Docker로 매장의 모든 기기가 함께 쓰기, 또는 소스에서 직접 실행.',
     'skip': '설치 방법 선택으로 건너뛰기',
-    'nav': [('#choose', '방법 고르기'), ('#accounts', '데모 계정'), ('#live', '운영 전 확인'), ('#help', '문제 해결')],
+    'nav': [('#choose', '방법 고르기'), ('#backup', '백업'), ('#accounts', '데모 계정'), ('#live', '운영 전 확인'), ('#help', '문제 해결')],
     'home_label': '홈',
     'copy': '복사',
     'copied': '복사됨',
@@ -621,6 +784,7 @@ KO = {
             ],
             'note_html': '구조, API, 모든 테스트는 <a href="' + REPO + '/blob/main/README.en.md">README (영문)</a>에 있습니다.',
         },
+        BACKUP_KO,
     ],
     'accounts': {
         'kick': '데모 계정',
@@ -651,7 +815,8 @@ KO = {
             '시작 계정 6개의 비밀번호를 모두 직접 정하거나(<code>SEED_ADMIN_PASSWORD</code> … <code>SEED_CASHIER_PASSWORD</code>), '
             '<code>AUTO_SEED</code>를 끄고 실제 직원 계정을 직접 만드세요.',
             '<code>CORS_ORIGIN</code>을 <code>*</code> 대신 매장의 실제 주소로.',
-            '데이터베이스 파일과 <code>.env</code>는 매장 기기에만 — 업로드하거나 공유하지 말고, 정기적으로 백업하세요.',
+            '데이터베이스 파일과 <code>.env</code>는 매장 기기에만 — 업로드하거나 공유하지 마세요. <code>BACKUP_COPY_DIR</code>를 다른 디스크로 지정하고 '
+            '개점 전에 <a href="#backup">백업과 복원</a>대로 한 번 복원해 보세요.',
             'Windows 한 줄 설치는 실제 매장에 쓰지 마세요. 체험용 설정입니다.',
             'PaynEat ERP에 연결한다면 <code>https://</code> 주소를 쓰세요. POS는 같은 기기가 아니면 자격 증명을 <code>http://</code>로 '
             '보내지 않으며, <code>ERP_ALLOW_INSECURE_HTTP</code>는 닫힌 네트워크에서만 씁니다. ERP 인증서를 체인의 내부 CA가 발급했다면 '

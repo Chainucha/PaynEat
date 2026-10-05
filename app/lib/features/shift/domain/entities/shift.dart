@@ -19,6 +19,7 @@ class Shift {
     this.countedCash,
     this.variance,
     this.note,
+    this.backupFailed = false,
   });
 
   final int id;
@@ -34,6 +35,9 @@ class Shift {
   final double? countedCash;
   final double? variance;
   final String? note;
+
+  /// มีเฉพาะในคำตอบของการปิดกะ: กะปิดสำเร็จ แต่สำรองข้อมูลหลังปิดกะไม่สำเร็จ (ticket 33)
+  final bool backupFailed;
 
   bool get isOpen => status == ShiftStatus.open;
 }

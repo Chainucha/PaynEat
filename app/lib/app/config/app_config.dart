@@ -37,6 +37,10 @@ class AppConfig {
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 20);
 
+  /// ปิดกะและ "สำรองข้อมูลตอนนี้" รอให้สำรองฐานข้อมูลเสร็จก่อนตอบ (ticket 33) ร้านที่ข้อมูลหลายปี
+  /// ใช้เวลานานกว่า [receiveTimeout] ได้ — ถ้ารอไม่ไหวจริง กะยังปิดแล้วและการสำรองยังทำต่อบนเซิร์ฟเวอร์
+  static const Duration backupTimeout = Duration(minutes: 2);
+
   /// เปิด log ของ HTTP request เฉพาะตอน debug
   static bool get enableApiLog => kDebugMode;
 

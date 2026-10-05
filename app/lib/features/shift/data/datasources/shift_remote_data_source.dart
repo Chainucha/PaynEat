@@ -1,6 +1,7 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import '../../../../app/config/app_config.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../models/shift_model.dart';
@@ -45,6 +46,8 @@ class ShiftRemoteDataSourceImpl implements ShiftRemoteDataSource {
         'countedCash': countedCash,
         if (note != null && note.isNotEmpty) 'note': note,
       },
+      // ปิดกะรอให้สำรองข้อมูลหลังปิดกะเสร็จก่อนตอบ (ticket 33)
+      receiveTimeout: AppConfig.backupTimeout,
     );
     return ShiftModel.fromJson(response.asMap);
   }

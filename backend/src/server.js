@@ -6,10 +6,12 @@
 import http from 'node:http';
 import { env } from './config/env.js';
 import { createApp } from './app.js';
-import { migrate } from './db/migrate.js';
+import { migrateWithBackup } from './db/migrate.js';
 import { seed } from './db/seed.js';
 import { initSocket } from './realtime/socket.js';
 import { closeDb } from './db/index.js';
+import { startServerHeartbeat, stopServerHeartbeat } from './db/serverLock.js';
+import { backupService } from './modules/backups/backup.service.js';
 import { scaleService } from './modules/scale/scale.service.js';
 import {
   checkErpTransportOnStartup,
@@ -19,8 +21,20 @@ import {
 import { logger } from './core/telemetry/logger.js';
 import { startMetricsServer } from './core/telemetry/metrics.js';
 
-migrate();
+// สำรองข้อมูล (ticket 33): ที่เก็บต้องไม่อยู่ในโฟลเดอร์ที่เว็บเสิร์ฟ และ migration ใหม่ต้องมีไฟล์สำรองก่อนเสมอ —
+// ตั้งผิดหรือสำรองไม่สำเร็จ เซิร์ฟเวอร์ไม่เปิด และยังไม่มี migration ใดถูกรัน
+try {
+  backupService.validateDirectories();
+  await migrateWithBackup();
+} catch (error) {
+  logger.critical(error.message);
+  process.exit(1);
+}
 if (process.env.AUTO_SEED !== 'false') seed();
+// นับการเปลี่ยนแปลงข้อมูลสำหรับรอบทุก 6 ชั่วโมงหลัง migration และ seed เขียนไปแล้ว
+backupService.markBaseline();
+backupService.startSchedule();
+startServerHeartbeat();
 
 const app = createApp();
 const server = http.createServer(app);
@@ -59,6 +73,8 @@ const shutdown = (signal) => {
   logger.info(`${signal} received, shutting down`);
   scaleService.stop();
   stopErpPullSchedule();
+  backupService.stopSchedule();
+  stopServerHeartbeat();
   metricsServer?.close();
   server.close(() => {
     closeDb();

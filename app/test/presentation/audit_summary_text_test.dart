@@ -168,6 +168,38 @@ void main() {
     );
   });
 
+  test('กู้คืนข้อมูล — ภาษาไทยตรงกับประโยคที่คำสั่ง db:restore บันทึก', () {
+    // backend: restore.js เขียนประโยคนี้ลงฐานข้อมูลที่กู้แล้ว (ticket 33)
+    final restored = log('system.restore', {
+      'file': 'payneat-2026-10-04T221530+0700-shift-close.sqlite',
+      'preRestore': 'payneat-2026-10-05T091000+0700-pre-restore.sqlite',
+    });
+    expect(
+      AuditSummaryText.render(restored, lookup('th_TH')),
+      'กู้คืนข้อมูลจากไฟล์ payneat-2026-10-04T221530+0700-shift-close.sqlite '
+      '(ฐานข้อมูลก่อนกู้คืนสำรองไว้ที่ payneat-2026-10-05T091000+0700-pre-restore.sqlite)',
+    );
+    expect(
+      AuditSummaryText.render(restored, lookup('en_US')),
+      'Restored the data from payneat-2026-10-04T221530+0700-shift-close.sqlite '
+      '(the database it replaced is kept as payneat-2026-10-05T091000+0700-pre-restore.sqlite)',
+    );
+
+    // เครื่องใหม่ที่ยังไม่มีฐานข้อมูล: ไม่มีไฟล์ pre-restore
+    final fresh = log('system.restore', {
+      'file': 'payneat-2026-10-04T221530+0700-shift-close.sqlite',
+      'preRestore': '',
+    });
+    expect(
+      AuditSummaryText.render(fresh, lookup('th_TH')),
+      'กู้คืนข้อมูลจากไฟล์ payneat-2026-10-04T221530+0700-shift-close.sqlite',
+    );
+    expect(
+      AuditSummaryText.render(fresh, lookup('ko_KR')),
+      'payneat-2026-10-04T221530+0700-shift-close.sqlite에서 데이터를 복원함',
+    );
+  });
+
   test(
     'log เก่าที่ไม่มี summaryArgs และ action ที่ไม่รู้จัก ถอยกลับไปใช้ประโยคที่บันทึกไว้',
     () {

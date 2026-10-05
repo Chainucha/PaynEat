@@ -22,6 +22,7 @@ class BackendProcess {
     this._tempDir,
     this._log,
     this._backendDir,
+    this.databaseFile,
   );
 
   final Process _process;
@@ -30,12 +31,16 @@ class BackendProcess {
   final StringBuffer _log;
   final Directory _backendDir;
 
+  /// ไฟล์ฐานข้อมูลของ backend ตัวนี้ — ค่าเริ่มต้นอยู่ในโฟลเดอร์ชั่วคราวของมันเอง
+  final String databaseFile;
+
+  /// โฟลเดอร์ไฟล์สำรอง (ticket 33) — ค่าเริ่มต้นของ backend คือ `backups/` ข้างไฟล์ฐานข้อมูล
+  String get backupDir => '${File(databaseFile).parent.path}/backups';
+
   String get apiBaseUrl => 'http://127.0.0.1:$port/api/v1';
 
   /// ที่อยู่ของ socket.io (ราก ไม่มี /api/v1) — ตาชั่งสดส่งผ่านช่องนี้ (ticket 22)
   String get socketUrl => 'http://127.0.0.1:$port';
-
-  String get _databaseFile => '${_tempDir.path}/e2e.sqlite';
 
   /// "เลื่อนเวลา" ในฐานข้อมูลของ backend — เทสต์ที่ต้องการบิลเลยกำหนด (ดอกเบี้ยผิดนัด ticket 21) รอ
   /// เวลาจริงไม่ได้ จึงแก้วันที่ตรงในไฟล์ SQLite ด้วย better-sqlite3 ของ backend เอง (WAL mode ให้
@@ -48,7 +53,7 @@ class BackendProcess {
         "const Database = require('better-sqlite3');"
             'const db = new Database(process.argv[1]);'
             'db.exec(process.argv[2]); db.close();',
-        _databaseFile,
+        databaseFile,
         statement,
       ],
       workingDirectory: _backendDir.path,
@@ -63,9 +68,12 @@ class BackendProcess {
 
   /// [environment] ทับค่า env ของ backend เพิ่มเติม — เช่น ต่อตาชั่ง (SCALE_DRIVER) หรือเปิดอีเมลแบบ
   /// ไม่ส่งจริง (MAIL_TRANSPORT=json) สำหรับชุดที่ต้องใช้ (tickets 22–23)
+  ///
+  /// [databaseFile] เปิดบนไฟล์ฐานข้อมูลที่มีอยู่แล้ว เช่น ไฟล์ที่เพิ่งกู้คืน (ticket 33) แทนฐานข้อมูลใหม่
   static Future<BackendProcess> start({
     Duration bootTimeout = const Duration(seconds: 60),
     Map<String, String> environment = const {},
+    String? databaseFile,
   }) async {
     final backendDir = _findBackendDir();
     if (!Directory('${backendDir.path}/node_modules').existsSync()) {
@@ -77,6 +85,7 @@ class BackendProcess {
     final port = await _freePort();
     final tempDir = await Directory.systemTemp.createTemp('payneat-e2e-');
     final log = StringBuffer();
+    final database = databaseFile ?? '${tempDir.path}/e2e.sqlite';
 
     // สำเนา env ของเครื่องแล้วทับเฉพาะที่ต้องคุม — ตัด ANTHROPIC_API_KEY ออกเสมอ กันไม่ให้
     // เทสต์ไปเรียก Claude API จริงเสียเงินโดยไม่ตั้งใจ (ผู้ช่วย AI มีทางถอยเมื่อไม่มี key อยู่แล้ว)
@@ -84,7 +93,7 @@ class BackendProcess {
       ...Platform.environment,
       'NODE_ENV': 'test',
       'JWT_SECRET': 'e2e-secret',
-      'DATABASE_FILE': '${tempDir.path}/e2e.sqlite',
+      'DATABASE_FILE': database,
       'PORT': '$port',
       'HOST': '127.0.0.1',
       // /metrics อยู่พอร์ตของตัวเอง (ticket 24) — ไฟล์ E2E รันขนานกันหลาย backend จึงให้ระบบเลือกพอร์ตว่างเอง
@@ -92,6 +101,10 @@ class BackendProcess {
       'METRICS_PORT': '0',
       ...environment,
     }..remove('ANTHROPIC_API_KEY');
+    // ที่เก็บไฟล์สำรองต้องเป็นค่าเริ่มต้นข้างฐานข้อมูลชั่วคราว ไม่ใช่ค่าที่เครื่องนักพัฒนาตั้งไว้ (ticket 33)
+    for (final name in ['BACKUP_DIR', 'BACKUP_COPY_DIR']) {
+      if (!environment.containsKey(name)) processEnvironment.remove(name);
+    }
 
     final process = await Process.start(
       Platform.environment['E2E_NODE'] ?? 'node',
@@ -106,7 +119,14 @@ class BackendProcess {
     int? earlyExit;
     unawaited(process.exitCode.then((code) => earlyExit = code));
 
-    final backend = BackendProcess._(process, port, tempDir, log, backendDir);
+    final backend = BackendProcess._(
+      process,
+      port,
+      tempDir,
+      log,
+      backendDir,
+      database,
+    );
     // วัดเวลาที่ผ่านไปด้วย Stopwatch (monotonic) ไม่ใช่นาฬิกา — AppClock ถูกตรึงได้ในเทสต์ ถ้าใช้ตัวนั้น
     // timeout อาจไม่มีวันถึง ส่วน DateTime.now() ถูกกฎ use_app_clock_not_date_time_now ห้ามไว้
     final elapsed = Stopwatch()..start();
@@ -139,6 +159,35 @@ class BackendProcess {
       },
     );
     await _cleanTempDir();
+  }
+
+  /// กู้คืน [backupFile] ลง [databaseFile] ด้วยคำสั่ง `db:restore` ตัวจริง (ticket 33) แบบที่เจ้าของร้าน
+  /// พิมพ์บนเครื่องเซิร์ฟเวอร์ คืนข้อความที่คำสั่งพิมพ์ออกมา — คำสั่งปฏิเสธ = เทสต์ล้มพร้อมเหตุผล
+  static Future<String> restore({
+    required String backupFile,
+    required String databaseFile,
+  }) async {
+    final backendDir = _findBackendDir();
+    final environment = <String, String>{
+      ...Platform.environment,
+      'NODE_ENV': 'test',
+      'JWT_SECRET': 'e2e-secret',
+      'DATABASE_FILE': databaseFile,
+    }..removeWhere((key, _) => key == 'BACKUP_DIR' || key == 'BACKUP_COPY_DIR');
+    final result = await Process.run(
+      Platform.environment['E2E_NODE'] ?? 'node',
+      ['src/db/restore.js', backupFile],
+      workingDirectory: backendDir.path,
+      environment: environment,
+      includeParentEnvironment: false,
+    );
+    if (result.exitCode != 0) {
+      throw StateError(
+        'db:restore ล้มเหลว (exit ${result.exitCode}):\n'
+        '${result.stdout}${result.stderr}',
+      );
+    }
+    return '${result.stdout}';
   }
 
   Future<void> _cleanTempDir() async {

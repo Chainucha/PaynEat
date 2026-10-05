@@ -49,6 +49,8 @@ class AuditLogAction {
   static const String erpConnect = 'erp.connect';
   static const String erpDisconnect = 'erp.disconnect';
   static const String erpBranchCreate = 'erp.branch_create';
+  // กู้คืนข้อมูลจากไฟล์สำรองด้วยคำสั่งบนเครื่องเซิร์ฟเวอร์ (ticket 33)
+  static const String systemRestore = 'system.restore';
 
   static const List<String> all = [
     orderCreate,
@@ -85,6 +87,7 @@ class AuditLogAction {
     erpConnect,
     erpDisconnect,
     erpBranchCreate,
+    systemRestore,
   ];
 
   static const Map<String, String> _keys = {
@@ -122,6 +125,7 @@ class AuditLogAction {
     erpConnect: 'audit_log_action_erp_connect',
     erpDisconnect: 'audit_log_action_erp_disconnect',
     erpBranchCreate: 'audit_log_action_erp_branch_create',
+    systemRestore: 'audit_log_action_system_restore',
   };
 
   static String translationKey(String action) => _keys[action] ?? action;

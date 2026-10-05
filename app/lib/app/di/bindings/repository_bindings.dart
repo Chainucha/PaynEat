@@ -13,6 +13,9 @@ import '../../../features/audit_log/domain/repositories/audit_log_repository.dar
 import '../../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../../features/auth/domain/repositories/auth_repository.dart';
+import '../../../features/backup/data/datasources/backup_remote_data_source.dart';
+import '../../../features/backup/data/repositories/backup_repository_impl.dart';
+import '../../../features/backup/domain/repositories/backup_repository.dart';
 import '../../../features/customer/data/datasources/customer_remote_data_source.dart';
 import '../../../features/customer/data/repositories/customer_repository_impl.dart';
 import '../../../features/customer/domain/repositories/customer_repository.dart';
@@ -143,6 +146,10 @@ void bindRepositories(StorageService storage) {
   Get.lazyPut<ErpConnectionRepository>(
     () =>
         ErpConnectionRepositoryImpl(Get.find<ErpConnectionRemoteDataSource>()),
+    fenix: true,
+  );
+  Get.lazyPut<BackupRepository>(
+    () => BackupRepositoryImpl(Get.find<BackupRemoteDataSource>()),
     fenix: true,
   );
 }

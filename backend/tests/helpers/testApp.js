@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import request from 'supertest';
@@ -13,6 +14,9 @@ const dbFile = path.join(root, `data/test-${process.pid}-${Date.now()}.sqlite`);
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret';
 process.env.DATABASE_FILE = dbFile;
+// ไฟล์สำรองของแต่ละไฟล์เทสต์อยู่ในโฟลเดอร์ชั่วคราวของตัวเอง (ปิดกะในเทสต์สำรองทุกครั้ง — ticket 33)
+const backupDir = fs.mkdtempSync(path.join(os.tmpdir(), 'payneat-test-backups-'));
+process.env.BACKUP_DIR = backupDir;
 
 const { createApp } = await import('../../src/app.js');
 const { seed } = await import('../../src/db/seed.js');
@@ -36,7 +40,8 @@ export const authHeader = (token) => ({ Authorization: `Bearer ${token}` });
 
 export const cleanup = () => {
   closeDb();
-  for (const suffix of ['', '-wal', '-shm']) {
+  fs.rmSync(backupDir, { recursive: true, force: true });
+  for (const suffix of ['', '-wal', '-shm', '.backup-status.json', '.running']) {
     const file = `${dbFile}${suffix}`;
     if (fs.existsSync(file)) fs.rmSync(file);
   }

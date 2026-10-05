@@ -10,6 +10,7 @@ import '../../../core/network/socket_client.dart';
 import '../../../features/ai_assistant/data/datasources/ai_assistant_remote_data_source.dart';
 import '../../../features/audit_log/data/datasources/audit_log_remote_data_source.dart';
 import '../../../features/auth/data/datasources/auth_remote_data_source.dart';
+import '../../../features/backup/data/datasources/backup_remote_data_source.dart';
 import '../../../features/customer/data/datasources/customer_remote_data_source.dart';
 import '../../../features/erp_connection/data/datasources/erp_connection_remote_data_source.dart';
 import '../../../features/ingredient/data/datasources/ingredient_remote_data_source.dart';
@@ -116,6 +117,10 @@ void bindDataSources() {
     () => ErpConnectionRemoteDataSourceImpl(client),
     fenix: true,
   );
+  Get.lazyPut<BackupRemoteDataSource>(
+    () => BackupRemoteDataSourceImpl(client),
+    fenix: true,
+  );
 }
 
 /// โหมดสาธิต: เปลี่ยนเฉพาะชั้น data source ชั้นอื่นทั้งหมดไม่ต้องแก้แม้แต่บรรทัดเดียว
@@ -187,4 +192,5 @@ void _bindDemoDataSources() {
     const DemoErpConnectionDataSource(),
     permanent: true,
   );
+  Get.put<BackupRemoteDataSource>(DemoBackupDataSource(), permanent: true);
 }

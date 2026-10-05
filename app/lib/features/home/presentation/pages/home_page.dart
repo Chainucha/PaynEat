@@ -10,7 +10,9 @@ import '../../../../app/theme/app_theme.dart';
 import '../../../../core/services/offline_order_queue_service.dart';
 import '../../../../core/services/session_service.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../backup/presentation/widgets/backup_warning_banner.dart';
 import '../controllers/home_controller.dart';
 
 /// โครงหน้าหลักของแอป
@@ -48,11 +50,23 @@ class HomePage extends GetView<HomeController> {
             if (useRail)
               _NavigationRailSection(extended: device == DeviceType.desktop),
             Expanded(
-              child: IndexedStack(
-                index: controller.currentIndex.value,
-                children: controller.destinations
-                    .map((destination) => destination.page)
-                    .toList(growable: false),
+              child: Column(
+                children: [
+                  // admin และ manager: ไม่ได้สำรองข้อมูลเกิน 26 ชั่วโมงหรือครั้งล่าสุดล้มเหลว (ticket 33)
+                  BackupWarningBanner(
+                    onOpenSettings: controller.user?.role == UserRole.admin
+                        ? controller.openSettings
+                        : null,
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: controller.currentIndex.value,
+                      children: controller.destinations
+                          .map((destination) => destination.page)
+                          .toList(growable: false),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

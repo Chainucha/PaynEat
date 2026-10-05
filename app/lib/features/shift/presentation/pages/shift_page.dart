@@ -270,6 +270,35 @@ class _ClosedShiftSummary extends GetView<ShiftController> {
               ],
             ),
           ),
+          // กะปิดสำเร็จแล้ว แต่สำรองข้อมูลหลังปิดกะไม่สำเร็จ (ticket 33) — แสดงค้างไว้ในการ์ด ไม่ใช่
+          // snackbar ที่หายในสองวินาที แคชเชียร์ต้องอ่านทันและบอกเจ้าของร้านได้
+          if (shift.backupFailed) ...[
+            const SizedBox(height: 12),
+            Container(
+              key: const Key('shift-backup-failed'),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.backup_outlined, color: AppColors.warningInk),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'shift_close_backup_failed'.tr,
+                      style: const TextStyle(fontSize: 13.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),

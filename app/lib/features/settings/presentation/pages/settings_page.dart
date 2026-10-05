@@ -12,6 +12,7 @@ import '../../../../core/localization/locale_service.dart';
 import '../../../../core/services/session_service.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../backup/presentation/widgets/backup_card.dart';
 import '../../../erp_connection/presentation/widgets/erp_connection_card.dart';
 import '../controllers/printer_settings_controller.dart';
 import '../controllers/settings_controller.dart';
@@ -326,6 +327,12 @@ class SettingsPage extends GetView<SettingsController> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 620),
               child: const ErpConnectionCard(),
+            ),
+            // สำรองข้อมูล — admin เท่านั้น (ticket 33)
+            const SizedBox(height: 12),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: const BackupCard(),
             ),
           ],
           const SizedBox(height: 12),

@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1139%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1191%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1139 automated tests.
+control and 1191 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -672,8 +672,23 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
     request → open `http://localhost:3000/metrics` → 404, because the Prometheus metrics are served on port 9464,
     which docker compose never exposes outside the machine (see `docs/tickets/24-telemetry-contract.md`,
     `docs/DECISIONS.md` #68)
+30. **Back up and restore** → log in as `admin` → **Settings** → the **"Backups"** card shows the last successful backup, the file size,
+    and the main location (`BACKUP_DIR`) and second location (`BACKUP_COPY_DIR`), each with its own status → press **"Back up now"** →
+    the card shows the new file's name (Option A: `backend/data/backups/` · Options B/D: `/app/data/backups` in the volume · Option C shows
+    an example status and writes no file) → close a shift as in step 19 and one more `…-shift-close.sqlite` appears → try a restore
+    (Option A): stop the server with <kbd>Ctrl</kbd>+<kbd>C</kbd>, then run `npm run db:restore -- data/backups/<file name>` in `backend` →
+    start the server again; the **Audit Log** has a **"Restore from a backup"** entry and the replaced database is kept as
+    `…-pre-restore.sqlite` (the Docker steps are in the [install guide](https://suruchboss.github.io/PaynEat/install.en.html#backup),
+    "Back up and restore" · see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
 
 **Business rules you can try**
+
+- **Backups** (Options A/B/D) → run `npm run db:restore` while the server is still up → the command refuses and says how to stop
+  the server (restoring over data in use is not possible) · log in as `cashier` or `waiter` → no Backups card and no warning
+  (the API answers 403) · `manager` sees the home-screen warning when no backup has succeeded for 26 hours, but has no backup button ·
+  set `BACKUP_DIR=../docs/backups` and start the server → it refuses to start, because backups must not sit in a folder published
+  on the web · if the backup after a shift close fails, the shift still closes and the shift summary card tells the cashier to inform
+  the owner
 
 - Log in as `admin` → **Staff** → the signed-in user's own row has no ⋮ menu, only a **"You"** badge (users cannot
   demote, deactivate, or delete their own account; a direct API call returns 400). Other rows allow role changes and
@@ -826,9 +841,9 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 516 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 574 cases — domain / controller / widget
-cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
+cd backend && npm test      # 542 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 596 cases — domain / controller / widget
+cd app && flutter test test_e2e   # 53 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
 ---
@@ -1045,6 +1060,11 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   interest 0–15% a year + grace days after the due date — changes are recorded in the audit log, and the
   section shows whether e-mail is configured on the server; see `docs/DECISIONS.md` #55, #57)
 - **Receipt printer settings** — this device's IP/port/paper size, with a test-print button
+- **Backups** (admin, Settings) — the last successful backup and why it ran (after a shift close, scheduled, before an update,
+  manual), its size, the number of files, the main and second locations each with its own status, a low-disk-space warning and a
+  **"Back up now"** button · `admin` and `manager` see a home-screen warning when no backup has succeeded for 26 hours or the last one
+  failed · there is no restore or download button, because a backup holds customer phone numbers and password hashes
+  (see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #90, #94)
 - **PaynEat ERP connection** (admin, Settings) for chains whose ingredients and branches are managed in
   [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP) — a single shop requires no action: it shows "Standalone" and operates exactly as before
   - Enter the ERP's address and this POS's credential (`pnepos_…`) → the POS validates the branch codes (any branch with a malformed
@@ -1179,6 +1199,15 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   is upgraded with its data intact · if a migration that has already run is edited, or the app is rolled back to a version
   older than the database, the server refuses to start and reports the reason (see `docs/DECISIONS.md` #79; instructions for
   adding a migration are in `CONTRIBUTING.md`)
+- **Automatic backups the owner can restore** — the server backs up the database after each shift close, every 6 hours when data
+  changed, before running migrations (a failed backup = no migration and no start) and when the admin asks, using SQLite's online
+  backup and checking `integrity_check` on every file; payments keep working during a backup · files go to `BACKUP_DIR`
+  (default `data/backups`) and can be copied to `BACKUP_COPY_DIR` on another disk · every file is kept for 48 hours, one a day for
+  `BACKUP_KEEP_DAYS` days (default 30), pre-update and pre-restore files for 90 days, and never down to zero files · files are `0600`,
+  folders `0700`, and the server refuses to start with a backup location inside a folder published on the web · restore with
+  `npm run db:restore -- <file>`, which refuses while the server runs, for a damaged file or one from a newer PaynEat, always backs up
+  the current database first and records a `system.restore` audit entry · metrics `payneat_backup_last_success_timestamp_seconds` /
+  `payneat_backup_failures_total` (see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
 
 ---
 
@@ -1499,17 +1528,17 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 516 cases
-cd app && flutter test      # 574 cases
-cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
+cd backend && npm test      # 542 cases
+cd app && flutter test      # 596 cases
+cd app && flutter test test_e2e   # 53 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (516 + 574 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (542 + 596 + 53). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
-**E2E — the real app against the real backend (49 cases)** — `app/test_e2e/` starts the real backend
+**E2E — the real app against the real backend (53 cases)** — `app/test_e2e/` starts the real backend
 (`node src/server.js`) on a random port with a new temporary database per file, then exercises the
 app's production data/domain code (`ApiClient` → data source → repository, the same stack the app assembles at
 startup) against it following a restaurant's workflow, with each role using its own "device". It is the only
@@ -1546,6 +1575,11 @@ and the backend tests are pure JavaScript), and it runs as a separate CI job:
 > every document type downloads as a real `%PDF-` file → a billing note is sent by e-mail
 > (`MAIL_TRANSPORT=json` builds the full message + PDF attachment without sending it) and a customer with
 > no e-mail on file receives 400
+>
+> `backup_restore_e2e_test.dart` (4 steps) — sell one bill and close the shift → the close response says the backup succeeded →
+> the app reads the backup status from the real backend (a cashier gets 403) → the admin's "Back up now" writes a new file → the
+> post-close file is restored into a new database with the real `db:restore` command and a backend is started on it → the shift's
+> Z-report matches the one before the restore to the baht, and a `system.restore` audit entry exists
 
 This suite uncovered **5 defects that the 659 existing tests had not detected**; all were fixed with regression
 tests on both the backend and Demo Mode: a tax invoice whose three printed lines did not sum correctly (#43), a
@@ -1560,7 +1594,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (516 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (542 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1785,6 +1819,15 @@ the server from starting; the migration files match `checksums.json` (a Windows 
 checksum); and a database created before T01, containing seed data, a sale, and a refund, is upgraded with every table's row
 count unchanged (see `docs/DECISIONS.md` #79)
 
+`backup-files.test.js` (6 cases) and `backups.test.js` (20 cases) cover backups (ticket 33): a shift close writes a file that passes
+`integrity_check` and holds that shift's totals, `0600` files and `0700` folders, a failed backup still lets the shift close, a 40,000-row
+backup taken during continuous writes contains no half-written transaction, the 6-hour schedule with a fake clock (only when data
+changed), a backup before migrations and no migration when it fails, the second location failing separately from the first, the
+26-hour warning, who may see the status and press the button (cashier/waiter/kitchen get 403), no endpoint sending a backup out,
+refusing a location inside a folder published on the web, the metrics, the retention rules (never down to zero files, even with
+`BACKUP_KEEP_DAYS=0`) and all four restore cases (server still running, damaged file, file from a newer version, a normal file with
+its `pre-restore` copy and audit entry)
+
 `erp-connection.test.js` (20 cases) exercises PaynEat ERP connected mode (ticket 25) against a stub ERP (`tests/helpers/erpStub.js`),
 from standalone operation through leaving connected mode:
 - by default the ERP is never called;
@@ -1864,7 +1907,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (574 cases)** — organized into 3 levels:
+**Flutter (596 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1894,6 +1937,8 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `settings_controller_test.dart` | Loading store settings into the correct form fields |
 | Widget | `settings_points_form_test.dart` | The settings form warns about an earn rate or point value below 0.01 baht before sending (no API call), exactly 0.01 sends, and a rate of 0.5 shows as 0.5 instead of being rounded to 1 and saved over (T15) |
 | Controller | `erp_connection_controller_test.dart` | The PaynEat ERP connection section (ticket 25): address/credential/branch codes checked before calling the backend, a successful connect clears the credential field at once, a branch-code refusal from the backend reloads the list, 422 field messages, pull now reports the count and version / a failure reloads the status, leaving connected mode, branch codes sent in capitals, the last pull's problem in the app's language, saying when scheduled pulls have stopped, the create-branch button (success names the branch actually created / a 409 shows the reason and reloads / not in demo mode), demo mode always standalone, parsing the backend's status (including how the credential travels — an older backend that doesn't send it counts as https), and ERP unit names (unknown codes shown as they are) |
+| Controller | `backup_controllers_test.dart` | The Backups section and warning (ticket 33): parsing the backend's answers (two locations with separate status, a Back up now result whose second copy failed, the `backup` field of a shift close), loading the status, a successful backup clearing the warning at once, a failed backup keeping its reason in the card, a timed-out request reloading the real status, which roles see the warning (admin/manager only) and reloading every 15 minutes |
+| Widget | `backup_widgets_test.dart` | The Backups card: time, size, file count, the advice to set a second location, a failing second location shown apart from the first, the warning with its reason and low disk space, no download button; the warning bar: roles without it see nothing, the admin gets a button to Settings, a manager is told to inform the owner |
 | Controller | `ingredients_controller_test.dart` | The ingredients page is read-only when connected to the ERP, an unreadable mode keeps the last value, the "low stock" filter is cleared in connected mode, item codes are sent in capitals and an edit sends null to clear one (ticket 25) |
 | Controller | `staff_controller_test.dart` | Filtering staff by role, counting by role; a manager can assign only waiter/cashier/kitchen, has no menu on manager/admin accounts and cannot delete, while admin manages every role (T22) |
 | Widget | `staff_page_permissions_test.dart` | The staff page for a manager: the ⋮ menu only on staff rows, no delete, no promote to manager/admin, and no admin filter chip; admin sees the menu on every row but their own, with delete (T22) |
@@ -1989,7 +2034,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   Added to support Korean restaurants in Thailand (see `docs/DECISIONS.md` #39). **Korean menu names are
   intentionally not stored in the database**, because menu names are each restaurant's own data, not system text
 - [x] **Flutter integration tests against a real backend** — implemented as the E2E suite `app/test_e2e/`
-  (49 cases): it starts the real backend on a new temporary database per file and exercises the app's
+  (53 cases): it starts the real backend on a new temporary database per file and exercises the app's
   data/domain code through a full restaurant business day, a customer scanning the QR, and
   branches/permissions. It operates at the data/domain layer rather than through `integration_test`, which
   requires a physical device, and runs as a separate CI job. The suite uncovered 5 defects not detected by the
@@ -2143,14 +2188,14 @@ Completed work, planned work, and known limitations, with the reasoning for each
   (`docs/DECISIONS.md` #87), T10 split by item sharing promotions and included VAT correctly (`docs/DECISIONS.md` #88), T15 a 0.01-baht
   minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89), T19 production defaults (`docs/DECISIONS.md` #83)
   and T22 managers manage only lower-role staff in their own branches (`docs/DECISIONS.md` #92) — **round 1 is complete**.
-  Next: ticket 33 and round 2 (including net sales that subtract a refund twice, #143) are what must be done before the first real
+  Ticket 33 is done. Next: round 2 (including net sales that subtract a refund twice, #143) are what must be done before the first real
   shop, closed by a test in which a shop owner runs a whole shift (`docs/DECISIONS.md` #93)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
-- [ ] **Automatic backups the owner can restore without a developer (ticket 33)** — a backup at every shift close, every six
-  hours and before every database upgrade, each one checked for integrity; an optional second copy on another disk; a warning for
-  the owner when no backup has succeeded for 26 hours; and a one-command restore. Required before the first real shop, and
-  the first ticket of that set (see `docs/DECISIONS.md` #90, #93)
+- [x] **Automatic backups the owner can restore without a developer (ticket 33, #145)** — a backup at every shift close, every six
+  hours when data changed and before every database upgrade, each one checked for integrity; an optional second copy on another disk;
+  a Backups section in Settings and a warning for the admin and managers when no backup has succeeded for 26 hours; and
+  `npm run db:restore`, which always backs up the current database first (see `docs/DECISIONS.md` #90, #94)
 - [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
   network the server's operator allows explicitly (with a permanent warning); an old `http://` connection stops sending the credential
   at once; certificates are always verified, with a chain's internal CA supported through `NODE_EXTRA_CA_CERTS`; and the contract copy

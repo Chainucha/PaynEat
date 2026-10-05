@@ -2142,13 +2142,15 @@ Completed work, planned work, and known limitations, with the reasoning for each
   food the kitchen has started needs a manager even after an undo (`docs/DECISIONS.md` #86), T06 net paid after refunds
   (`docs/DECISIONS.md` #87), T10 split by item sharing promotions and included VAT correctly (`docs/DECISIONS.md` #88), T15 a 0.01-baht
   minimum points rate and repairing broken balances (`docs/DECISIONS.md` #89), T19 production defaults (`docs/DECISIONS.md` #83)
-  and T22 managers manage only lower-role staff in their own branches (`docs/DECISIONS.md` #92) — **round 1 is complete**
+  and T22 managers manage only lower-role staff in their own branches (`docs/DECISIONS.md` #92) — **round 1 is complete**.
+  Next: ticket 33 and round 2 (including net sales that subtract a refund twice, #143) are what must be done before the first real
+  shop, closed by a test in which a shop owner runs a whole shift (`docs/DECISIONS.md` #93)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [ ] **Automatic backups the owner can restore without a developer (ticket 33)** — a backup at every shift close, every six
   hours and before every database upgrade, each one checked for integrity; an optional second copy on another disk; a warning for
-  the owner when no backup has succeeded for 26 hours; and a one-command restore. Required before the first real shop
-  (see `docs/DECISIONS.md` #90)
+  the owner when no backup has succeeded for 26 hours; and a one-command restore. Required before the first real shop, and
+  the first ticket of that set (see `docs/DECISIONS.md` #90, #93)
 - [x] **PaynEat ERP connection over HTTPS only** — the ERP address must be `https://`, except `localhost` or a closed
   network the server's operator allows explicitly (with a permanent warning); an old `http://` connection stops sending the credential
   at once; certificates are always verified, with a chain's internal CA supported through `NODE_EXTRA_CA_CERTS`; and the contract copy
@@ -2210,7 +2212,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   job-application use (key figures and highlights, considerably shorter than this README)
 - [`docs/PaynEat-POS-Features-TH.pdf`](docs/PaynEat-POS-Features-TH.pdf) — a 30-page document covering every screen with explanations (Thai)
 - [`docs/PaynEat-POS-Features-EN.pdf`](docs/PaynEat-POS-Features-EN.pdf) — English edition, rewritten for business audiences (30 pages)
-- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 92 design decisions and their accepted trade-offs (e.g. why
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — 93 design decisions and their accepted trade-offs (e.g. why
   amounts are stored in satang, why the billing logic is intentionally implemented twice, why SQLite is used)
 - [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) — coding standards derived from a code-quality audit
   covering Clean Code / State Management / Clean Architecture / Technical Debt / folder structure; the

@@ -13,6 +13,7 @@ class CategoryModel extends Category {
     super.sortOrder,
     super.isActive,
     super.itemCount,
+    super.stationId,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) => CategoryModel(
@@ -24,6 +25,7 @@ class CategoryModel extends Category {
     sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
     isActive: json['isActive'] as bool? ?? true,
     itemCount: (json['itemCount'] as num?)?.toInt() ?? 0,
+    stationId: (json['stationId'] as num?)?.toInt(),
   );
 
   static Map<String, dynamic> toCreateJson({

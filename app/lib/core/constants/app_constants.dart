@@ -243,4 +243,41 @@ class StorageKeys {
   static const String pendingOrderItems = 'pending_order_items';
   static const String locale = 'app_locale';
   static const String contrast = 'app_contrast';
+  static const String kitchenStation = 'kitchen_station';
+}
+
+/// ชิปกรองสถานีบนจอครัว (ticket 34) — เก็บเป็น "รหัสสถานี" ต่อเครื่อง
+///
+/// สถานีเป็นแถวในฐานข้อมูลที่ร้านเพิ่มเองได้ จึงไม่มีรายการค่าตายตัวในแอป มีแต่สามรหัสที่
+/// migration เตรียมไว้ให้ (ใช้ในโหมดสาธิตและเทสต์) กับค่า [all] ที่หมายถึง "ไม่กรอง"
+class KitchenStationFilter {
+  const KitchenStationFilter._();
+
+  static const String all = 'all';
+  static const String hot = 'hot';
+  static const String cold = 'cold';
+  static const String bar = 'bar';
+
+  static const Map<String, String> _keys = {
+    hot: 'station_hot',
+    cold: 'station_cold',
+    bar: 'station_bar',
+  };
+
+  /// ชื่อสถานีที่แอปรู้จักมาแต่ต้น — สถานีที่ร้านเพิ่มเองไม่มีคำแปล จึงคืนค่ารหัสไปตามเดิม
+  /// (ใช้เฉพาะจุดที่ไม่มีข้อมูลสถานีจริงอยู่ในมือ ปกติให้ใช้ `KitchenStation.displayName`)
+  static String label(String code) => (_keys[code] ?? code).tr;
+
+  /// แปลงรหัสที่เลือกเป็นค่าที่เก็บลงเครื่อง — null (ทุกสถานี) เก็บเป็น [all]
+  static String store(String? code) =>
+      code == null || code.isEmpty ? all : code;
+
+  /// อ่านค่าจากเครื่องกลับเป็นรหัสสถานี — [all] หรือค่าว่าง/เสียหายให้ถือว่า "ทุกสถานี"
+  /// ไม่โยน error เพราะสถานีถูกลบหรือเปลี่ยนรหัสได้ จอครัวต้องเปิดใช้ต่อได้เสมอ
+  static String? parse(String? raw) {
+    if (raw == null) return null;
+    final value = raw.trim();
+    if (value.isEmpty || value == all) return null;
+    return value;
+  }
 }

@@ -3,6 +3,42 @@
 
 /// คำแปลของฟีเจอร์ menu
 const Map<String, String> menuTranslationsTh = {
+  'menu_station_button': 'สถานีครัว',
+  'menu_form_station_label': 'สถานีครัว',
+  'menu_form_station_inherit': 'ตามหมวดหมู่ (@station)',
+  'menu_station_sheet_title': 'จัดการสถานีครัว',
+  'menu_station_empty': 'ยังไม่มีสถานีครัว',
+  'menu_station_dialog_title_new': 'เพิ่มสถานีครัว',
+  'menu_station_dialog_title_edit': 'แก้ไขสถานีครัว',
+  'menu_station_code_label': 'รหัสสถานี (a-z 0-9 - _)',
+  'menu_station_code_locked':
+      'รหัสแก้ไม่ได้ เพราะจอครัวแต่ละเครื่องจำรหัสนี้ไว้',
+  'menu_station_name_label': 'ชื่อสถานี',
+  'menu_station_name_en_label': 'ชื่อภาษาอังกฤษ',
+  'menu_station_name_ko_label': 'ชื่อภาษาเกาหลี',
+  'menu_station_icon_label': 'ไอคอน',
+  'menu_station_default_badge': 'ค่าเริ่มต้น',
+  'menu_station_set_default': 'ตั้งเป็นค่าเริ่มต้น',
+  'menu_station_category_label': 'สถานีครัวของหมวดหมู่นี้',
+  'menu_station_use_default': 'ใช้สถานีค่าเริ่มต้น',
+  'menu_station_none': 'ยังไม่กำหนด',
+  'menu_station_item_count': '@count เมนู',
+  'menu_station_created_success': 'เพิ่มสถานีครัวแล้ว',
+  'menu_station_updated_success': 'บันทึกสถานีครัวแล้ว',
+  'menu_station_deleted_success': 'ลบสถานีครัวแล้ว',
+  'menu_delete_station_title': 'ลบสถานีครัว',
+  'menu_delete_station_confirm': 'ลบสถานีครัว "@name" ใช่ไหม',
+  'menu_delete_station_default_error':
+      'ลบสถานีค่าเริ่มต้นไม่ได้ กรุณาตั้งสถานีอื่นเป็นค่าเริ่มต้นก่อน',
+  'menu_delete_station_has_items_error':
+      'ลบไม่ได้ เพราะยังมีเมนูผูกกับสถานีนี้ กรุณาย้ายเมนูออกก่อน',
+  'menu_delete_station_has_categories_error':
+      'ลบไม่ได้ เพราะยังมีหมวดหมู่ผูกกับสถานีนี้ กรุณาย้ายหมวดหมู่ออกก่อน',
+  'menu_delete_station_in_open_order_error':
+      'สถานีนี้ถูกใช้ในบิลไปแล้ว ปิดใช้งานแทนการลบ',
+  'menu_station_default_cannot_disable_error':
+      'ปิดใช้งานสถานีค่าเริ่มต้นไม่ได้ กรุณาตั้งสถานีอื่นเป็นค่าเริ่มต้นก่อน',
+  'menu_station_code_taken_error': 'รหัสสถานี "@code" ถูกใช้แล้ว',
   // Management page — search / filter bar / list header
   'menu_search_hint': 'ค้นหาเมนู...',
   'menu_category_button': 'หมวดหมู่',
@@ -113,6 +149,42 @@ const Map<String, String> menuTranslationsTh = {
 };
 
 const Map<String, String> menuTranslationsEn = {
+  'menu_station_button': 'Stations',
+  'menu_form_station_label': 'Kitchen station',
+  'menu_form_station_inherit': 'Follow the category (@station)',
+  'menu_station_sheet_title': 'Manage kitchen stations',
+  'menu_station_empty': 'No kitchen stations yet',
+  'menu_station_dialog_title_new': 'Add a kitchen station',
+  'menu_station_dialog_title_edit': 'Edit kitchen station',
+  'menu_station_code_label': 'Station code (a-z 0-9 - _)',
+  'menu_station_code_locked':
+      "The code can't change — each kitchen screen remembers it",
+  'menu_station_name_label': 'Station name',
+  'menu_station_name_en_label': 'English name',
+  'menu_station_name_ko_label': 'Korean name',
+  'menu_station_icon_label': 'Icon',
+  'menu_station_default_badge': 'Default',
+  'menu_station_set_default': 'Make this the default',
+  'menu_station_category_label': 'Kitchen station for this category',
+  'menu_station_use_default': 'Use the default station',
+  'menu_station_none': 'Not set',
+  'menu_station_item_count': '@count items',
+  'menu_station_created_success': 'Kitchen station added',
+  'menu_station_updated_success': 'Kitchen station saved',
+  'menu_station_deleted_success': 'Kitchen station deleted',
+  'menu_delete_station_title': 'Delete kitchen station',
+  'menu_delete_station_confirm': 'Delete the station "@name"?',
+  'menu_delete_station_default_error':
+      "The default station can't be deleted — make another station the default first",
+  'menu_delete_station_has_items_error':
+      "Can't delete — menu items are still assigned to this station. Move them out first",
+  'menu_delete_station_has_categories_error':
+      "Can't delete — categories are still assigned to this station. Move them out first",
+  'menu_delete_station_in_open_order_error':
+      'This station already appears on a bill — deactivate it instead of deleting',
+  'menu_station_default_cannot_disable_error':
+      "The default station can't be deactivated — make another station the default first",
+  'menu_station_code_taken_error': 'The station code "@code" is already taken',
   // Management page — search / filter bar / list header
   'menu_search_hint': 'Search menu...',
   'menu_category_button': 'Category',
@@ -225,6 +297,41 @@ const Map<String, String> menuTranslationsEn = {
 };
 
 const Map<String, String> menuTranslationsKo = {
+  'menu_station_button': '스테이션',
+  'menu_form_station_label': '주방 스테이션',
+  'menu_form_station_inherit': '카테고리 따름 (@station)',
+  'menu_station_sheet_title': '주방 스테이션 관리',
+  'menu_station_empty': '주방 스테이션이 아직 없습니다',
+  'menu_station_dialog_title_new': '주방 스테이션 추가',
+  'menu_station_dialog_title_edit': '주방 스테이션 수정',
+  'menu_station_code_label': '스테이션 코드 (a-z 0-9 - _)',
+  'menu_station_code_locked': '각 주방 화면이 이 코드를 기억하므로 변경할 수 없습니다',
+  'menu_station_name_label': '스테이션 이름',
+  'menu_station_name_en_label': '영어 이름',
+  'menu_station_name_ko_label': '한국어 이름',
+  'menu_station_icon_label': '아이콘',
+  'menu_station_default_badge': '기본',
+  'menu_station_set_default': '기본으로 지정',
+  'menu_station_category_label': '이 카테고리의 주방 스테이션',
+  'menu_station_use_default': '기본 스테이션 사용',
+  'menu_station_none': '미지정',
+  'menu_station_item_count': '메뉴 @count개',
+  'menu_station_created_success': '주방 스테이션을 추가했습니다',
+  'menu_station_updated_success': '주방 스테이션을 저장했습니다',
+  'menu_station_deleted_success': '주방 스테이션을 삭제했습니다',
+  'menu_delete_station_title': '주방 스테이션 삭제',
+  'menu_delete_station_confirm': '"@name" 스테이션을 삭제할까요?',
+  'menu_delete_station_default_error':
+      '기본 스테이션은 삭제할 수 없습니다 — 먼저 다른 스테이션을 기본으로 지정해 주세요',
+  'menu_delete_station_has_items_error':
+      '삭제할 수 없습니다 — 이 스테이션에 연결된 메뉴가 있습니다. 먼저 옮겨 주세요',
+  'menu_delete_station_has_categories_error':
+      '삭제할 수 없습니다 — 이 스테이션에 연결된 카테고리가 있습니다. 먼저 옮겨 주세요',
+  'menu_delete_station_in_open_order_error':
+      '이 스테이션은 이미 청구서에 사용되었습니다 — 삭제하지 말고 비활성화해 주세요',
+  'menu_station_default_cannot_disable_error':
+      '기본 스테이션은 비활성화할 수 없습니다 — 먼저 다른 스테이션을 기본으로 지정해 주세요',
+  'menu_station_code_taken_error': '스테이션 코드 "@code"은(는) 이미 사용 중입니다',
   'menu_search_hint': '메뉴 검색...',
   'menu_category_button': '카테고리',
   'menu_total_count': '전체 @count개',

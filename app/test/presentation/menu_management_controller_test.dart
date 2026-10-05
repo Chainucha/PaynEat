@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
 import 'package:payneat_pos/features/menu/domain/entities/category.dart';
+import 'package:payneat_pos/features/menu/domain/entities/kitchen_station.dart';
 import 'package:payneat_pos/features/menu/domain/entities/menu_item.dart';
 import 'package:payneat_pos/features/menu/domain/repositories/menu_repository.dart';
 import 'package:payneat_pos/features/menu/domain/usecases/menu_usecases.dart';
@@ -13,6 +14,12 @@ import 'package:payneat_pos/features/menu/presentation/controllers/menu_manageme
 class _FakeMenuRepository implements MenuRepository {
   Result<List<Category>> nextCategoriesResult = const Result.success([]);
   Result<List<MenuItem>> nextMenuItemsResult = const Result.success([]);
+  Result<List<KitchenStation>> nextStationsResult = const Result.success([]);
+  Result<KitchenStation> nextSaveStationResult = const Result.success(
+    KitchenStation(id: 1, code: 'bar', name: 'บาร์'),
+  );
+  final deletedStationIds = <int>[];
+  final savedStations = <SaveKitchenStationParams>[];
 
   @override
   Future<Result<List<Category>>> getCategories({
@@ -25,6 +32,39 @@ class _FakeMenuRepository implements MenuRepository {
     String? search,
     bool? availableOnly,
   }) async => nextMenuItemsResult;
+
+  @override
+  Future<Result<List<KitchenStation>>> getKitchenStations({
+    bool activeOnly = false,
+  }) async => nextStationsResult;
+
+  @override
+  Future<Result<KitchenStation>> saveKitchenStation({
+    int? id,
+    required String name,
+    String? code,
+    String? nameEn,
+    String? nameKo,
+    String? icon,
+    bool? isActive,
+    bool? isDefault,
+  }) async {
+    savedStations.add(
+      SaveKitchenStationParams(
+        id: id,
+        name: name,
+        code: code,
+        isDefault: isDefault,
+      ),
+    );
+    return nextSaveStationResult;
+  }
+
+  @override
+  Future<Result<void>> deleteKitchenStation(int id) async {
+    deletedStationIds.add(id);
+    return const Result.success(null);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -58,6 +98,9 @@ void main() {
       toggleAvailability: ToggleMenuAvailabilityUseCase(repository),
       saveCategory: SaveCategoryUseCase(repository),
       deleteCategory: DeleteCategoryUseCase(repository),
+      getStations: GetKitchenStationsUseCase(repository),
+      saveStationUseCase: SaveKitchenStationUseCase(repository),
+      deleteStationUseCase: DeleteKitchenStationUseCase(repository),
     );
   });
 
@@ -119,6 +162,28 @@ void main() {
       await controller.load();
 
       expect(controller.unavailableCount, 2);
+    });
+  });
+
+  group('MenuManagementController — สถานีครัว (ticket 34)', () {
+    test('load → เติมรายการสถานีมาให้ฟอร์มและชีตใช้', () async {
+      repository.nextStationsResult = const Result.success([
+        KitchenStation(id: 1, code: 'hot', name: 'ครัวร้อน', isDefault: true),
+        KitchenStation(id: 3, code: 'bar', name: 'บาร์'),
+      ]);
+
+      await controller.load();
+
+      expect(controller.stations.length, 2);
+      expect(controller.stations.first.isDefault, isTrue);
+    });
+
+    test('ดึงสถานีไม่สำเร็จ → ตั้ง errorMessage', () async {
+      repository.nextStationsResult = Result.failure(ServerFailure('ล่ม'));
+
+      await controller.load();
+
+      expect(controller.errorMessage.value, 'ล่ม');
     });
   });
 }

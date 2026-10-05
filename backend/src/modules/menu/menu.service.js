@@ -8,6 +8,7 @@ import { getDb } from '../../db/index.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
 import { categoryRepository } from '../categories/category.repository.js';
 import { ingredientRepository } from '../ingredients/ingredient.repository.js';
+import { kitchenStationService } from '../kitchen-stations/kitchen-station.service.js';
 import { menuRepository } from './menu.repository.js';
 import { toMenuItemDto } from './menu.mapper.js';
 
@@ -124,6 +125,7 @@ export const menuService = {
 
   create(payload, currentBranchId) {
     assertCategoryExists(payload.categoryId);
+    kitchenStationService.assertStationExists(payload.stationId);
     assertIngredientsExist(payload.ingredients);
     const branchId = resolveBranchIdForWrite(currentBranchId, payload.branchId);
     const codes = normalizeCodes(payload, {
@@ -153,6 +155,7 @@ export const menuService = {
   update(id, payload, actingUser) {
     const before = this.getById(id);
     assertCategoryExists(payload.categoryId);
+    kitchenStationService.assertStationExists(payload.stationId);
     assertIngredientsExist(payload.ingredients);
 
     const newPriceSatang = payload.price === undefined ? undefined : toSatang(payload.price);

@@ -208,3 +208,50 @@ test('POST /users — พนักงานใหม่ถูกกำหนด�
   assert.equal(loggedIn.status, 200);
   assert.equal(loggedIn.body.data.user.branchName, 'สาขาสุขุมวิท');
 });
+
+test('GET /orders/kitchen/queue — จอครัวเห็นเฉพาะตั๋วของสาขาที่ล็อกอินอยู่ (ticket 34)', async () => {
+  const { token: admin } = await login('admin', 'admin123');
+  const branches = (await get('/api/v1/branches', admin)).body.data;
+
+  // admin สลับไปทำงานในสาขาหนึ่ง เปิดโต๊ะ เปิดออเดอร์ แล้วส่งเข้าครัว — ทำทั้งสองสาขา
+  const sendOrderAt = async (branchCode) => {
+    const branch = branches.find((row) => row.code === branchCode);
+    const selected = await post('/api/v1/auth/select-branch', admin, { branchId: branch.id });
+    assert.equal(selected.status, 200, JSON.stringify(selected.body));
+    const token = selected.body.data.token;
+
+    const table = await post('/api/v1/tables', token, {
+      name: `KQ${branchCode.slice(0, 3)}${Date.now().toString().slice(-6)}`,
+    });
+    assert.equal(table.status, 201, JSON.stringify(table.body));
+    const menu = await get('/api/v1/menu-items?availableOnly=true&limit=1', token);
+    const order = await post('/api/v1/orders', token, {
+      type: 'dine_in',
+      tableId: table.body.data.id,
+      guestCount: 1,
+      items: [{ menuItemId: menu.body.data[0].id, quantity: 1 }],
+    });
+    assert.equal(order.status, 201, JSON.stringify(order.body));
+    const sent = await post(`/api/v1/orders/${order.body.data.id}/send-to-kitchen`, token);
+    assert.equal(sent.status, 200, JSON.stringify(sent.body));
+    return order.body.data.id;
+  };
+
+  const sukhumvitOrderId = await sendOrderAt('SUKHUMVIT');
+  const thonglorOrderId = await sendOrderAt('THONGLOR');
+
+  // บัญชีครัวมีสิทธิ์สาขาสุขุมวิทสาขาเดียว
+  const { token: kitchen } = await login('kitchen', 'kitchen123');
+  const queue = await get('/api/v1/orders/kitchen/queue', kitchen);
+  assert.equal(queue.status, 200);
+  const orderIds = new Set(queue.body.data.map((item) => item.orderId));
+  assert.ok(orderIds.has(sukhumvitOrderId), 'ต้องเห็นตั๋วของสาขาตัวเอง');
+  assert.ok(!orderIds.has(thonglorOrderId), 'ต้องไม่เห็นตั๋วของสาขาอื่น');
+
+  // admin โหมด "ทุกสาขา" เห็นทั้งสองสาขาเหมือนเดิม (ดู docs/DECISIONS.md #36)
+  const allBranches = await post('/api/v1/auth/select-branch', admin, { branchId: null });
+  const adminQueue = await get('/api/v1/orders/kitchen/queue', allBranches.body.data.token);
+  const adminOrderIds = new Set(adminQueue.body.data.map((item) => item.orderId));
+  assert.ok(adminOrderIds.has(sukhumvitOrderId));
+  assert.ok(adminOrderIds.has(thonglorOrderId));
+});

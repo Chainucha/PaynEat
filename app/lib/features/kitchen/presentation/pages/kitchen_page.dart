@@ -11,6 +11,7 @@ import '../../../../core/widgets/state_views.dart';
 import '../../../order/domain/entities/order_item.dart';
 import '../controllers/kitchen_controller.dart';
 import '../widgets/kitchen_ticket_card.dart';
+import '../widgets/station_filter_bar.dart';
 
 /// จอครัว — แบ่งเป็น 3 คอลัมน์ตามสถานะ เห็นภาพรวมงานทั้งครัวในจอเดียว
 class KitchenPage extends GetView<KitchenController> {
@@ -21,6 +22,7 @@ class KitchenPage extends GetView<KitchenController> {
     return Column(
       children: [
         const _KitchenHeader(),
+        const StationFilterBar(),
         const _OfflineBanner(),
         Expanded(
           child: Obx(() {
@@ -35,6 +37,14 @@ class KitchenPage extends GetView<KitchenController> {
               return EmptyView(
                 message: 'kitchen_empty_queue_message'.tr,
                 icon: Icons.restaurant_rounded,
+              );
+            }
+            // มีตั๋วอยู่ แต่ไม่ใช่ของสถานีที่เลือก — บอกตรง ๆ ว่ากรองอยู่ ไม่ปล่อยให้เห็นสามคอลัมน์
+            // ว่างเปล่าแล้วเดาเอาเองว่าครัวว่างหรือจอค้าง (ticket 34)
+            if (controller.visibleQueue.isEmpty) {
+              return EmptyView(
+                message: 'kitchen_station_empty_queue_message'.tr,
+                icon: Icons.filter_alt_off_rounded,
               );
             }
 
@@ -204,7 +214,7 @@ class _KitchenHeader extends GetView<KitchenController> {
                     ),
                     child: Text(
                       'kitchen_queue_count'.trParams({
-                        'count': controller.queue.length.toString(),
+                        'count': controller.visibleQueue.length.toString(),
                       }),
                       style: TextStyle(
                         fontSize: 12.5,
@@ -351,6 +361,10 @@ class _TicketList extends GetView<KitchenController> {
           item: item,
           isLate: controller.isLate(item),
           onAdvance: () => controller.advance(item),
+          // โชว์ป้ายสถานีเฉพาะตอนดู "ทุกสถานี" — กรองอยู่แล้วป้ายก็ซ้ำซ้อน และหัวตั๋วก็แน่นพอแล้ว
+          stationLabel: controller.selectedStationCode.value == null
+              ? item.stationName
+              : null,
         );
       },
     );

@@ -48,5 +48,19 @@ void main() {
         expect(storage.user?['id'], 9);
       },
     );
+
+    test(
+      'สถานีครัวที่จอเลือกไว้ไม่ถูกล้างตอน logout (ผูกกับเครื่อง ไม่ใช่บัญชี)',
+      () async {
+        final storage = await StorageService.init();
+
+        await storage.saveSession(token: 'token-123', user: const {'id': 1});
+        await storage.saveKitchenStation('bar');
+        await storage.clear();
+
+        expect(storage.token, isNull);
+        expect(storage.kitchenStation, 'bar');
+      },
+    );
   });
 }

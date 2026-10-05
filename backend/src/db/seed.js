@@ -51,17 +51,18 @@ const resolveSeedPassword = (user) => {
   return value;
 };
 
+// `station` = รหัสสถานีครัวตั้งต้นของหมวดหมู่ (ticket 34) เมนูรายตัวทับได้ ดู MENU ด้านล่าง
 // prettier-ignore
 const CATEGORIES = [
-  { name: 'แนะนำ', nameEn: 'Recommended', icon: '⭐', sortOrder: 1 },
-  { name: 'อาหารจานเดียว', nameEn: 'Rice & Noodles', icon: '🍛', sortOrder: 2 },
-  { name: 'กับข้าว', nameEn: 'Main Dishes', icon: '🍲', sortOrder: 3 },
-  { name: 'ยำ / สลัด', nameEn: 'Salads', icon: '🥗', sortOrder: 4 },
-  { name: 'ของทานเล่น', nameEn: 'Appetizers', icon: '🍤', sortOrder: 5 },
-  { name: 'เครื่องดื่ม', nameEn: 'Drinks', icon: '🥤', sortOrder: 6 },
-  { name: 'ของหวาน', nameEn: 'Desserts', icon: '🍨', sortOrder: 7 },
+  { name: 'แนะนำ', nameEn: 'Recommended', icon: '⭐', sortOrder: 1, station: 'hot' },
+  { name: 'อาหารจานเดียว', nameEn: 'Rice & Noodles', icon: '🍛', sortOrder: 2, station: 'hot' },
+  { name: 'กับข้าว', nameEn: 'Main Dishes', icon: '🍲', sortOrder: 3, station: 'hot' },
+  { name: 'ยำ / สลัด', nameEn: 'Salads', icon: '🥗', sortOrder: 4, station: 'cold' },
+  { name: 'ของทานเล่น', nameEn: 'Appetizers', icon: '🍤', sortOrder: 5, station: 'hot' },
+  { name: 'เครื่องดื่ม', nameEn: 'Drinks', icon: '🥤', sortOrder: 6, station: 'bar' },
+  { name: 'ของหวาน', nameEn: 'Desserts', icon: '🍨', sortOrder: 7, station: 'bar' },
   // เคาน์เตอร์ขายเนื้อสด/ของฝากกลับบ้าน (ดู docs/tickets/18-sell-by-weight.md, 19-barcode-scale.md)
-  { name: 'เนื้อสด & ของกลับบ้าน', nameEn: 'Fresh Meat & Take-home', icon: '🥩', sortOrder: 8 },
+  { name: 'เนื้อสด & ของกลับบ้าน', nameEn: 'Fresh Meat & Take-home', icon: '🥩', sortOrder: 8, station: 'cold' },
 ];
 
 // prettier-ignore
@@ -342,6 +343,27 @@ export const seed = ({ migrations } = {}) => {
       );
       for (const category of CATEGORIES) {
         insertCategory.run(category.name, category.nameEn, category.icon, category.sortOrder);
+      }
+    }
+
+    // สถานีครัวมาพร้อม migration 0006 ไม่ใช่ seed — ที่นี่แค่ผูก id เข้ากับหมวดหมู่ (ticket 34)
+    // ผูกเป็นขั้นแยกหลัง INSERT เพราะ seed() ถูกเรียกกับ schema รุ่นเก่าด้วย (tests/migrations.test.js
+    // seed บน migration 0001 เพื่อจำลองฐานข้อมูลของร้านก่อน T01) ตอนนั้นยังไม่มีทั้งตารางและคอลัมน์นี้
+    const hasStations = db
+      .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'kitchen_stations'")
+      .get();
+    if (hasStations) {
+      const stationIdByCode = new Map(
+        db
+          .prepare('SELECT id, code FROM kitchen_stations')
+          .all()
+          .map((row) => [row.code, row.id]),
+      );
+      const setCategoryStation = db.prepare(
+        'UPDATE categories SET station_id = ? WHERE name = ? AND station_id IS NULL',
+      );
+      for (const category of CATEGORIES) {
+        setCategoryStation.run(stationIdByCode.get(category.station) ?? null, category.name);
       }
     }
 

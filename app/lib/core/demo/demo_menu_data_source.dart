@@ -31,6 +31,34 @@ class DemoMenuDataSource implements MenuRemoteDataSource {
       _delayed(() => _store.deleteCategory(id));
 
   @override
+  Future<List<KitchenStationModel>> getKitchenStations({
+    bool activeOnly = false,
+  }) => _delayed(
+    () => _store
+        .kitchenStationList(activeOnly: activeOnly)
+        .map(KitchenStationModel.fromJson)
+        .toList(growable: false),
+  );
+
+  @override
+  Future<KitchenStationModel> createKitchenStation(Map<String, dynamic> body) =>
+      _delayed(
+        () => KitchenStationModel.fromJson(_store.saveKitchenStation(body)),
+      );
+
+  @override
+  Future<KitchenStationModel> updateKitchenStation(
+    int id,
+    Map<String, dynamic> body,
+  ) => _delayed(
+    () => KitchenStationModel.fromJson(_store.saveKitchenStation(body, id: id)),
+  );
+
+  @override
+  Future<void> deleteKitchenStation(int id) =>
+      _delayed(() => _store.deleteKitchenStation(id));
+
+  @override
   Future<List<MenuItemModel>> getMenuItems({
     int? categoryId,
     String? search,

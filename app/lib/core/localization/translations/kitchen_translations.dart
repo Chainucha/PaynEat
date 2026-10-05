@@ -3,6 +3,10 @@
 
 /// คำแปลของฟีเจอร์ kitchen
 const Map<String, String> kitchenTranslationsTh = {
+  'kitchen_station_filter_all': 'ทุกสถานี',
+  'kitchen_station_filter_label': 'กรองตามสถานีครัว',
+  'kitchen_station_empty_queue_message':
+      'ไม่มีรายการของสถานีนี้\nแตะ "ทุกสถานี" เพื่อดูทั้งครัว',
   'kitchen_header_title': 'คิวครัว',
   'kitchen_queue_count': '@count รายการ',
   'kitchen_late_count': 'ช้า @count',
@@ -20,6 +24,10 @@ const Map<String, String> kitchenTranslationsTh = {
 };
 
 const Map<String, String> kitchenTranslationsEn = {
+  'kitchen_station_filter_all': 'All stations',
+  'kitchen_station_filter_label': 'Filter by kitchen station',
+  'kitchen_station_empty_queue_message':
+      'No tickets for this station\nTap "All stations" to see the whole kitchen',
   'kitchen_header_title': 'Kitchen Queue',
   'kitchen_queue_count': '@count items',
   'kitchen_late_count': 'Late @count',
@@ -37,6 +45,10 @@ const Map<String, String> kitchenTranslationsEn = {
 };
 
 const Map<String, String> kitchenTranslationsKo = {
+  'kitchen_station_filter_all': '전체 스테이션',
+  'kitchen_station_filter_label': '주방 스테이션으로 필터',
+  'kitchen_station_empty_queue_message':
+      '이 스테이션에는 항목이 없습니다\n전체 스테이션을 탭하면 주방 전체가 보입니다',
   'kitchen_header_title': '주방 대기열',
   'kitchen_queue_count': '@count개',
   'kitchen_late_count': '지연 @count',

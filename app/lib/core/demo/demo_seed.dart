@@ -71,6 +71,43 @@ class DemoSeed {
     },
   ];
 
+  /// สถานีครัว (ticket 34) — ชุดเดียวกับที่ migration 0006 ใส่ให้ฝั่ง backend
+  static List<Map<String, dynamic>> kitchenStations() => [
+    {
+      'id': 1,
+      'code': 'hot',
+      'name': 'ครัวร้อน',
+      'nameEn': 'Hot Kitchen',
+      'nameKo': '온주방',
+      'icon': '🔥',
+      'sortOrder': 1,
+      'isActive': true,
+      'isDefault': true,
+    },
+    {
+      'id': 2,
+      'code': 'cold',
+      'name': 'ครัวเย็น',
+      'nameEn': 'Cold Kitchen',
+      'nameKo': '냉주방',
+      'icon': '🥗',
+      'sortOrder': 2,
+      'isActive': true,
+      'isDefault': false,
+    },
+    {
+      'id': 3,
+      'code': 'bar',
+      'name': 'บาร์',
+      'nameEn': 'Bar',
+      'nameKo': '바',
+      'icon': '🥤',
+      'sortOrder': 3,
+      'isActive': true,
+      'isDefault': false,
+    },
+  ];
+
   static List<Map<String, dynamic>> categories() => [
     {
       'id': 1,
@@ -80,6 +117,7 @@ class DemoSeed {
       'icon': '⭐',
       'sortOrder': 1,
       'isActive': true,
+      'stationId': 1,
     },
     {
       'id': 2,
@@ -89,6 +127,7 @@ class DemoSeed {
       'icon': '🍛',
       'sortOrder': 2,
       'isActive': true,
+      'stationId': 1,
     },
     {
       'id': 3,
@@ -98,6 +137,7 @@ class DemoSeed {
       'icon': '🍲',
       'sortOrder': 3,
       'isActive': true,
+      'stationId': 1,
     },
     {
       'id': 4,
@@ -107,6 +147,7 @@ class DemoSeed {
       'icon': '🥗',
       'sortOrder': 4,
       'isActive': true,
+      'stationId': 2,
     },
     {
       'id': 5,
@@ -116,6 +157,7 @@ class DemoSeed {
       'icon': '🍤',
       'sortOrder': 5,
       'isActive': true,
+      'stationId': 1,
     },
     {
       'id': 6,
@@ -125,6 +167,7 @@ class DemoSeed {
       'icon': '🥤',
       'sortOrder': 6,
       'isActive': true,
+      'stationId': 3,
     },
     {
       'id': 7,
@@ -134,6 +177,7 @@ class DemoSeed {
       'icon': '🍨',
       'sortOrder': 7,
       'isActive': true,
+      'stationId': 3,
     },
     // เคาน์เตอร์ขายเนื้อสด/ของฝากกลับบ้าน (ดู docs/tickets/18-sell-by-weight.md, 19-barcode-scale.md)
     {
@@ -144,6 +188,7 @@ class DemoSeed {
       'icon': '🥩',
       'sortOrder': 8,
       'isActive': true,
+      'stationId': 2,
     },
   ];
 
@@ -510,6 +555,7 @@ class DemoSeed {
     bool soldByWeight = false,
     String? barcode,
     String? scalePlu,
+    int? stationId,
   }) {
     final categoryName = categories().firstWhere(
       (c) => c['id'] == categoryId,
@@ -535,6 +581,8 @@ class DemoSeed {
       'soldByWeight': soldByWeight,
       'barcode': barcode,
       'scalePlu': scalePlu,
+      // null = ตามหมวดหมู่ (ticket 34) — ตั้งค่าเฉพาะจานที่อยากให้เห็นว่า "ทับค่าหมวดหมู่ได้"
+      'stationId': stationId,
       // เก็บไว้ใช้ภายใน demo store เท่านั้น (ไม่ใช่ฟิลด์ที่ API จริงส่งกลับ) — ดู
       // demo_store_ingredients.dart: แยก "ระบบปิดขายเพราะสต๊อกหมด" ออกจาก "พนักงานปิดขายเอง"
       'autoDisabledByStock': false,

@@ -25,6 +25,7 @@ extension DemoStoreMenu on DemoStore {
         'icon': body['icon'],
         'sortOrder': categories.length + 1,
         'isActive': true,
+        'stationId': body['stationId'],
       };
       categories.add(category);
       return category;
@@ -155,6 +156,8 @@ extension DemoStoreMenu on DemoStore {
         'soldByWeight': soldByWeight,
         'barcode': codes['barcode'],
         'scalePlu': codes['scalePlu'],
+        // null = ตามหมวดหมู่ (ticket 34) — กฎการตัดสินอยู่ที่ resolveStationFor
+        'stationId': body['stationId'],
       };
       menuItems.add(item);
       return item;
@@ -323,4 +326,128 @@ extension DemoStoreMenu on DemoStore {
 
   void deleteMenuItem(int id) =>
       menuItems.removeWhere((row) => row['id'] == id);
+
+  // ------------------------------------------------ kitchen stations (ticket 34) --
+  /// สถานีค่าเริ่มต้นของร้าน — ปลายทางของจานที่ไม่ได้กำหนดสถานีไว้เลย
+  Map<String, dynamic> defaultStation() => kitchenStations.firstWhere(
+    (row) => row['isDefault'] == true,
+    orElse: () => kitchenStations.first,
+  );
+
+  /// กฎการตัดสินสถานีของหนึ่งจาน: เมนู → หมวดหมู่ → ค่าเริ่มต้น
+  /// กฎเดียวกับ `buildItemRow` ฝั่ง backend — โหมดสาธิตเป็นอีกการนำไปใช้หนึ่ง (DECISIONS #8)
+  Map<String, dynamic> resolveStationFor(Map<String, dynamic> menu) {
+    final categoryStationId = categories.firstWhere(
+      (row) => row['id'] == menu['categoryId'],
+      orElse: () => <String, dynamic>{},
+    )['stationId'];
+    final stationId = menu['stationId'] ?? categoryStationId;
+    return kitchenStations.firstWhere(
+      (row) => row['id'] == stationId,
+      orElse: defaultStation,
+    );
+  }
+
+  /// `itemCount` นับจานที่ตกลงสถานีนี้จริงตามกฎการตัดสิน ไม่ใช่แค่จานที่ผูกตรง ๆ
+  List<Map<String, dynamic>> kitchenStationList({bool activeOnly = false}) =>
+      kitchenStations
+          .where((station) => !activeOnly || station['isActive'] == true)
+          .map(
+            (station) => {
+              ...station,
+              'itemCount': menuItems
+                  .where(
+                    (item) => resolveStationFor(item)['id'] == station['id'],
+                  )
+                  .length,
+            },
+          )
+          .toList(growable: false);
+
+  Map<String, dynamic> saveKitchenStation(
+    Map<String, dynamic> body, {
+    int? id,
+  }) {
+    if (id == null) {
+      final code = (body['code'] as String? ?? '').trim();
+      if (kitchenStations.any((row) => row['code'] == code)) {
+        throw ApiException(
+          message: 'menu_station_code_taken_error'.trParams({'code': code}),
+          statusCode: 409,
+        );
+      }
+      final station = {
+        'id': _nextId(),
+        'code': code,
+        'name': body['name'],
+        'nameEn': body['nameEn'],
+        'nameKo': body['nameKo'],
+        'icon': body['icon'],
+        'sortOrder': kitchenStations.length + 1,
+        'isActive': true,
+        'isDefault': false,
+      };
+      kitchenStations.add(station);
+      return station;
+    }
+
+    final station = kitchenStations.firstWhere((row) => row['id'] == id);
+    if (body['isDefault'] == false && station['isDefault'] == true) {
+      throw ApiException(
+        message: 'menu_delete_station_default_error'.tr,
+        statusCode: 409,
+      );
+    }
+    if (body['isActive'] == false && station['isDefault'] == true) {
+      throw ApiException(
+        message: 'menu_station_default_cannot_disable_error'.tr,
+        statusCode: 409,
+      );
+    }
+    // รหัสสถานีแก้ไม่ได้ จอครัวแต่ละเครื่องจำรหัสนี้ไว้ (ticket 34)
+    body.forEach((key, value) {
+      if (key == 'code') return;
+      station[key] = value;
+    });
+    if (body['isDefault'] == true) {
+      for (final row in kitchenStations) {
+        row['isDefault'] = row['id'] == id;
+      }
+      station['isActive'] = true;
+    }
+    return station;
+  }
+
+  void deleteKitchenStation(int id) {
+    final station = kitchenStations.firstWhere((row) => row['id'] == id);
+    if (station['isDefault'] == true) {
+      throw ApiException(
+        message: 'menu_delete_station_default_error'.tr,
+        statusCode: 409,
+      );
+    }
+    if (menuItems.any((item) => item['stationId'] == id)) {
+      throw ApiException(
+        message: 'menu_delete_station_has_items_error'.tr,
+        statusCode: 409,
+      );
+    }
+    if (categories.any((row) => row['stationId'] == id)) {
+      throw ApiException(
+        message: 'menu_delete_station_has_categories_error'.tr,
+        statusCode: 409,
+      );
+    }
+    if (orders.any(
+      (order) => (order['items'] as List? ?? const []).any(
+        (item) => (item as Map)['stationId'] == id,
+      ),
+    )) {
+      throw ApiException(
+        message: 'menu_delete_station_in_open_order_error'.tr,
+        statusCode: 409,
+      );
+    }
+    kitchenStations.removeWhere((row) => row['id'] == id);
+  }
 }

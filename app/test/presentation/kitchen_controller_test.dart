@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
+import 'package:payneat_pos/core/utils/app_clock.dart';
 import 'package:payneat_pos/core/network/socket_client.dart';
 import 'package:payneat_pos/core/services/session_service.dart';
 import 'package:payneat_pos/core/services/storage_service.dart';
@@ -14,6 +15,9 @@ import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item.dart';
 import 'package:payneat_pos/features/order/domain/repositories/order_repository.dart';
 import 'package:payneat_pos/features/order/domain/usecases/order_usecases.dart';
+import 'package:payneat_pos/features/menu/domain/entities/kitchen_station.dart';
+import 'package:payneat_pos/features/menu/domain/repositories/menu_repository.dart';
+import 'package:payneat_pos/features/menu/domain/usecases/menu_usecases.dart';
 import 'package:payneat_pos/features/kitchen/presentation/controllers/kitchen_controller.dart';
 
 class _FakeOrderRepository implements OrderRepository {
@@ -40,6 +44,22 @@ class _FakeOrderRepository implements OrderRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// repository ของเมนู ใช้เฉพาะดึงรายการสถานีมาทำชิปกรองบนจอครัว (ticket 34)
+class _FakeMenuRepository implements MenuRepository {
+  Result<List<KitchenStation>> nextStationsResult = const Result.success([]);
+
+  @override
+  Future<Result<List<KitchenStation>>> getKitchenStations({
+    bool activeOnly = false,
+  }) async => nextStationsResult;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+KitchenStation _station(int id, String code, {bool isDefault = false}) =>
+    KitchenStation(id: id, code: code, name: code, isDefault: isDefault);
+
 Order _order({int id = 1}) => Order(
   id: id,
   code: 'A001',
@@ -54,6 +74,7 @@ OrderItem _item(
   int orderId = 1,
   String status = OrderItemStatus.pending,
   String? createdAt,
+  String? stationCode,
 }) => OrderItem(
   id: id,
   orderId: orderId,
@@ -63,24 +84,30 @@ OrderItem _item(
   lineTotal: 50,
   status: status,
   createdAt: createdAt,
+  stationCode: stationCode,
 );
 
 void main() {
   late _FakeOrderRepository repository;
+  late _FakeMenuRepository menuRepository;
   late SessionService session;
+  late StorageService storage;
   late KitchenController controller;
+
+  KitchenController buildController() => KitchenController(
+    getQueue: GetKitchenQueueUseCase(repository),
+    updateItemStatus: UpdateOrderItemStatusUseCase(repository),
+    session: session,
+    getStations: GetKitchenStationsUseCase(menuRepository),
+    storage: storage,
+  );
 
   setUp(() {
     repository = _FakeOrderRepository();
-    session = SessionService(
-      storage: StorageService.memory(),
-      socket: SocketClient(),
-    );
-    controller = KitchenController(
-      getQueue: GetKitchenQueueUseCase(repository),
-      updateItemStatus: UpdateOrderItemStatusUseCase(repository),
-      session: session,
-    );
+    menuRepository = _FakeMenuRepository();
+    storage = StorageService.memory();
+    session = SessionService(storage: storage, socket: SocketClient());
+    controller = buildController();
   });
 
   tearDown(() => controller.onClose());
@@ -272,5 +299,109 @@ void main() {
         expect(() => controller.onClose(), returnsNormally);
       },
     );
+  });
+
+  group('KitchenController — ชิปกรองสถานี (ticket 34)', () {
+    final stations = [
+      _station(1, KitchenStationFilter.hot, isDefault: true),
+      _station(3, KitchenStationFilter.bar),
+    ];
+
+    setUp(() {
+      menuRepository.nextStationsResult = Result.success(stations);
+      repository.nextQueueResult = Result.success([
+        _item(1, stationCode: KitchenStationFilter.hot),
+        _item(2, stationCode: KitchenStationFilter.bar),
+        _item(3, stationCode: KitchenStationFilter.bar),
+      ]);
+    });
+
+    test('ยังไม่เลือกอะไร → เห็นทุกสถานี', () async {
+      await controller.load();
+
+      expect(controller.selectedStationCode.value, isNull);
+      expect(controller.visibleQueue.length, 3);
+      expect(controller.pending.length, 3);
+    });
+
+    test('เลือกสถานี → คอลัมน์และตัวนับจานช้ากรองตามสถานีนั้น', () async {
+      // ตรึงนาฬิกาไว้ เพื่อให้ "รอมาแล้ว 40 นาที" เป็นจริงแน่นอนไม่ว่าเครื่องที่รันตั้งโซนเวลาไว้อย่างไร
+      final now = DateTime(2026, 10, 4, 12);
+      AppClock.freeze(now);
+      addTearDown(AppClock.unfreeze);
+      // backend เก็บเวลาเป็น UTC และ Formatters.parse ก็อ่านแบบ UTC จึงต้องสร้างค่าเป็น UTC
+      // ไม่ใช่เวลาท้องถิ่น ไม่งั้นเครื่องที่ไม่ได้ตั้งโซนเวลาเป็น UTC จะคำนวณเวลารอผิด
+      final longAgo = now
+          .subtract(const Duration(minutes: 40))
+          .toUtc()
+          .toIso8601String();
+
+      repository.nextQueueResult = Result.success([
+        _item(1, stationCode: KitchenStationFilter.hot, createdAt: longAgo),
+        _item(2, stationCode: KitchenStationFilter.bar),
+      ]);
+      await controller.load();
+      expect(controller.lateCount, 1);
+
+      await controller.selectStation(KitchenStationFilter.bar);
+
+      expect(controller.visibleQueue.length, 1);
+      expect(controller.pending.single.id, 2);
+      // จานช้าของครัวร้อนไม่ใช่งานของบาร์ แท็บเล็ตบาร์จึงต้องไม่ขึ้นเตือน
+      expect(controller.lateCount, 0);
+    });
+
+    test(
+      'สถานีที่เลือกถูกจำไว้ต่อเครื่อง และ controller ตัวใหม่กู้คืนได้',
+      () async {
+        await controller.selectStation(KitchenStationFilter.bar);
+        expect(storage.kitchenStation, KitchenStationFilter.bar);
+
+        final revived = buildController();
+        revived.onInit();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(revived.selectedStationCode.value, KitchenStationFilter.bar);
+        revived.onClose();
+      },
+    );
+
+    test('สถานีที่จำไว้ไม่มีอยู่แล้ว → กลับไปทุกสถานี', () async {
+      await storage.saveKitchenStation('ghost');
+
+      final revived = buildController();
+      revived.onInit();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(revived.selectedStationCode.value, isNull);
+      expect(storage.kitchenStation, KitchenStationFilter.all);
+      revived.onClose();
+    });
+
+    test(
+      'ตั๋วที่ไม่มีสถานี → โผล่ที่ชิปสถานีค่าเริ่มต้น ไม่หายไปจากทุกชิป',
+      () async {
+        repository.nextQueueResult = Result.success([_item(9)]);
+        await controller.load();
+        await controller.selectStation(null);
+        controller.stations.assignAll(stations);
+
+        await controller.selectStation(KitchenStationFilter.hot);
+        expect(controller.visibleQueue.single.id, 9);
+
+        await controller.selectStation(KitchenStationFilter.bar);
+        expect(controller.visibleQueue, isEmpty);
+      },
+    );
+
+    test('ดึงรายการสถานีไม่สำเร็จ → ซ่อนชิป แต่ตั๋วทุกใบยังแสดงอยู่', () async {
+      menuRepository.nextStationsResult = Result.failure(ServerFailure('ล่ม'));
+
+      controller.onInit();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.stations, isEmpty);
+      expect(controller.visibleQueue.length, 3);
+    });
   });
 }

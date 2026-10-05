@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/printing/receipt_printer_service.dart';
 import '../../../../core/services/printer_settings_service.dart';
 import '../../../../core/services/session_service.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../ai_assistant/domain/usecases/ask_ai_assistant_usecase.dart';
 import '../../../ai_assistant/presentation/controllers/ai_assistant_controller.dart';
 import '../../../ai_assistant/presentation/pages/ai_assistant_page.dart';
@@ -94,6 +95,8 @@ class HomeBinding extends Bindings {
         getQueue: Get.find<GetKitchenQueueUseCase>(),
         updateItemStatus: Get.find<UpdateOrderItemStatusUseCase>(),
         session: Get.find<SessionService>(),
+        getStations: Get.find<GetKitchenStationsUseCase>(),
+        storage: Get.find<StorageService>(),
       ),
       fenix: true,
     );
@@ -125,6 +128,9 @@ class HomeBinding extends Bindings {
         toggleAvailability: Get.find<ToggleMenuAvailabilityUseCase>(),
         saveCategory: Get.find<SaveCategoryUseCase>(),
         deleteCategory: Get.find<DeleteCategoryUseCase>(),
+        getStations: Get.find<GetKitchenStationsUseCase>(),
+        saveStationUseCase: Get.find<SaveKitchenStationUseCase>(),
+        deleteStationUseCase: Get.find<DeleteKitchenStationUseCase>(),
       ),
       fenix: true,
     );

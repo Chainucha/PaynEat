@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1139%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1174%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1139 automated tests.
+control and 1174 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -536,8 +536,15 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 5. **Review the cart on the right** → the subtotal, 10% Service Charge, and 7% VAT are calculated immediately
 6. **Tap "Confirm & Send to Kitchen"** → the order detail page opens with a bill number
 7. **Switch to the kitchen window** (`kitchen`) → the ticket appears automatically, without a refresh.
-   Tap **"Start Cooking" → "Ready"**; the ticket moves across the columns
+   Tap **"Start Cooking" → "Ready"**; the ticket moves across the columns.
+   Above the columns sits a row of **kitchen station chips** (All stations / Hot Kitchen / Cold Kitchen / Bar).
+   Tap **"Bar"** → only drink tickets remain, and the queue and late counters drop with them. Now **reload the
+   page** → the screen is still on Bar, because the choice is remembered per device, so the bar's tablet does not
+   have to be set again every shift (see `docs/DECISIONS.md` #94)
 8. **Return to the waiter window** → the status has already been updated; tap **"Served"**
+   *(to try the snapshot rule: sign in as `manager` → **Menu management** → **Stations** → move the dish you just
+   ordered to another station, then look at the kitchen screen again — the ticket being cooked stays where it was,
+   only new tickets go to the new station)*
 9. **Tap "Checkout / Close Bill"** → because a customer was linked in step 4, a **"Loyalty
    points"** box shows the customer's points balance (a new customer has no points to redeem yet). To test a split
    payment, select **"QR"** and pay 100 THB first → the system displays a **real, scannable PromptPay QR code**
@@ -826,8 +833,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 516 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 574 cases — domain / controller / widget
+cd backend && npm test      # 538 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 587 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -933,6 +940,13 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
 - Mark a menu item as sold out immediately, without manager involvement
 - **Distinct icon/label per order type** on every ticket — table 🍽️ / takeaway 🥡 / delivery 🛵 — identifiable
   at a glance without opening the ticket's details
+- **One screen per kitchen station** (Hot Kitchen / Cold Kitchen / Bar — add your own) — every dish is tied to a
+  station, and tickets are routed to that station's screen. The kitchen display carries **station chips** whose
+  choice is remembered per device (the bar's tablet stays on Bar no matter who signs in), and the queue and late
+  counters follow the selected station. A shop with a single kitchen never sees the chips.
+  **The station is stamped onto the ticket when the item is saved**, so moving a dish to another station — or
+  renaming a station — never drags food already being cooked onto a different screen
+  (see `docs/tickets/34-kitchen-stations.md`, `docs/DECISIONS.md` #94)
 
 ### 💰 Cashier
 
@@ -1499,13 +1513,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 516 cases
-cd app && flutter test      # 574 cases
+cd backend && npm test      # 538 cases
+cd app && flutter test      # 587 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (516 + 574 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (538 + 587 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1560,7 +1574,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (516 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (538 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1864,7 +1878,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (574 cases)** — organized into 3 levels:
+**Flutter (587 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|

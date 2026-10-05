@@ -184,3 +184,69 @@ test('GET /menu-items — ค้นหาด้วยคำค้นและก
   assert.equal(res.body.data.length, 1);
   assert.equal(res.body.data[0].name, 'ค้นหาเจอแน่นอน-เฉพาะกิจ');
 });
+
+test('POST/PATCH /menu-items — stationId ตั้งได้ ล้างกลับเป็น "ตามหมวดหมู่" ได้ และสถานีมั่วได้ 400', async () => {
+  const { token } = await login('admin', 'admin123');
+  const category = await createCategory(token);
+  const stations = await get('/api/v1/kitchen-stations', token);
+  const bar = stations.body.data.find((row) => row.code === 'bar');
+
+  const created = await post('/api/v1/menu-items', token, {
+    categoryId: category.id,
+    name: 'เมนูมีสถานี',
+    price: 80,
+    stationId: bar.id,
+  });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  assert.equal(created.body.data.stationId, bar.id);
+
+  // null = "ตามหมวดหมู่" ต้องเขียนลงฐานข้อมูลได้จริง ไม่ใช่ถูก COALESCE กลืนไปเฉย ๆ
+  const cleared = await patch(`/api/v1/menu-items/${created.body.data.id}`, token, {
+    stationId: null,
+  });
+  assert.equal(cleared.status, 200, JSON.stringify(cleared.body));
+  assert.equal(cleared.body.data.stationId, null);
+
+  const reassigned = await patch(`/api/v1/menu-items/${created.body.data.id}`, token, {
+    stationId: bar.id,
+  });
+  assert.equal(reassigned.body.data.stationId, bar.id);
+
+  // ไม่ส่งมาเลย = ไม่แตะช่องนี้
+  const untouched = await patch(`/api/v1/menu-items/${created.body.data.id}`, token, {
+    name: 'เมนูมีสถานี (แก้ชื่อ)',
+  });
+  assert.equal(untouched.body.data.stationId, bar.id);
+
+  const bogus = await post('/api/v1/menu-items', token, {
+    categoryId: category.id,
+    name: 'เมนูสถานีมั่ว',
+    price: 80,
+    stationId: 999999,
+  });
+  assert.equal(bogus.status, 400);
+});
+
+test('POST/PATCH /categories — stationId เป็นค่าตั้งต้นของหมวดหมู่ ล้างได้ และสถานีมั่วได้ 400', async () => {
+  const { token } = await login('admin', 'admin123');
+  const stations = await get('/api/v1/kitchen-stations', token);
+  const cold = stations.body.data.find((row) => row.code === 'cold');
+
+  const created = await post('/api/v1/categories', token, {
+    name: `หมวดมีสถานี-${Date.now()}`,
+    stationId: cold.id,
+  });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  assert.equal(created.body.data.stationId, cold.id);
+
+  const cleared = await patch(`/api/v1/categories/${created.body.data.id}`, token, {
+    stationId: null,
+  });
+  assert.equal(cleared.status, 200);
+  assert.equal(cleared.body.data.stationId, null);
+
+  const bogus = await patch(`/api/v1/categories/${created.body.data.id}`, token, {
+    stationId: 999999,
+  });
+  assert.equal(bogus.status, 400);
+});

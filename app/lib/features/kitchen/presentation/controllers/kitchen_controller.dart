@@ -12,6 +12,9 @@ import '../../../../core/network/socket_client.dart';
 import '../../../../core/services/session_service.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_dialogs.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../menu/domain/entities/kitchen_station.dart';
+import '../../../menu/domain/usecases/menu_usecases.dart';
 import '../../../order/domain/entities/order_item.dart';
 import '../../../order/domain/usecases/order_usecases.dart';
 
@@ -24,15 +27,27 @@ class KitchenController extends GetxController {
     required GetKitchenQueueUseCase getQueue,
     required UpdateOrderItemStatusUseCase updateItemStatus,
     required SessionService session,
+    required GetKitchenStationsUseCase getStations,
+    required StorageService storage,
   }) : _getQueue = getQueue,
        _updateItemStatus = updateItemStatus,
-       _session = session;
+       _session = session,
+       _getStations = getStations,
+       _storage = storage;
 
   final GetKitchenQueueUseCase _getQueue;
   final UpdateOrderItemStatusUseCase _updateItemStatus;
   final SessionService _session;
+  final GetKitchenStationsUseCase _getStations;
+  final StorageService _storage;
 
   final RxList<OrderItem> queue = <OrderItem>[].obs;
+
+  /// สถานีครัวที่เปิดใช้งาน ใช้ทำชิปกรอง (ticket 34) — โหลดไม่ขึ้นก็ซ่อนชิปไป ไม่ปิดจอครัว
+  final RxList<KitchenStation> stations = <KitchenStation>[].obs;
+
+  /// รหัสสถานีที่จอนี้เลือกอยู่ — null = ทุกสถานี เก็บต่อเครื่องใน [StorageService]
+  final RxnString selectedStationCode = RxnString();
   final RxBool isLoading = true.obs;
   final RxnString errorMessage = RxnString();
   final RxInt tick = 0.obs;
@@ -57,7 +72,12 @@ class KitchenController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // กู้ชิปที่เครื่องนี้เลือกไว้ก่อนโหลดคิว ตั๋วชุดแรกจึงขึ้นตรงสถานีเลยโดยไม่กระพริบ
+    selectedStationCode.value = KitchenStationFilter.parse(
+      _storage.kitchenStation,
+    );
     load();
+    _loadStations();
     _listenToRealtimeUpdates();
 
     _syncConnectionState();
@@ -90,14 +110,57 @@ class KitchenController extends GetxController {
   void _syncConnectionState() =>
       isOffline.value = !AppConfig.demoMode && !_session.socket.connected.value;
 
-  List<OrderItem> byStatus(String status) =>
-      queue.where((item) => item.status == status).toList(growable: false);
+  /// สถานีค่าเริ่มต้นของร้าน — ตั๋วที่ไม่มีสถานีประทับไว้ถือเป็นของสถานีนี้ (ticket 34)
+  String? get defaultStationCode =>
+      stations.firstWhereOrNull((station) => station.isDefault)?.code;
+
+  /// คิวหลังกรองสถานี — ทุกอย่างที่จอครัวแสดง (คอลัมน์, ตัวนับ, ตัวนับจานช้า) อ่านจากที่นี่
+  /// ที่เดียว ไม่งั้นแท็บเล็ตของบาร์จะขึ้น "ช้า 3 จาน" ของตั๋วที่ตัวเองทำอะไรไม่ได้
+  List<OrderItem> get visibleQueue {
+    final selected = selectedStationCode.value;
+    if (selected == null) return queue.toList(growable: false);
+    return queue.where(_matchesStation).toList(growable: false);
+  }
+
+  bool _matchesStation(OrderItem item) {
+    final selected = selectedStationCode.value;
+    if (selected == null) return true;
+    if (item.stationCode != null) return item.stationCode == selected;
+    // ตั๋วที่ไม่มีสถานี (ข้อมูลก่อน ticket 34) โผล่ที่ชิปสถานีค่าเริ่มต้น จึงไม่หายไปจากทุกชิป
+    return selected == defaultStationCode;
+  }
+
+  /// เลือกชิปสถานี — กรองในเครื่องทันที ไม่ยิงคิวใหม่ (ใช้ได้แม้ตอน socket หลุด)
+  Future<void> selectStation(String? code) async {
+    selectedStationCode.value = code;
+    await _storage.saveKitchenStation(KitchenStationFilter.store(code));
+  }
+
+  Future<void> _loadStations() async {
+    final result = await _getStations(true);
+    result.fold(
+      onSuccess: (rows) {
+        stations.assignAll(rows);
+        // สถานีที่จำไว้ถูกลบหรือปิดใช้งานไปแล้ว — กลับไป "ทุกสถานี" ดีกว่าโชว์จอเปล่าค้าง
+        final selected = selectedStationCode.value;
+        if (selected != null && !rows.any((row) => row.code == selected)) {
+          selectStation(null);
+        }
+      },
+      // โหลดสถานีไม่ได้ไม่ใช่เรื่องคอขวดของจอครัว — ซ่อนชิปแล้วแสดงตั๋วทั้งหมดต่อไป
+      onFailure: (_) => stations.clear(),
+    );
+  }
+
+  List<OrderItem> byStatus(String status) => visibleQueue
+      .where((item) => item.status == status)
+      .toList(growable: false);
 
   List<OrderItem> get pending => byStatus(OrderItemStatus.pending);
   List<OrderItem> get cooking => byStatus(OrderItemStatus.cooking);
   List<OrderItem> get ready => byStatus(OrderItemStatus.ready);
 
-  int get lateCount => queue
+  int get lateCount => visibleQueue
       .where(
         (item) =>
             item.status != OrderItemStatus.ready &&

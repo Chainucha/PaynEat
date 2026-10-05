@@ -21,6 +21,7 @@ class MenuItemPayload {
     this.soldByWeight,
     this.barcode,
     this.scalePlu,
+    this.stationId,
   });
 
   final String name;
@@ -40,6 +41,10 @@ class MenuItemPayload {
   final String? barcode;
   final String? scalePlu;
 
+  /// สถานีครัว (ticket 34) — null = "ตามหมวดหมู่" ซึ่งเป็นค่าที่มีความหมาย ไม่ใช่ "ไม่ได้ส่งมา"
+  /// จึงส่งคีย์นี้ไปทุกครั้งแบบไม่มีเงื่อนไข ต่างจากช่องอื่นด้านบน
+  final int? stationId;
+
   Map<String, dynamic> toJson() => {
     'name': name,
     'categoryId': categoryId,
@@ -54,6 +59,7 @@ class MenuItemPayload {
     if (soldByWeight != null) 'soldByWeight': soldByWeight,
     if (barcode != null) 'barcode': barcode,
     if (scalePlu != null) 'scalePlu': scalePlu,
+    'stationId': stationId,
     if (optionGroups != null)
       'optionGroups': optionGroups!
           .map(

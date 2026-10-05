@@ -17,6 +17,7 @@ import {
   moveTableSchema,
   mergeOrderSchema,
   listOrderQuerySchema,
+  kitchenQueueQuerySchema,
   idParamSchema,
   itemParamSchema,
 } from './order.schema.js';
@@ -31,6 +32,7 @@ const manager = authorize('admin', 'manager');
 router.get(
   '/kitchen/queue',
   authorize('admin', 'manager', 'kitchen', 'waiter'),
+  validate({ query: kitchenQueueQuerySchema }),
   orderController.kitchenQueue,
 );
 router.get('/code/:code', orderController.byCode);

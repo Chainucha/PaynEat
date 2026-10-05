@@ -24,6 +24,10 @@ class ApiEndpoints {
   static const String categories = '/categories';
   static String category(int id) => '/categories/$id';
 
+  // Kitchen stations (ticket 34)
+  static const String kitchenStations = '/kitchen-stations';
+  static String kitchenStation(int id) => '/kitchen-stations/$id';
+
   // Menu
   static const String menuItems = '/menu-items';
   static String menuItem(int id) => '/menu-items/$id';

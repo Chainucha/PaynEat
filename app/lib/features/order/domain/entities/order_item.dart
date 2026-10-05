@@ -39,6 +39,9 @@ class OrderItem {
     this.orderCode,
     this.tableName,
     this.orderType,
+    this.stationId,
+    this.stationName,
+    this.stationCode,
     this.weightGrams,
   });
 
@@ -70,6 +73,14 @@ class OrderItem {
   final String? orderCode;
   final String? tableName;
   final String? orderType;
+
+  /// สถานีครัวที่ประทับไว้ตอนบันทึกรายการ (ticket 34) — [stationName] คือชื่อ ณ ตอนนั้น
+  /// เปลี่ยนชื่อสถานีหรือย้ายเมนูไปสถานีอื่นภายหลังจึงไม่กระทบตั๋วที่ครัวกำลังทำอยู่
+  final int? stationId;
+  final String? stationName;
+
+  /// รหัสสถานี join มาให้เฉพาะตอนดึงจากคิวครัว — ใช้เป็นกุญแจของชิปกรองบนจอครัว
+  final String? stationCode;
 
   String get statusLabel => OrderItemStatus.label(status);
   bool get isCancelled => status == OrderItemStatus.cancelled;

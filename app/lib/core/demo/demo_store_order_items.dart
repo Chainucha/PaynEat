@@ -131,11 +131,16 @@ extension DemoStoreOrderItems on DemoStore {
         throw ApiException(message: 'order_weigh_invalid'.tr, statusCode: 422);
       }
 
+      final station = resolveStationFor(menu);
       final item = {
         'id': _nextId(),
         'orderId': order['id'],
         'menuItemId': menu['id'],
         'categoryId': menu['categoryId'],
+        // ประทับสถานีครัวตอนบันทึก (ticket 34) ย้ายเมนูไปสถานีอื่นทีหลังจึงไม่ดึงตั๋วข้ามจอ
+        'stationId': station['id'],
+        'stationCode': station['code'],
+        'stationName': station['name'],
         'name': DemoNames.of(menu),
         'unitPrice': unitPrice,
         'quantity': quantity,

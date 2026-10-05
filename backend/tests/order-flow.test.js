@@ -115,6 +115,10 @@ test('เส้นทางหลักของร้าน: รับออเ
     assert.equal(ticket.status, 'pending');
     assert.equal(ticket.tableName, table.name);
     assert.equal(ticket.note, 'ไม่ใส่ผัก');
+    // สถานีครัวถูกประทับลงตั๋วตอนบันทึกรายการ (ticket 34) — ผัดกะเพราอยู่หมวดอาหารจานเดียว = ครัวร้อน
+    assert.equal(ticket.stationCode, 'hot');
+    assert.equal(ticket.stationName, 'ครัวร้อน');
+    assert.ok(ticket.stationId > 0);
   });
 
   await t.test('8) ครัวกดรับงาน (pending → cooking → ready)', async () => {

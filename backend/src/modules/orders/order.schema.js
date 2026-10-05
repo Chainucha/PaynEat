@@ -93,8 +93,36 @@ export const listOrderQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export const kitchenQuerySchema = z.object({
-  status: z.string().optional(),
+/**
+ * คิวครัว (KDS) — `status` ส่งมาเป็นรายการคั่นด้วย comma, `station` เป็นรหัสสถานีครัว (ticket 34)
+ * แยกสถานะที่ไม่รู้จักออกตั้งแต่ชั้นนี้ ไม่ปล่อยให้ค่าจาก query string ลงไปถึง SQL
+ */
+export const kitchenQueueQuerySchema = z.object({
+  status: z
+    .string()
+    .optional()
+    .transform((value) =>
+      value === undefined
+        ? undefined
+        : value
+            .split(',')
+            .map((item) => item.trim())
+            .filter((item) => item.length > 0),
+    )
+    .refine((list) => list === undefined || list.length > 0, {
+      message: 'กรุณาระบุสถานะอย่างน้อยหนึ่งสถานะ',
+    })
+    .refine(
+      (list) => list === undefined || list.every((item) => ORDER_ITEM_STATUSES.includes(item)),
+      {
+        message: `สถานะรายการอาหารต้องเป็นหนึ่งใน: ${ORDER_ITEM_STATUSES.join(', ')}`,
+      },
+    ),
+  station: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9_-]{2,20}$/, 'รหัสสถานีครัวไม่ถูกต้อง')
+    .optional(),
 });
 
 export const idParamSchema = z.object({ id: z.coerce.number().int().positive() });

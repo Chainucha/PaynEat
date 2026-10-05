@@ -4,6 +4,7 @@
 import '../../../../core/usecases/result.dart';
 import '../entities/menu_item_payload.dart';
 import '../entities/category.dart';
+import '../entities/kitchen_station.dart';
 import '../entities/menu_item.dart';
 
 abstract class MenuRepository {
@@ -12,9 +13,23 @@ abstract class MenuRepository {
     required String name,
     String? nameEn,
     String? icon,
+    int? stationId,
   });
   Future<Result<Category>> updateCategory(int id, Map<String, dynamic> changes);
   Future<Result<void>> deleteCategory(int id);
+
+  Future<Result<List<KitchenStation>>> getKitchenStations({bool activeOnly});
+  Future<Result<KitchenStation>> saveKitchenStation({
+    int? id,
+    required String name,
+    String? code,
+    String? nameEn,
+    String? nameKo,
+    String? icon,
+    bool? isActive,
+    bool? isDefault,
+  });
+  Future<Result<void>> deleteKitchenStation(int id);
 
   Future<Result<List<MenuItem>>> getMenuItems({
     int? categoryId,

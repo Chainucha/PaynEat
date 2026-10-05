@@ -62,6 +62,7 @@ class DemoStore {
 
   late List<Map<String, dynamic>> users;
   late List<Map<String, dynamic>> categories;
+  late List<Map<String, dynamic>> kitchenStations;
   late List<Map<String, dynamic>> menuItems;
   late List<Map<String, dynamic>> ingredients;
   late List<Map<String, dynamic>> tables;
@@ -100,6 +101,7 @@ class DemoStore {
   void reset() {
     users = DemoSeed.users();
     categories = DemoSeed.categories();
+    kitchenStations = DemoSeed.kitchenStations();
     menuItems = DemoSeed.menuItems();
     ingredients = DemoSeed.ingredients();
     tables = DemoSeed.tables();

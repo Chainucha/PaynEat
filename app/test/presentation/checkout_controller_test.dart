@@ -20,7 +20,9 @@ import 'package:payneat_pos/features/order/domain/usecases/order_usecases.dart';
 import 'package:payneat_pos/features/payment/domain/entities/payment.dart';
 import 'package:payneat_pos/features/payment/domain/repositories/payment_repository.dart';
 import 'package:payneat_pos/features/payment/domain/usecases/payment_usecases.dart';
+import 'package:payneat_pos/features/payment/data/models/payment_model.dart';
 import 'package:payneat_pos/features/payment/presentation/controllers/checkout_controller.dart';
+import 'package:payneat_pos/features/payment/presentation/pages/checkout_page.dart';
 import 'package:payneat_pos/features/settings/domain/entities/store_settings.dart';
 import 'package:payneat_pos/features/settings/domain/repositories/settings_repository.dart';
 import 'package:payneat_pos/features/settings/domain/usecases/settings_usecases.dart';
@@ -681,5 +683,75 @@ void main() {
         await tester.pumpAndSettle();
       },
     );
+  });
+  group('CheckoutController บิลที่ถือเงินเกินยอดบิล (T07 #105)', () {
+    const card = Payment(
+      id: 41,
+      orderId: 1,
+      method: PaymentMethod.card,
+      amount: 188.32,
+      received: 188.32,
+    );
+    // สภาพที่ #48 ทิ้งไว้ก่อนแก้: ยอดบิล 23.54 แต่ร้านถือเงิน 188.32 — backend ส่งคงเหลือ 0 และยอดที่ต้องคืน
+    const overpaid = PaymentSummary(
+      orderId: 1,
+      total: 23.54,
+      paid: 188.32,
+      remaining: 0,
+      refundDue: 164.78,
+      payments: [card],
+    );
+
+    test('อ่าน refundDue จาก API และไม่นับว่าจ่ายครบ', () {
+      final parsed = PaymentSummaryModel.fromJson({
+        'orderId': 1,
+        'total': 23.54,
+        'paid': 188.32,
+        'remaining': 0,
+        'refundDue': 164.78,
+      });
+      expect(parsed.refundDue, 164.78);
+      expect(parsed.needsRefund, isTrue);
+      expect(parsed.isFullyPaid, isFalse);
+      expect(
+        PaymentSummaryModel.fromJson({'remaining': 0}).needsRefund,
+        isFalse,
+      );
+    });
+
+    test('กดรับเงินไม่ได้ และบอกให้คืนเงินก่อน', () async {
+      orderRepository.nextOrderResult = Result.success(_order(total: 23.54));
+      paymentRepository.nextSummaryResult = const Result.success(overpaid);
+      controller.onInit();
+      await Future<void>.delayed(Duration.zero);
+
+      controller.setAmount(0.01);
+      expect(controller.canPay, isFalse);
+      expect(controller.payBlockedHint, 'payment_refund_due_hint'.tr);
+    });
+
+    testWidgets('หน้าชำระเงินโชว์ยอดที่ต้องคืนลูกค้า ไม่ใช่ "คงเหลือ 0"', (
+      tester,
+    ) async {
+      orderRepository.nextOrderResult = Result.success(_order(total: 23.54));
+      paymentRepository.nextSummaryResult = const Result.success(overpaid);
+      // จอเดสก์ท็อปของแคชเชียร์ — ฟอนต์ทดสอบกว้างกว่าฟอนต์จริงมาก จอแคบทำให้ส่วนอื่นของหน้าล้นเอง
+      tester.view.physicalSize = const Size(1600, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      Get.put<CheckoutController>(controller);
+      addTearDown(Get.reset);
+      await tester.pumpWidget(const GetMaterialApp(home: CheckoutPage()));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('checkout-refund-due')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('checkout-remaining-due')),
+        findsNothing,
+      );
+      expect(find.text('payment_refund_due_label'.tr), findsOneWidget);
+      expect(find.textContaining('164.78'), findsWidgets);
+    });
   });
 }

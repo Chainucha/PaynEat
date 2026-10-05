@@ -14,7 +14,9 @@ import { promotionRepository } from '../promotions/promotion.repository.js';
 import { ingredientService } from '../ingredients/ingredient.service.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
 import { customerRepository } from '../customers/customer.repository.js';
+import { paymentRepository } from '../payments/payment.repository.js';
 import { orderRepository } from './order.repository.js';
+import { closeFullyPaidOrder } from './order.closing.js';
 import { calculateBill, lineTotalFor } from './order.calculator.js';
 import {
   evaluatePromotion,
@@ -205,14 +207,45 @@ const buildDto = (orderRow) => toOrderDto(orderRow, orderRepository.findItems(or
  * `change()` เปลี่ยนข้อมูลและบันทึก audit ของตัวเอง แล้วคืน id ของออเดอร์ที่ต้องคำนวณยอดใหม่ ถ้าขั้นไหน throw รวมถึงการคำนวณยอด
  * ทุกอย่างของการแก้ครั้งนั้น rollback พร้อมกัน ยอดรวมจึงไม่ค้างค่าเก่าหลังรายการเปลี่ยนไปแล้ว
  * การแก้ที่ไม่กระทบบิล (ย้ายโต๊ะ, ส่งครัว, ข้อมูลทั่วไป) ส่ง `recalculateTotals: false` เพื่อให้ยอดเหมือนเดิมทุกประการ
- * guard ที่ต้องเห็นออเดอร์หลังแก้ (T04, T07, T09) ใส่ที่นี่ ก่อน commit
+ * guard ที่ต้องเห็นออเดอร์หลังแก้ใส่ที่นี่ ก่อน commit — ยอดบิลต้องไม่ต่ำกว่าเงินที่รับไว้ (T07) อยู่ใน `settleIfCovered`
  * คืนแถวออเดอร์หลังแก้
  */
-const changeOrder = (change, { recalculateTotals = true } = {}) =>
-  getDb().transaction(() => {
+const changeOrder = (change, { recalculateTotals = true } = {}) => {
+  let closed = false;
+  const updated = getDb().transaction(() => {
     const orderId = change();
-    return recalculateTotals ? recalculate(orderId) : orderRepository.findById(orderId);
+    const order = recalculateTotals ? recalculate(orderId) : orderRepository.findById(orderId);
+    closed = settleIfCovered(order);
+    return closed ? orderRepository.findById(orderId) : order;
   })();
+  if (closed) {
+    emit(EVENTS.ORDER_PAID, buildDto(updated));
+    if (updated.table_id) emit(EVENTS.TABLE_UPDATED, { id: updated.table_id, status: 'available' });
+  }
+  return updated;
+};
+
+/**
+ * ยอดบิลที่ยังเปิดต้องไม่ต่ำกว่าเงินที่ร้านถือไว้สุทธิ (T07 #105, DECISIONS #95) — ตรวจหลังคำนวณยอดใหม่ ก่อน commit
+ * การแก้ใดๆ (ลบ/ยกเลิก/แก้จำนวน/ส่วนลด/โปรโมชัน) ที่ทำให้ยอดต่ำกว่า จึง rollback ทั้งก้อนพร้อมบอกยอดที่ต้องคืนก่อน และถ้ายอดใหม่
+ * เท่ากับเงินที่รับไว้พอดี บิลปิดใน transaction เดียวกัน ไม่มีบิลที่เก็บเงินไม่ได้และปิดไม่ได้ค้างอยู่ คืน true เมื่อปิดบิล
+ * บิลที่ปิดแล้วหรือถูกยกเลิกไม่อยู่ในกติกานี้ (ยกเลิกทั้งบิล #49 และรวมบิล #47 เป็นใบของตัวเอง)
+ */
+const settleIfCovered = (order) => {
+  if (!MUTABLE_ORDER_STATUSES.includes(order.status)) return false;
+  const paid = paymentRepository.netPaid(order.id);
+  if (paid > 0 && order.total === paid) {
+    // เงินที่รับไว้ครบยอดใหม่พอดี = เก็บครบแล้ว ปิดบิลตามกฎเดียวกับรอบจ่ายสุดท้าย (DECISIONS #87) ไม่ปล่อยค้างเปิดที่คงเหลือ 0
+    closeFullyPaidOrder(order);
+    return true;
+  }
+  if (order.total >= paid) return false;
+  throw ApiError.conflict(
+    `ยอดบิลจะเหลือ ${toBaht(order.total)} บาท น้อยกว่าเงินที่รับไว้แล้ว ${toBaht(paid)} บาท ` +
+      `ต้องคืนเงิน ${toBaht(paid - order.total)} บาทก่อน`,
+    { refundRequired: toBaht(paid - order.total), total: toBaht(order.total), paid: toBaht(paid) },
+  );
+};
 
 export const orderService = {
   list(filters, currentBranchId) {

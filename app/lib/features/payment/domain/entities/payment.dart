@@ -58,6 +58,7 @@ class PaymentSummary {
     required this.paid,
     required this.remaining,
     this.refunded = 0,
+    this.refundDue = 0,
     this.payments = const [],
     this.refunds = const [],
   });
@@ -71,15 +72,21 @@ class PaymentSummary {
 
   /// ยอดคืนเงินรวมของออเดอร์นี้ — คืนบนบิลที่ยังเปิดทำให้ยอดคงเหลือเพิ่มขึ้นเท่านี้
   final double refunded;
+
+  /// บิลที่ยังเปิดแต่ร้านถือเงินไว้เกินยอดบิล = ยอดที่ต้องคืนลูกค้าก่อน (T07 #105, docs/DECISIONS.md #95)
+  /// ยอดคงเหลือเป็น 0 ในกรณีนี้ หน้าจอจึงต้องโชว์ยอดนี้แทน ไม่ใช่ "คงเหลือ 0"
+  final double refundDue;
   final List<Payment> payments;
   final List<Refund> refunds;
+
+  bool get needsRefund => refundDue > 0;
 
   /// ยอดที่คืนไปแล้วของ payment นี้
   double refundedFor(int paymentId) => refunds
       .where((refund) => refund.paymentId == paymentId)
       .fold<double>(0, (sum, refund) => sum + refund.amount);
 
-  bool get isFullyPaid => remaining <= 0;
+  bool get isFullyPaid => remaining <= 0 && !needsRefund;
   bool get isPartiallyPaid => paid > 0 && remaining > 0;
 }
 

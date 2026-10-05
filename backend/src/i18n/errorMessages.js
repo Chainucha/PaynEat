@@ -796,6 +796,16 @@ export const ERROR_MESSAGES = [
     ko: '이미 결제된 항목입니다 — 취소하려면 먼저 환불하세요',
   },
   {
+    th: 'ยอดบิลจะเหลือ {total} บาท น้อยกว่าเงินที่รับไว้แล้ว {paid} บาท ต้องคืนเงิน {refund} บาทก่อน',
+    en: 'The bill would drop to {total} THB, below the {paid} THB already received — refund {refund} THB first',
+    ko: '계산서 금액이 {total} THB로 줄어 이미 받은 {paid} THB보다 적어집니다 — 먼저 {refund} THB를 환불하세요',
+  },
+  {
+    th: 'บิลนี้รับเงินไว้เกินยอดบิล {amount} บาท ต้องคืนเงินส่วนเกินก่อน',
+    en: 'This bill holds {amount} THB more than its total — refund the excess first',
+    ko: '이 계산서는 총액보다 {amount} THB를 더 받았습니다 — 먼저 초과분을 환불하세요',
+  },
+  {
     th: 'ที่อยู่ของ PaynEat ERP ต้องเป็น URL แบบ https:// เช่น https://erp.example.com',
     en: "PaynEat ERP's address must be an https:// URL, for example https://erp.example.com",
     ko: 'PaynEat ERP 주소는 https:// URL이어야 합니다 (예: https://erp.example.com)',

@@ -42,6 +42,7 @@ class PaymentSummaryModel extends PaymentSummary {
     required super.paid,
     required super.remaining,
     super.refunded,
+    super.refundDue,
     super.payments,
     super.refunds,
   });
@@ -53,6 +54,7 @@ class PaymentSummaryModel extends PaymentSummary {
         paid: (json['paid'] as num?)?.toDouble() ?? 0,
         remaining: (json['remaining'] as num?)?.toDouble() ?? 0,
         refunded: (json['refunded'] as num?)?.toDouble() ?? 0,
+        refundDue: (json['refundDue'] as num?)?.toDouble() ?? 0,
         payments: (json['payments'] as List? ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(PaymentModel.fromJson)

@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1191%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1201%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -361,6 +361,10 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
   결제 건마다 환불된 금액이 표시되고 매니저는 그 화면에서 바로 환불할 수 있으며, 순액을 모두 받아야만 계산서가 마감됩니다. 항목을
   골라 나눠 결제한 건을 전액 환불하면 그 항목은 다시 미결제가 되고, 마감된 계산서를 환불해도 새 미수금이 생기지 않습니다
   (`docs/DECISIONS.md` #87)
+- **계산서 금액은 이미 받은 돈보다 작아질 수 없음** — 일부 결제 후 항목 삭제·수량 감소·취소, 할인, 프로모션으로 계산서 금액이 받아 둔
+  순액보다 작아지면 먼저 환불할 금액을 알려 주며 거부되고 계산서는 그대로입니다. 새 금액이 받은 돈과 정확히 같아지면 계산서가 바로
+  마감되고 테이블이 비워집니다. 이미 총액보다 많이 받은 예전 계산서는 결제 화면에 "남은 금액 0" 대신 **"고객에게 환불할 금액"**을
+  보여 주고 환불 전까지 추가 결제를 받지 않습니다 (`docs/DECISIONS.md` #95)
 - **마감된 계산서의 항목 잠금** — 결제가 끝났거나 취소된 계산서의 항목은 관리자도 취소할 수 없고, 나눠서 결제된 항목은 환불한 뒤에만
   취소할 수 있습니다. 주방은 먼저 결제한 포장 주문도 평소처럼 조리 상태를 진행합니다 (`docs/DECISIONS.md` #85)
 
@@ -502,13 +506,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1191건**의 자동화 테스트를 통과합니다.
+공개 전 **1201건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 542건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 596건 — domain / controller / widget
+cd backend && npm test      # 546건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 602건 — domain / controller / widget
 cd app && flutter test test_e2e   # 53건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1191건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1201건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 53건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

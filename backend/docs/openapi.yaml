@@ -1360,7 +1360,13 @@ paths:
                 type: { type: string, enum: [none, amount, percent] }
                 value: { type: number, example: 10 }
       responses:
-        '200': { description: สำเร็จ }
+        '200':
+          description: >-
+            สำเร็จ ถ้ายอดใหม่เท่ากับเงินที่รับไว้แล้วพอดี บิลปิด (`status: paid`) และโต๊ะว่างทันที (T07)
+        '409':
+          description: >-
+            ยอดบิลใหม่จะต่ำกว่าเงินที่รับไว้แล้วสุทธิ (T07) ต้องคืนเงินก่อน ไม่มีอะไรในบิลเปลี่ยน
+            `error.details` มี refundRequired, total และ paid กติกาเดียวกันใช้กับการเพิ่ม/แก้จำนวน/ลบ/ยกเลิกรายการและโปรโมชัน
   /orders/{id}/promotion/redeem:
     parameters:
       - in: path
@@ -1515,6 +1521,10 @@ paths:
                       order: { $ref: '#/components/schemas/Order' }
                       isFullyPaid: { type: boolean }
                       remaining: { type: number }
+        '409':
+          description: >-
+            บิลถูกยกเลิก/ชำระครบแล้ว, ยังไม่เปิดกะ หรือบิลที่ยังเปิดถือเงินเกินยอดบิลอยู่แล้ว (T07) ต้องคืนส่วนเกินก่อน
+            (`error.details.refundRequired`) ใช้กับดูยอดแยกบิลก่อนจ่าย (split-preview) ด้วย
   /payments/{id}/refund:
     parameters:
       - in: path
@@ -1628,6 +1638,11 @@ paths:
                   paid: { type: number, description: ยอดชำระ − ยอดคืนเงิน }
                   refunded: { type: number, description: ยอดคืนเงินรวมของออเดอร์นี้ }
                   remaining: { type: number }
+                  refundDue:
+                    type: number
+                    description: >-
+                      บิลที่ยังเปิดแต่ร้านถือเงินเกินยอดบิล (ข้อมูลก่อน T07) = ยอดที่ต้องคืนลูกค้าก่อนรับเงินเพิ่ม
+                      กรณีนี้ remaining เป็น 0 บิลที่ปิดแล้วหรือยกเลิกแล้วเป็น 0 เสมอ
                   payments: { type: array, items: { type: object } }
                   refunds: { type: array, items: { type: object } }
   /payments/order/{id}/receipt:

@@ -99,7 +99,7 @@ extension DemoStoreSeedHistory on DemoStore {
         }
 
         orders.add(order);
-        _recalculate(order);
+        _recalculate(order, settle: false);
 
         final method = const [
           PaymentMethod.cash,
@@ -196,7 +196,7 @@ extension DemoStoreSeedHistory on DemoStore {
       item['orderId'] = order['id'];
     }
     orders.add(order);
-    _recalculate(order);
+    _recalculate(order, settle: false);
     order['updatedAt'] = stamp;
 
     final term = (customer['creditTermDays'] as num).toInt();

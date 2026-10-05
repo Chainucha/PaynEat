@@ -3327,4 +3327,172 @@ void main() {
       },
     );
   });
+  group('DemoStore ยอดบิลต้องไม่ต่ำกว่ายอดที่จ่ายแล้ว (T07 #105)', () {
+    const manager = 2;
+
+    Map<String, dynamic> openTwoItems() {
+      final table = store.tableList().firstWhere(
+        (t) => t['status'] == 'available',
+      );
+      final order = store.createOrder(
+        type: 'dine_in',
+        tableId: table['id'] as int,
+        guestCount: 2,
+        items: [
+          for (final item in store.menuList().take(2))
+            {'menuItemId': item['id'], 'quantity': 1, 'optionIds': []},
+        ],
+      );
+      return store.findOrder(order['id'] as int);
+    }
+
+    // ข้อความแปลแล้ว (ไทยเป็นค่าเริ่มต้นของเทสต์) — mirror ของข้อความ 409 ใน backend
+    final translated = {
+      'order_error_total_below_paid': contains('บาทก่อน'),
+      'payment_error_overpaid_refund_first': contains(
+        'ต้องคืนเงินส่วนเกินก่อน',
+      ),
+    };
+    Matcher conflict(String key) => throwsA(
+      isA<ApiException>()
+          .having((e) => e.statusCode, 'statusCode', 409)
+          .having((e) => e.message, 'message', translated[key]),
+    );
+
+    test(
+      'ใส่ส่วนลดจนยอดต่ำกว่าเงินที่รับไว้ → 409 และทุกอย่างกลับเป็นก่อนกด คืนเงินก่อนแล้วใส่ได้',
+      () {
+        final order = openTwoItems();
+        final orderId = order['id'] as int;
+        final total = (order['total'] as num).toDouble();
+        final payment =
+            store.pay(
+                  orderId: orderId,
+                  method: 'cash',
+                  amount: total - 1,
+                  received: total - 1,
+                )['payment']
+                as Map<String, dynamic>;
+        final auditBefore = store.auditLogs.length;
+
+        expect(
+          () => store.atomically(
+            () => store.applyDiscount(orderId, DiscountType.percent, 50),
+          ),
+          conflict('order_error_total_below_paid'),
+        );
+        final unchanged = store.findOrder(orderId);
+        expect(unchanged['total'], total);
+        expect(unchanged['discountType'], DiscountType.none);
+        expect(store.auditLogs, hasLength(auditBefore));
+
+        store.refundPayment(
+          paymentId: payment['id'] as int,
+          amount: total - 1,
+          reason: 'ลดราคาให้ลูกค้า',
+          refundedById: manager,
+        );
+        store.atomically(
+          () => store.applyDiscount(orderId, DiscountType.percent, 50),
+        );
+        expect(store.findOrder(orderId)['discountType'], DiscountType.percent);
+        expect(store.findOrder(orderId)['status'], isNot(OrderStatus.paid));
+      },
+    );
+
+    test(
+      'แยกจ่ายรายการแรกแล้ว → ลบ/ลดจำนวน/ยกเลิกรายการนั้นไม่ได้ ยกเลิกรายการที่เหลือแล้วบิลปิดและโต๊ะว่าง',
+      () {
+        final order = openTwoItems();
+        final orderId = order['id'] as int;
+        final ids = [
+          for (final item in order['items'] as List) item['id'] as int,
+        ];
+        store.updateItem(orderId, ids.first, quantity: 2);
+        store.pay(orderId: orderId, method: 'card', itemIds: [ids.first]);
+
+        expect(
+          () => store.atomically(() => store.removeItem(orderId, ids.first)),
+          conflict('order_error_total_below_paid'),
+        );
+        expect(
+          () => store.atomically(
+            () => store.updateItem(orderId, ids.first, quantity: 1),
+          ),
+          conflict('order_error_total_below_paid'),
+        );
+        expect(
+          () => store.updateItemStatus(
+            orderId,
+            ids.first,
+            OrderItemStatus.cancelled,
+            actorId: manager,
+          ),
+          throwsA(isA<ApiException>()),
+        );
+        final still = store.findOrder(orderId);
+        expect(
+          (still['items'] as List).firstWhere(
+            (item) => item['id'] == ids.first,
+          )['quantity'],
+          2,
+        );
+
+        store.atomically(
+          () => store.updateItemStatus(
+            orderId,
+            ids.last,
+            OrderItemStatus.cancelled,
+            actorId: manager,
+          ),
+        );
+        final closed = store.findOrder(orderId);
+        expect(closed['status'], OrderStatus.paid);
+        expect(closed['closedAt'], isNotNull);
+        expect(
+          store.tableList().firstWhere(
+            (t) => t['id'] == closed['tableId'],
+          )['status'],
+          'available',
+        );
+        expect(store.paymentSummary(orderId)['refundDue'], 0);
+      },
+    );
+
+    test(
+      'บิลที่ถือเงินเกินยอดอยู่แล้ว (ข้อมูลก่อน T07) → สรุปยอดบอกยอดที่ต้องคืน รับเงินและดูยอดแยกบิลได้ 409',
+      () {
+        final order = openTwoItems();
+        final orderId = order['id'] as int;
+        final ids = [
+          for (final item in order['items'] as List) item['id'] as int,
+        ];
+        store.pay(orderId: orderId, method: 'card', itemIds: [ids.first]);
+        final paid = store.paidAmount(orderId);
+        store.findOrder(orderId)['total'] = paid - 12.34;
+
+        final summary = store.paymentSummary(orderId);
+        expect(summary['remaining'], 0);
+        expect(summary['refundDue'], closeTo(12.34, 0.001));
+        expect(
+          () =>
+              store.pay(orderId: orderId, method: 'card', itemIds: [ids.last]),
+          conflict('payment_error_overpaid_refund_first'),
+        );
+        expect(
+          () => store.pay(
+            orderId: orderId,
+            method: 'cash',
+            amount: 0.01,
+            received: 1,
+          ),
+          conflict('payment_error_overpaid_refund_first'),
+        );
+        expect(
+          () => store.splitPreview(orderId, [ids.last]),
+          conflict('payment_error_overpaid_refund_first'),
+        );
+      },
+    );
+  });
 }

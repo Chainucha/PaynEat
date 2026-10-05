@@ -73,9 +73,12 @@ class KitchenController extends GetxController {
   void onInit() {
     super.onInit();
     // กู้ชิปที่เครื่องนี้เลือกไว้ก่อนโหลดคิว ตั๋วชุดแรกจึงขึ้นตรงสถานีเลยโดยไม่กระพริบ
-    selectedStationCode.value = KitchenStationFilter.parse(
-      _storage.kitchenStation,
-    );
+    // ไม่เคยเลือกบนเครื่องนี้ → ใช้สถานีที่ผูกไว้กับบัญชีเป็นค่าตั้งต้น (ticket 35) แค่ "เลือกให้ล่วงหน้า"
+    // ไม่ได้ล็อก: แตะชิปอื่นได้ และค่าที่เลือกบนเครื่องจะทับค่าของบัญชีตั้งแต่นั้นไป
+    final savedOnDevice = _storage.kitchenStation;
+    selectedStationCode.value = savedOnDevice != null
+        ? KitchenStationFilter.parse(savedOnDevice)
+        : _session.currentUser?.stationCodes.firstOrNull;
     load();
     _loadStations();
     _listenToRealtimeUpdates();

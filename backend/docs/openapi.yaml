@@ -84,6 +84,16 @@ components:
         isActive: { type: boolean }
         branchId: { type: integer, nullable: true, description: 'สาขาที่ token นี้ทำงานอยู่ — null เฉพาะ admin โหมด "ทุกสาขา" (ticket 11)' }
         branchName: { type: string, nullable: true }
+        stationIds:
+          type: array
+          items: { type: integer }
+          description: >-
+            สถานีครัวที่พนักงานคนนี้รับผิดชอบ (ดู ticket 35) ชุดว่าง = ไม่ผูกสถานี = เห็นทุกสถานีบนจอครัว
+            ส่งกลับมาเฉพาะ endpoint ที่รู้ค่านี้ (รายชื่อพนักงาน, login, /auth/me)
+        stationCodes:
+          type: array
+          items: { type: string, example: bar }
+          description: รหัสของสถานีชุดเดียวกัน — จอครัวใช้เลือกชิปสถานีให้ล่วงหน้า
     Branch:
       type: object
       description: สาขา (ดู ticket 11 — multi-branch)
@@ -827,6 +837,8 @@ paths:
         admin เห็นทุกคน (T22 #86)
       responses:
         '200': { description: สำเร็จ }
+      description: >-
+        แต่ละคนพก `stationIds`/`stationCodes` ของสถานีครัวที่รับผิดชอบมาด้วย (ดู ticket 35)
     post:
       tags: [Users]
       summary: เพิ่มพนักงาน (admin/manager) — manager สร้างได้เฉพาะ role waiter/kitchen/cashier ในสาขาที่กำลังทำงานอยู่

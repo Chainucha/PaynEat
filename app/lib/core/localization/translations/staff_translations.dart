@@ -3,6 +3,12 @@
 
 /// คำแปลของฟีเจอร์ staff
 const Map<String, String> staffTranslationsTh = {
+  'staff_stations_label': 'สถานีครัวที่รับผิดชอบ',
+  'staff_stations_hint':
+      'ไม่เลือกเลย = เห็นทุกสถานีบนจอครัว เลือกไว้แล้วจอจะเปิดมาที่สถานีนั้นให้ แต่ยังสลับได้',
+  'staff_stations_action': 'ตั้งสถานีครัว',
+  'staff_stations_dialog_title': 'สถานีครัวของ @name',
+  'staff_stations_saved': 'บันทึกสถานีครัวของพนักงานแล้ว',
   'staff_add_staff': 'เพิ่มพนักงาน',
   'staff_empty_state': 'ไม่พบพนักงานในบทบาทนี้',
   'staff_name_label': 'ชื่อ-นามสกุล',
@@ -42,6 +48,12 @@ const Map<String, String> staffTranslationsTh = {
 };
 
 const Map<String, String> staffTranslationsEn = {
+  'staff_stations_label': 'Kitchen stations',
+  'staff_stations_hint':
+      'Leave empty to see every station. Pick some and the kitchen screen opens on them — it can still be switched.',
+  'staff_stations_action': 'Set kitchen stations',
+  'staff_stations_dialog_title': 'Kitchen stations for @name',
+  'staff_stations_saved': "Saved this person's kitchen stations",
   'staff_add_staff': 'Add staff',
   'staff_empty_state': 'No staff found in this role',
   'staff_name_label': 'Full name',
@@ -81,6 +93,12 @@ const Map<String, String> staffTranslationsEn = {
 };
 
 const Map<String, String> staffTranslationsKo = {
+  'staff_stations_label': '담당 주방 스테이션',
+  'staff_stations_hint':
+      '선택하지 않으면 모든 스테이션이 보입니다. 선택하면 주방 화면이 해당 스테이션으로 열리며, 전환은 계속 가능합니다.',
+  'staff_stations_action': '주방 스테이션 지정',
+  'staff_stations_dialog_title': '@name 님의 주방 스테이션',
+  'staff_stations_saved': '직원의 주방 스테이션을 저장했습니다',
   'staff_add_staff': '직원 추가',
   'staff_empty_state': '이 역할에 해당하는 직원이 없습니다',
   'staff_name_label': '이름',

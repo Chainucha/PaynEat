@@ -13,6 +13,8 @@ class User {
     required this.isActive,
     this.branchId,
     this.branchName,
+    this.stationIds = const [],
+    this.stationCodes = const [],
   });
 
   final int id;
@@ -24,6 +26,12 @@ class User {
   // property ถาวรของ user คนเดียวมีได้หลายสาขา — null ได้เฉพาะ admin โหมด "ทุกสาขา"
   final int? branchId;
   final String? branchName;
+
+  // สถานีครัวที่พนักงานคนนี้รับผิดชอบ (ticket 35) — ชุดว่าง = ไม่ผูกสถานี ซึ่งหมายถึง "เห็นทุกสถานี"
+  // ใช้เลือกชิปสถานีบนจอครัวให้ล่วงหน้าเท่านั้น ไม่ได้ซ่อนตั๋ว จอยังสลับสถานีได้เอง
+  // `stationIds` ให้หน้าจัดการพนักงานติ๊กช่อง, `stationCodes` ให้จอครัวใช้เลือกชิป
+  final List<int> stationIds;
+  final List<String> stationCodes;
 
   String get roleLabel => UserRole.label(role);
 

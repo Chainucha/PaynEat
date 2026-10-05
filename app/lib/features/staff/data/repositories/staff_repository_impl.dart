@@ -22,12 +22,14 @@ class StaffRepositoryImpl implements StaffRepository {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
   }) => guard(
     () async => await _remote.create(
       name: name,
       username: username,
       password: password,
       role: role,
+      stationIds: stationIds,
     ),
   );
 
@@ -37,11 +39,13 @@ class StaffRepositoryImpl implements StaffRepository {
     String? name,
     String? role,
     bool? isActive,
+    List<int>? stationIds,
   }) => guard(
     () async => await _remote.update(id, {
       'name': ?name,
       'role': ?role,
       'isActive': ?isActive,
+      'stationIds': ?stationIds,
     }),
   );
 

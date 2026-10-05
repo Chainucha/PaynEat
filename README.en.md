@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1174%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1178%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1174 automated tests.
+control and 1178 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -541,6 +541,9 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
    Tap **"Bar"** → only drink tickets remain, and the queue and late counters drop with them. Now **reload the
    page** → the screen is still on Bar, because the choice is remembered per device, so the bar's tablet does not
    have to be set again every shift (see `docs/DECISIONS.md` #94)
+   *(to make one account open on the same station on every device: sign in as `admin` → **Staff** → the ⋮ menu on
+   the `kitchen` account → **"Set kitchen stations"** → tick Bar, then open the kitchen screen in a fresh window
+   and it starts on Bar — see `docs/DECISIONS.md` #95)*
 8. **Return to the waiter window** → the status has already been updated; tap **"Served"**
    *(to try the snapshot rule: sign in as `manager` → **Menu management** → **Stations** → move the dish you just
    ordered to another station, then look at the kitchen screen again — the ticket being cooked stays where it was,
@@ -833,8 +836,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 538 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 587 cases — domain / controller / widget
+cd backend && npm test      # 540 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 589 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 49 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -947,6 +950,11 @@ cd app && flutter test test_e2e   # 49 cases — the real app talking to the rea
   **The station is stamped onto the ticket when the item is saved**, so moving a dish to another station — or
   renaming a station — never drags food already being cooked onto a different screen
   (see `docs/tickets/34-kitchen-stations.md`, `docs/DECISIONS.md` #94)
+- **Staff accounts can be tied to stations** (several per person) — a kitchen screen that has never been set on
+  that device opens on the account's station, so a shop where people grab whichever tablet is free doesn't have
+  to re-pick every shift. It is a **default, not a lock**: the chips still work and a choice made on the device
+  overrides the account, so a mis-assigned account can never make tickets quietly disappear
+  (see `docs/tickets/35-staff-kitchen-stations.md`, `docs/DECISIONS.md` #95)
 
 ### 💰 Cashier
 
@@ -1513,13 +1521,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 538 cases
-cd app && flutter test      # 587 cases
+cd backend && npm test      # 540 cases
+cd app && flutter test      # 589 cases
 cd app && flutter test test_e2e   # 49 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (538 + 587 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (540 + 589 + 49). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1574,7 +1582,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (538 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (540 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1878,7 +1886,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (587 cases)** — organized into 3 levels:
+**Flutter (589 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|

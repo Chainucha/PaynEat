@@ -3,6 +3,7 @@
 
 import bcrypt from 'bcryptjs';
 import { ApiError } from '../../core/ApiError.js';
+import { kitchenStationService } from '../kitchen-stations/kitchen-station.service.js';
 import { getDb } from '../../db/index.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
 import { branchRepository } from '../branches/branch.repository.js';
@@ -36,7 +37,16 @@ const assertCanManage = (actingUser, target) => {
 const findTarget = (id) => {
   const user = userRepository.findById(id);
   if (!user) throw ApiError.notFound('ไม่พบผู้ใช้งานนี้');
-  return toUserDto(user);
+  return withStations(user);
+};
+
+/** DTO ที่พกสถานีครัวของพนักงานคนนั้นมาด้วย (ticket 35) */
+const withStations = (row) => toUserDto(row, null, userRepository.findStations(row.id));
+
+const assertStationsExist = (stationIds) => {
+  for (const stationId of stationIds ?? []) {
+    kitchenStationService.assertStationExists(stationId);
+  }
 };
 
 export const userService = {
@@ -44,7 +54,7 @@ export const userService = {
     const scope = isAdmin(actingUser)
       ? {}
       : { roles: STAFF_ROLES, branchIds: managedBranchIds(actingUser) };
-    return userRepository.findAll({ ...filters, ...scope }).map(toUserDto);
+    return userRepository.findAll({ ...filters, ...scope }).map(withStations);
   },
 
   getById(id, actingUser) {
@@ -56,8 +66,9 @@ export const userService = {
   // currentBranchId มาจาก req.branchId ของผู้สร้าง (null เฉพาะ admin โหมด "ทุกสาขา" ดู
   // docs/DECISIONS.md #36) — พนักงานใหม่ต้องมีสิทธิ์เข้าอย่างน้อย 1 สาขาเสมอ ไม่งั้นจะล็อกอินไม่ได้
   // เลย (สาขาว่างเปล่า) จึงต้องระบุ branchId มาทาง payload แทนตอนสร้างในโหมดนี้
-  create({ name, username, password, role, branchId }, actingUser, currentBranchId) {
+  create({ name, username, password, role, branchId, stationIds }, actingUser, currentBranchId) {
     assertAssignableRole(actingUser, role);
+    assertStationsExist(stationIds);
     if (userRepository.findByUsername(username)) {
       throw ApiError.conflict('username นี้ถูกใช้งานแล้ว');
     }
@@ -73,14 +84,16 @@ export const userService = {
       const passwordHash = bcrypt.hashSync(password, 10);
       const created = userRepository.create({ name, username, passwordHash, role });
       branchRepository.addUser(created.id, resolvedBranchId);
+      if (stationIds?.length) userRepository.replaceStations(created.id, stationIds);
       return created;
     });
-    return toUserDto(run());
+    return withStations(run());
   },
 
   update(id, payload, actingUser) {
     const target = this.getById(id, actingUser);
     assertAssignableRole(actingUser, payload.role);
+    assertStationsExist(payload.stationIds);
     // ห้ามลดสิทธิ์/ปิดบัญชีตัวเอง — กดพลาดครั้งเดียวแล้วล็อกตัวเองออกจากหน้าจัดการพนักงานทันที
     // (เหลือ admin คนเดียวในร้าน = ไม่มีใครเปิดคืนให้ได้) ดู docs/DECISIONS.md #62
     if (Number(id) === Number(actingUser.id)) {
@@ -94,6 +107,10 @@ export const userService = {
 
     const run = getDb().transaction(() => {
       const updated = userRepository.update(id, payload);
+      // ส่งมาเป็นชุดเต็มเสมอ: [] = ถอดสถานีออกหมด (กลับไปเห็นทุกสถานี) ไม่ส่ง = ไม่แตะ
+      if (payload.stationIds !== undefined) {
+        userRepository.replaceStations(id, payload.stationIds);
+      }
       // แก้ role กับปิดการใช้งานเป็นการกระทำที่เสี่ยง ต้อง log แยกจากกัน (แก้ชื่อเฉยๆ ไม่ต้อง log)
       // ดู docs/tickets/08-audit-log.md
       if (payload.role !== undefined && payload.role !== target.role) {
@@ -120,7 +137,7 @@ export const userService = {
       }
       return updated;
     });
-    return toUserDto(run());
+    return withStations(run());
   },
 
   resetPassword(id, password, actingUser) {
@@ -139,7 +156,7 @@ export const userService = {
       });
       return updated;
     });
-    return toUserDto(run());
+    return withStations(run());
   },
 
   remove(id, actingUser) {

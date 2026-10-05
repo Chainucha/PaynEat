@@ -12,6 +12,7 @@ abstract class StaffRemoteDataSource {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
   });
   Future<UserModel> update(int id, Map<String, dynamic> changes);
   Future<UserModel> resetPassword(int id, String password);
@@ -35,6 +36,7 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
   }) async {
     final result = await _client.post(
       ApiEndpoints.users,
@@ -43,6 +45,7 @@ class StaffRemoteDataSourceImpl implements StaffRemoteDataSource {
         'username': username,
         'password': password,
         'role': role,
+        'stationIds': ?stationIds,
       },
     );
     return UserModel.fromJson(result.asMap);

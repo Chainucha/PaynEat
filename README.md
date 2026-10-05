@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1174%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1178%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1174 automated tests.
+control and 1178 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -519,6 +519,9 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
    เหนือคอลัมน์มี **ชิปเลือกสถานีครัว** (ทุกสถานี / ครัวร้อน / ครัวเย็น / บาร์) แตะ **"บาร์"** → เหลือแต่
    ตั๋วเครื่องดื่ม ตัวนับคิวและตัวนับจานช้าลดตามด้วย แล้ว **รีเฟรชหน้า** → จอยังอยู่ที่บาร์ เพราะจำสถานีไว้
    ต่อเครื่อง (แท็บเล็ตของบาร์จึงไม่ต้องตั้งใหม่ทุกครั้งที่เปลี่ยนกะ ดู `docs/DECISIONS.md` #94)
+   *(ถ้าอยากให้บัญชีหนึ่งเปิดมาที่สถานีเดิมทุกเครื่อง: ล็อกอินเป็น `admin` → **จัดการพนักงาน** → เมนู ⋮
+   ของบัญชี `kitchen` → **"ตั้งสถานีครัว"** → ติ๊ก บาร์ แล้วเปิดจอครัวในหน้าต่างใหม่ จอจะเริ่มที่บาร์เอง
+   ดู `docs/DECISIONS.md` #95)*
 8. **กลับไปหน้าต่างพนักงานเสิร์ฟ** → สถานะอัปเดตตามทันที จากนั้นกด **"เสิร์ฟแล้ว"**
    *(อยากลองกฎการประทับสถานี: ล็อกอินเป็น `manager` → **จัดการเมนู** → **สถานีครัว** → ย้ายเมนูที่เพิ่งสั่งไป
    สถานีอื่น แล้วกลับไปดูจอครัว ตั๋วใบที่ครัวกำลังทำอยู่ยังอยู่สถานีเดิม เฉพาะตั๋วใบใหม่ที่ไปสถานีใหม่)*
@@ -757,8 +760,8 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 ### 🧪 การรันเทสต์
 
 ```bash
-cd backend && npm test      # 538 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 587 เคส — domain / controller / widget
+cd backend && npm test      # 540 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
+cd app && flutter test      # 589 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -852,6 +855,10 @@ cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุ
   ไม่ว่าใครจะล็อกอิน) ตัวนับคิวและตัวนับจานช้ากรองตามสถานีที่เลือกด้วย ร้านที่มีครัวเดียวไม่เห็นชิปเลย
   **สถานีถูกประทับลงตั๋วตอนบันทึกรายการ** ย้ายเมนูไปสถานีอื่นหรือเปลี่ยนชื่อสถานีภายหลังจึงไม่ดึงตั๋วที่
   ครัวกำลังทำอยู่ข้ามจอ (ดู `docs/tickets/34-kitchen-stations.md`, `docs/DECISIONS.md` #94)
+- **ผูกสถานีกับบัญชีพนักงานได้** (หลายสถานีต่อคน) จอครัวที่ยังไม่เคยตั้งค่าบนเครื่องนั้นจะเปิดมาที่สถานี
+  ของบัญชีให้เลย ร้านที่พนักงานหยิบแท็บเล็ตเครื่องไหนก็ได้จึงไม่ต้องแตะเลือกใหม่ทุกกะ — เป็น **ค่าตั้งต้น
+  ไม่ใช่การล็อก** ชิปยังแตะได้ และค่าที่เลือกบนเครื่องจะทับค่าของบัญชี จึงไม่มีทางที่บัญชีซึ่งตั้งสถานีผิด
+  จะทำให้ตั๋วหายไปเงียบ ๆ (ดู `docs/tickets/35-staff-kitchen-stations.md`, `docs/DECISIONS.md` #95)
 
 ### 💰 แคชเชียร์
 
@@ -920,6 +927,8 @@ cd app && flutter test test_e2e   # 49 เคส — แอปจริงคุ
 
 ### 🖥️ ผู้ดูแลระบบ (เว็บ)
 
+- **ตั้งสถานีครัวให้พนักงาน** จากหน้าจัดการพนักงาน — ติ๊กได้หลายสถานี (คนทำครัวร้อนที่ช่วยดูเตาย่างด้วย
+  ไม่ต้องมีสองบัญชี) ไม่ติ๊กเลย = เห็นทุกสถานี ขอบเขตของผู้จัดการยังเป็นไปตาม `docs/DECISIONS.md` #92
 - **จัดการสถานีครัว** จากหน้าจัดการเมนู — เพิ่ม/แก้/ปิดใช้งานสถานี ตั้งสถานีค่าเริ่มต้น และกำหนดสถานีตั้งต้น
   ให้ทั้งหมวดหมู่ (เช่น "เครื่องดื่ม → บาร์") แล้วทับเป็นจาน ๆ ได้ที่ฟอร์มเมนู จานที่ไม่กำหนดเลยจะไปสถานี
   ค่าเริ่มต้น จึงไม่มีตั๋วหายจากทุกจอ (ดู `docs/DECISIONS.md` #94)
@@ -1366,13 +1375,13 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 ## 🧪 การทดสอบ
 
 ```bash
-cd backend && npm test      # 538 เคส
-cd app && flutter test      # 587 เคส
+cd backend && npm test      # 540 เคส
+cd app && flutter test      # 589 เคส
 cd app && flutter test test_e2e   # 49 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
-badge นับเฉพาะเทสต์ของ backend และแอป (538 + 587 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (540 + 589 + 49) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (49 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1415,7 +1424,7 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 เพื่อยืนยันว่า API ตอบ `/health`, เข้าสู่ระบบได้, ตาชั่งจำลองทำงานอยู่ และเว็บตอบ 200 — เมื่อผ่านแล้วจึงอัปโหลดเป็น release `demo` ของทางเลือก D
 (job นี้ป้องกันไม่ให้ Dockerfile ที่ build ไม่ผ่านหลุดรอดโดยไม่มีการแจ้งเตือน ดู `docs/DECISIONS.md` #63, #65)
 
-**Backend (538 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
+**Backend (540 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
 `kitchen-stations.test.js` คุม CRUD สิทธิ์และ 409 ทุกกรณีของสถานีครัว ส่วน `kitchen-station-routing.test.js`
 คุมกฎการตัดสินสถานี (เมนู → หมวดหมู่ → ค่าเริ่มต้น) และกฎว่าย้ายเมนูหรือเปลี่ยนชื่อสถานีภายหลังต้องไม่ดึงตั๋ว
 ที่ครัวกำลังทำอยู่ข้ามจอ (ticket 34)
@@ -1674,7 +1683,7 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 เบอร์ อีเมล เลขผู้เสียภาษี ที่อยู่ รหัสผ่าน หรือ token ลงใน log, JSON ที่ไม่ถูกต้องซึ่งมีรหัสผ่านได้รับ 400 (เดิม 500) โดยเนื้อหา body ไม่ถูกบันทึก
 และ QR token ของโต๊ะไม่ปรากฏใน log (ดู `docs/DECISIONS.md` #68)
 
-**Flutter (587 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (589 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|
@@ -1925,6 +1934,9 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
 - [ ] **สำรองข้อมูลอัตโนมัติและกู้คืนได้เอง (ticket 33)** — สำรองทุกครั้งที่ปิดกะ ทุก 6 ชั่วโมง และก่อนอัปเดตฐานข้อมูล ตรวจความสมบูรณ์ของทุกไฟล์
   เก็บชุดที่สองบนอีกดิสก์ได้ เจ้าของร้านเห็นแถบเตือนเมื่อไม่ได้สำรองเกิน 26 ชั่วโมง และกู้คืนได้ด้วยคำสั่งเดียว ต้องเสร็จก่อนร้านจริงร้านแรก
   (ดู `docs/DECISIONS.md` #90)
+- [x] **ผูกพนักงานกับสถานีครัว (ticket 35)** — ตารางเชื่อม `user_stations` ผูกได้หลายสถานีต่อคน ตั้งจาก
+  หน้าจัดการพนักงาน จอครัวใช้เป็นค่าตั้งต้นของชิป ส่วนค่าที่เลือกบนเครื่องยังทับได้เสมอ — ยังไม่ทำ: บังคับให้
+  เห็นแค่สถานีของตัวเอง, ผูกแยกตามสาขา (ดู `docs/DECISIONS.md` #94)
 - [x] **สถานีครัว — ส่งอาหารเข้าจอของครัวที่ทำจานนั้นเอง (ticket 34)** — ตารางอ้างอิง `kitchen_stations`
   (ครัวร้อน/ครัวเย็น/บาร์ มาให้ตั้งต้น ร้านเพิ่มเองได้) ตัดสินสถานีจากเมนู → หมวดหมู่ → ค่าเริ่มต้น แล้วประทับ
   ทั้งรหัสและชื่อลงตั๋วตอนบันทึก จอครัวมีชิปกรองสถานีที่จำไว้ต่อเครื่อง `?station=` บน API คิวครัว และคิวครัว

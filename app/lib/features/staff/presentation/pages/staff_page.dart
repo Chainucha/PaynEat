@@ -9,6 +9,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../../auth/domain/entities/user.dart';
+import '../../../menu/domain/entities/kitchen_station.dart';
 import '../controllers/staff_controller.dart';
 
 /// จัดการพนักงาน — เพิ่มบัญชี เปลี่ยนบทบาท ปิด/เปิดการใช้งาน
@@ -99,6 +100,7 @@ class StaffPage extends GetView<StaffController> {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     String role = UserRole.waiter;
+    final stationIds = <int>[];
 
     await Get.dialog<void>(
       StatefulBuilder(
@@ -160,6 +162,19 @@ class StaffPage extends GetView<StaffController> {
                     onChanged: (value) =>
                         setState(() => role = value ?? UserRole.waiter),
                   ),
+                  // สถานีครัวที่รับผิดชอบ (ticket 35) — ไม่ติ๊กเลย = เห็นทุกสถานี
+                  // ขึ้นเฉพาะบทบาทที่เห็นจอครัว ไม่ไปรบกวนตอนเพิ่มแคชเชียร์
+                  if (UserRole.seesKitchen(role) &&
+                      controller.stations.isNotEmpty)
+                    _StationPicker(
+                      stations: controller.stations,
+                      selected: stationIds,
+                      onChanged: (next) => setState(() {
+                        stationIds
+                          ..clear()
+                          ..addAll(next);
+                      }),
+                    ),
                 ],
               ),
             ),
@@ -177,6 +192,7 @@ class StaffPage extends GetView<StaffController> {
                   username: usernameController.text.trim(),
                   password: passwordController.text,
                   role: role,
+                  stationIds: UserRole.seesKitchen(role) ? stationIds : null,
                 );
                 if (created) Get.back<void>();
               },
@@ -187,6 +203,42 @@ class StaffPage extends GetView<StaffController> {
       ),
     );
   }
+}
+
+Future<void> _showStationDialog(BuildContext context, User user) async {
+  final controller = Get.find<StaffController>();
+  final selected = [...user.stationIds];
+
+  final saved = await Get.dialog<bool>(
+    AlertDialog(
+      title: Text('staff_stations_dialog_title'.trParams({'name': user.name})),
+      content: SingleChildScrollView(
+        child: StatefulBuilder(
+          builder: (context, setState) => _StationPicker(
+            stations: controller.stations,
+            selected: selected,
+            onChanged: (next) => setState(() {
+              selected
+                ..clear()
+                ..addAll(next);
+            }),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back<void>(),
+          child: Text('common_cancel'.tr),
+        ),
+        FilledButton(
+          onPressed: () => Get.back(result: true),
+          child: Text('common_save'.tr),
+        ),
+      ],
+    ),
+  );
+
+  if (saved == true) await controller.setStations(user, selected);
 }
 
 class _RoleChip extends StatelessWidget {
@@ -319,6 +371,8 @@ class _StaffRow extends GetView<StaffController> {
                     controller.toggleActive(user);
                   case 'delete':
                     controller.delete(user);
+                  case 'stations':
+                    _showStationDialog(context, user);
                   default:
                     controller.updateRole(user, value);
                 }
@@ -337,6 +391,12 @@ class _StaffRow extends GetView<StaffController> {
                       ),
                     ),
                 const PopupMenuDivider(),
+                if (UserRole.seesKitchen(user.role) &&
+                    controller.stations.isNotEmpty)
+                  PopupMenuItem(
+                    value: 'stations',
+                    child: Text('staff_stations_action'.tr),
+                  ),
                 PopupMenuItem(
                   value: 'toggle',
                   child: Text(
@@ -357,6 +417,68 @@ class _StaffRow extends GetView<StaffController> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// เลือกสถานีครัวที่พนักงานคนนี้รับผิดชอบ (ticket 35)
+///
+/// ติ๊กได้หลายสถานี เพราะคนทำครัวร้อนที่ช่วยดูเตาย่างด้วยไม่ควรต้องมีสองบัญชี
+/// ไม่ติ๊กเลย = ไม่ผูกสถานี = จอครัวเปิดมาที่ "ทุกสถานี" เหมือนเดิม
+class _StationPicker extends StatelessWidget {
+  const _StationPicker({
+    required this.stations,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<KitchenStation> stations;
+  final List<int> selected;
+  final ValueChanged<List<int>> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            'staff_stations_label'.tr,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            'staff_stations_hint'.tr,
+            style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+          ),
+        ),
+        for (final station in stations)
+          CheckboxListTile(
+            key: ValueKey('staff_station_${station.code}'),
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: selected.contains(station.id),
+            title: Text(station.labelWithIcon),
+            onChanged: (checked) {
+              final next = [...selected];
+              if (checked == true) {
+                next.add(station.id);
+              } else {
+                next.remove(station.id);
+              }
+              onChanged(next);
+            },
+          ),
+      ],
     );
   }
 }

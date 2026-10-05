@@ -11,6 +11,7 @@ import 'package:payneat_pos/core/network/socket_client.dart';
 import 'package:payneat_pos/core/services/session_service.dart';
 import 'package:payneat_pos/core/services/storage_service.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
+import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item.dart';
 import 'package:payneat_pos/features/order/domain/repositories/order_repository.dart';
@@ -391,6 +392,54 @@ void main() {
 
         await controller.selectStation(KitchenStationFilter.bar);
         expect(controller.visibleQueue, isEmpty);
+      },
+    );
+
+    test('บัญชีผูกสถานีไว้ → จอเปิดมาที่สถานีนั้นให้เลย (ticket 35)', () async {
+      session.updateUser(
+        const User(
+          id: 9,
+          name: 'เชฟบาร์',
+          username: 'barchef',
+          role: UserRole.kitchen,
+          isActive: true,
+          stationIds: [3],
+          stationCodes: [KitchenStationFilter.bar],
+        ),
+      );
+
+      final revived = buildController();
+      revived.onInit();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(revived.selectedStationCode.value, KitchenStationFilter.bar);
+      // แค่เลือกให้ล่วงหน้า ไม่ได้จำลงเครื่อง — เครื่องยังไม่เคยตั้งค่าเอง
+      expect(storage.kitchenStation, isNull);
+      revived.onClose();
+    });
+
+    test(
+      'ค่าที่เครื่องเคยเลือกทับค่าของบัญชี รวมถึงตอนเลือก "ทุกสถานี"',
+      () async {
+        session.updateUser(
+          const User(
+            id: 9,
+            name: 'เชฟบาร์',
+            username: 'barchef',
+            role: UserRole.kitchen,
+            isActive: true,
+            stationIds: [3],
+            stationCodes: [KitchenStationFilter.bar],
+          ),
+        );
+        await storage.saveKitchenStation(KitchenStationFilter.all);
+
+        final revived = buildController();
+        revived.onInit();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(revived.selectedStationCode.value, isNull);
+        revived.onClose();
       },
     );
 

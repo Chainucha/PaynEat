@@ -14,6 +14,8 @@ class UserModel extends User {
     required super.isActive,
     super.branchId,
     super.branchName,
+    super.stationIds,
+    super.stationCodes,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -24,6 +26,13 @@ class UserModel extends User {
     isActive: json['isActive'] as bool? ?? true,
     branchId: (json['branchId'] as num?)?.toInt(),
     branchName: json['branchName'] as String?,
+    stationIds: ((json['stationIds'] as List?) ?? const [])
+        .whereType<num>()
+        .map((value) => value.toInt())
+        .toList(growable: false),
+    stationCodes: ((json['stationCodes'] as List?) ?? const [])
+        .whereType<String>()
+        .toList(growable: false),
   );
 
   Map<String, dynamic> toJson() => {
@@ -34,5 +43,7 @@ class UserModel extends User {
     'isActive': isActive,
     'branchId': branchId,
     'branchName': branchName,
+    'stationIds': stationIds,
+    'stationCodes': stationCodes,
   };
 }

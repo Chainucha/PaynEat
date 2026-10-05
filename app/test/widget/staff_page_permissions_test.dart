@@ -10,6 +10,9 @@ import 'package:payneat_pos/core/network/socket_client.dart';
 import 'package:payneat_pos/core/services/session_service.dart';
 import 'package:payneat_pos/core/services/storage_service.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
+import 'package:payneat_pos/features/menu/domain/entities/kitchen_station.dart';
+import 'package:payneat_pos/features/menu/domain/repositories/menu_repository.dart';
+import 'package:payneat_pos/features/menu/domain/usecases/menu_usecases.dart';
 import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/staff/domain/repositories/staff_repository.dart';
 import 'package:payneat_pos/features/staff/domain/usecases/staff_usecases.dart';
@@ -38,6 +41,19 @@ User _user(int id, String role) => User(
   isActive: true,
 );
 
+/// repository ของเมนู ใช้เฉพาะดึงรายการสถานีมาทำช่องติ๊กในฟอร์มพนักงาน (ticket 35)
+class _FakeMenuRepository implements MenuRepository {
+  Result<List<KitchenStation>> nextStationsResult = const Result.success([]);
+
+  @override
+  Future<Result<List<KitchenStation>>> getKitchenStations({
+    bool activeOnly = false,
+  }) async => nextStationsResult;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   tearDown(Get.reset);
 
@@ -54,6 +70,7 @@ void main() {
     Get.put(
       StaffController(
         getStaff: GetStaffUseCase(repository),
+        getStations: GetKitchenStationsUseCase(_FakeMenuRepository()),
         createStaff: CreateStaffUseCase(repository),
         updateStaff: UpdateStaffUseCase(repository),
         deleteStaff: DeleteStaffUseCase(repository),

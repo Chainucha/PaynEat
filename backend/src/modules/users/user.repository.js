@@ -51,6 +51,27 @@ export const userRepository = {
     );
   },
 
+  /** สถานีครัวที่พนักงานคนนี้รับผิดชอบ (ticket 35) — ไม่มีแถว = ไม่ผูก = เห็นทุกสถานี */
+  findStations(userId) {
+    return getDb()
+      .prepare(
+        `SELECT s.id, s.code
+           FROM user_stations us
+           JOIN kitchen_stations s ON s.id = us.station_id
+          WHERE us.user_id = ?
+          ORDER BY s.sort_order, s.id`,
+      )
+      .all(userId);
+  },
+
+  /** แทนที่ชุดสถานีทั้งชุด (ส่ง [] = ถอดออกทั้งหมด) — ให้ผู้เรียกครอบ transaction เอง */
+  replaceStations(userId, stationIds) {
+    const db = getDb();
+    db.prepare('DELETE FROM user_stations WHERE user_id = ?').run(userId);
+    const insert = db.prepare('INSERT INTO user_stations (user_id, station_id) VALUES (?, ?)');
+    for (const stationId of new Set(stationIds)) insert.run(userId, stationId);
+  },
+
   findByUsername(username) {
     return getDb().prepare('SELECT * FROM users WHERE username = ?').get(username);
   },

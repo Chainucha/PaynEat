@@ -50,6 +50,11 @@ class UserRole {
   /// และกฎใน payment.service.js ที่ห้ามพนักงานเสิร์ฟขายเชื่อ แม้จะรับเงินสดได้ปกติ
   static bool canHandleCredit(String role) =>
       role == admin || role == manager || role == cashier;
+
+  /// บทบาทที่เห็นจอครัว — ตรงกับ `authorize('admin','manager','kitchen','waiter')` ของ
+  /// `GET /orders/kitchen/queue` การผูกสถานีครัวกับบัญชี (ticket 35) มีผลกับบทบาทเหล่านี้เท่านั้น
+  static bool seesKitchen(String role) =>
+      role == admin || role == manager || role == kitchen || role == waiter;
 }
 
 /// สถานะโต๊ะ

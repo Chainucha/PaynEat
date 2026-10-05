@@ -18,13 +18,28 @@ extension DemoStoreAuth on DemoStore {
 
   // ชื่อพนักงานตัวอย่างมี nameEn/nameKo ใน seed อยู่แล้วแต่เดิมส่งแต่ชื่อไทย หน้าจัดการพนักงาน
   // ภาษาเกาหลีจึงเป็นชื่อไทยทั้งหน้า (#64) — บัญชีที่ร้านสร้างเองไม่มีคำแปล ได้ชื่อตามที่พิมพ์
-  Map<String, dynamic> _publicUser(Map<String, dynamic> user) => {
-    'id': user['id'],
-    'name': DemoNames.of(user),
-    'username': user['username'],
-    'role': user['role'],
-    'isActive': user['isActive'],
-  };
+  Map<String, dynamic> _publicUser(Map<String, dynamic> user) {
+    // สถานีครัวที่ผูกไว้ (ticket 35) เปิดออกสองรูปเหมือน backend: ids ให้หน้าจัดการพนักงานติ๊กช่อง
+    // และ codes ให้จอครัวเลือกชิปล่วงหน้า ไม่ผูกเลย = ชุดว่าง = เห็นทุกสถานี
+    final ids = ((user['stationIds'] as List?) ?? const []).whereType<int>();
+    return {
+      'id': user['id'],
+      'name': DemoNames.of(user),
+      'username': user['username'],
+      'role': user['role'],
+      'isActive': user['isActive'],
+      'stationIds': ids.toList(growable: false),
+      'stationCodes': ids
+          .map(
+            (id) => kitchenStations.firstWhere(
+              (station) => station['id'] == id,
+              orElse: () => const <String, dynamic>{},
+            )['code'],
+          )
+          .whereType<String>()
+          .toList(growable: false),
+    };
+  }
 
   Map<String, dynamic> profile(String? token) {
     final id = int.tryParse(token?.split('-').last ?? '');
@@ -73,6 +88,7 @@ extension DemoStoreAuth on DemoStore {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
     int? actorId,
   }) {
     _assertStaffScope(actorId, [role]);
@@ -86,6 +102,7 @@ extension DemoStoreAuth on DemoStore {
       'password': password,
       'role': role,
       'isActive': true,
+      'stationIds': stationIds ?? const <int>[],
     };
     users.add(user);
     return _publicUser(user);

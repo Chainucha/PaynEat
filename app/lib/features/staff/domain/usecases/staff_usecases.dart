@@ -22,12 +22,16 @@ class CreateStaffParams {
     required this.username,
     required this.password,
     required this.role,
+    this.stationIds,
   });
 
   final String name;
   final String username;
   final String password;
   final String role;
+
+  /// สถานีครัวที่รับผิดชอบ (ticket 35) — ส่งเป็นชุดเต็มเสมอ: [] = ถอดออกทั้งหมด, null = ไม่แตะ
+  final List<int>? stationIds;
 }
 
 class CreateStaffUseCase implements UseCase<User, CreateStaffParams> {
@@ -41,6 +45,7 @@ class CreateStaffUseCase implements UseCase<User, CreateStaffParams> {
     username: params.username,
     password: params.password,
     role: params.role,
+    stationIds: params.stationIds,
   );
 }
 
@@ -50,12 +55,16 @@ class UpdateStaffParams {
     this.name,
     this.role,
     this.isActive,
+    this.stationIds,
   });
 
   final int id;
   final String? name;
   final String? role;
   final bool? isActive;
+
+  /// สถานีครัวที่รับผิดชอบ (ticket 35) — ส่งเป็นชุดเต็มเสมอ: [] = ถอดออกทั้งหมด, null = ไม่แตะ
+  final List<int>? stationIds;
 }
 
 class UpdateStaffUseCase implements UseCase<User, UpdateStaffParams> {
@@ -69,6 +78,7 @@ class UpdateStaffUseCase implements UseCase<User, UpdateStaffParams> {
     name: params.name,
     role: params.role,
     isActive: params.isActive,
+    stationIds: params.stationIds,
   );
 }
 

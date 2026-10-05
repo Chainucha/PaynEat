@@ -167,6 +167,7 @@ class HomeBinding extends Bindings {
     Get.lazyPut(
       () => StaffController(
         getStaff: Get.find<GetStaffUseCase>(),
+        getStations: Get.find<GetKitchenStationsUseCase>(),
         createStaff: Get.find<CreateStaffUseCase>(),
         updateStaff: Get.find<UpdateStaffUseCase>(),
         deleteStaff: Get.find<DeleteStaffUseCase>(),

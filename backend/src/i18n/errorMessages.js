@@ -100,6 +100,11 @@ export const ERROR_MESSAGES = [
     ko: '아이디 또는 비밀번호가 올바르지 않습니다',
   },
   {
+    th: 'ใส่รหัสผ่านผิดหลายครั้งเกินไป กรุณาลองใหม่ในอีก {minutes} นาที',
+    en: 'Too many incorrect passwords — please try again in {minutes} min',
+    ko: '비밀번호를 너무 여러 번 잘못 입력했습니다 — {minutes}분 후에 다시 시도해 주세요',
+  },
+  {
     th: 'บัญชีนี้ถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ',
     en: 'This account is deactivated — please contact your admin',
     ko: '사용 중지된 계정입니다 — 관리자에게 문의해 주세요',

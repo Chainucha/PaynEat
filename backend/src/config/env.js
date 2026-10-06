@@ -50,6 +50,19 @@ export const jwtSecretProblem = (secret, nodeEnv) => {
 const jwtProblem = jwtSecretProblem(process.env.JWT_SECRET, process.env.NODE_ENV);
 if (jwtProblem) throw new Error(jwtProblem);
 
+/**
+ * ค่า TRUST_PROXY → ค่า `trust proxy` ของ Express (ดู app.js) — ไม่ตั้ง/false = ไม่เชื่อ X-Forwarded-For
+ * (req.ip คือเครื่องที่ต่อเข้ามาตรง ๆ), ตัวเลข = จำนวน proxy ที่อยู่หน้าเซิร์ฟเวอร์, true = เชื่อทุก hop,
+ * ข้อความอื่น = รายชื่อ IP/subnet ของ proxy ตามรูปแบบของ Express (เช่น `loopback`, `10.0.0.0/8`)
+ */
+export const parseTrustProxy = (value) => {
+  const text = value?.trim() ?? '';
+  if (text === '' || text === 'false') return false;
+  if (text === 'true') return true;
+  if (/^\d+$/.test(text)) return Number(text);
+  return text;
+};
+
 const databaseFile = process.env.DATABASE_FILE
   ? path.resolve(rootDir, process.env.DATABASE_FILE)
   : path.resolve(rootDir, 'data/payneat.sqlite');
@@ -70,6 +83,15 @@ export const env = {
   },
   // ไม่ตั้งค่า หรือมี '*' = wildcard เป็น string ตรง ๆ (array ['*'] ไม่ match origin ไหนเลย — ดู cors.js)
   corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN),
+  // เซิร์ฟเวอร์อยู่หลัง reverse proxy (nginx, tunnel) — ตั้งเพื่อให้ req.ip เป็นเครื่องของผู้ใช้จริง
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
+  // พักการเข้าสู่ระบบชั่วคราวหลังใส่รหัสผ่านผิดครบ AUTH_MAX_FAILED_ATTEMPTS ครั้งภายใน
+  // AUTH_FAILED_ATTEMPT_WINDOW_MINUTES นาที (นับต่อ IP และต่อ username ดู modules/auth/auth.attempts.js)
+  auth: {
+    maxFailedAttempts: Math.max(1, toInt(process.env.AUTH_MAX_FAILED_ATTEMPTS, 10)),
+    failedAttemptWindowMs:
+      Math.max(1, toInt(process.env.AUTH_FAILED_ATTEMPT_WINDOW_MINUTES, 15)) * 60 * 1000,
+  },
   // ค่าเริ่มต้นของร้าน ใช้ตอนคำนวณบิล (ปรับได้ที่ตาราง settings)
   store: {
     name: process.env.STORE_NAME ?? 'PaynEat Restaurant',

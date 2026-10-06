@@ -832,6 +832,16 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ApiError' }
+        '429':
+          description: >-
+            ใส่รหัสผ่านผิดครบ AUTH_MAX_FAILED_ATTEMPTS ครั้ง (ค่าเริ่มต้น 10) ภายใน
+            AUTH_FAILED_ATTEMPT_WINDOW_MINUTES นาที (ค่าเริ่มต้น 15) นับต่อ IP และต่อ username —
+            header `Retry-After` บอกจำนวนวินาทีที่ต้องรอ เข้าสู่ระบบสำเร็จล้างตัวนับ
+          headers:
+            Retry-After: { schema: { type: integer } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
       description: >-
         ถ้า user มีสิทธิ์เข้ามากกว่า 1 สาขา (ดู ticket 11) จะได้ `needsBranchSelection: true`,
         `pendingToken`, และ `branches` แทน `token`/`user` — ต้องเรียก POST /auth/select-branch
@@ -881,6 +891,11 @@ paths:
       summary: เปลี่ยนรหัสผ่านของตัวเอง
       responses:
         '200': { description: สำเร็จ }
+        '400': { description: รหัสผ่านปัจจุบันไม่ถูกต้อง }
+        '429':
+          description: >-
+            ใส่รหัสผ่านปัจจุบันผิดครบเพดานเดียวกับ /auth/login (นับต่อบัญชี) — header `Retry-After`
+            บอกจำนวนวินาทีที่ต้องรอ
 
   /branches:
     get:

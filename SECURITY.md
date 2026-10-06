@@ -59,6 +59,8 @@ branch `main` ซึ่งเป็นเวอร์ชันเดียวท
   `SEED_WAITER1_PASSWORD`, `SEED_WAITER2_PASSWORD`, `SEED_KITCHEN_PASSWORD` และ `SEED_CASHIER_PASSWORD` ครบทั้ง 6 ค่า
   (ดู `backend/.env.example`) มิฉะนั้นเซิร์ฟเวอร์จะไม่เริ่มทำงาน หรือปิด `AUTO_SEED` แล้วสร้างบัญชีจริงเองทั้งหมด
 - **กำหนด `CORS_ORIGIN` เป็นโดเมนที่ใช้งานจริง** แทนค่า `*`
+- **กำหนด `TRUST_PROXY` เมื่อเซิร์ฟเวอร์อยู่หลัง reverse proxy** (nginx, Caddy, tunnel ฯลฯ) เช่น `TRUST_PROXY=1` สำหรับ proxy
+  หนึ่งชั้น เพื่อให้เซิร์ฟเวอร์เห็น IP ของเครื่องผู้ใช้จริง หากแอปเชื่อมต่อเซิร์ฟเวอร์โดยตรงให้คงค่าเริ่มต้น (ปิด) ไว้ (ดู `backend/.env.example`)
 - **ไม่เปิดพอร์ต metrics (`METRICS_PORT`, ค่าเริ่มต้น 9464) สู่ภายนอก** `/metrics` แยกจากพอร์ตของ API โดยเจตนา และ
   `docker-compose.yml` ไม่เปิดพอร์ตนี้ออกนอกเครื่อง (`docs/DECISIONS.md` #68) นอก Docker ค่าเริ่มต้นของ `METRICS_HOST` คือ `127.0.0.1`
 - **ไม่ตั้ง `EXPOSE_ERROR_STACK`** ค่าเริ่มต้นคือคำตอบของ API ไม่แนบรายละเอียดภายในของ error และค่านี้ไม่มีผลเมื่อ `NODE_ENV=production`

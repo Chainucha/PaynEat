@@ -16,6 +16,9 @@ import apiRoutes from './routes.js';
 
 export const createApp = () => {
   const app = express();
+  // หลัง reverse proxy: req.ip อ่านจาก X-Forwarded-For ตามจำนวน/รายชื่อ proxy ที่ตั้งไว้ (ค่าเริ่มต้นปิด
+  // เพราะถ้าไม่มี proxy อยู่หน้าเซิร์ฟเวอร์จริง req.ip จะมาจาก header ที่ไคลเอนต์ส่งมาเอง) — ดู env.js#parseTrustProxy
+  app.set('trust proxy', env.trustProxy);
 
   // ตัวแรกสุด: ทุกคำขอ (รวมที่ถูก cors/helmet/body parser ปฏิเสธ) ได้ x-request-id และบรรทัด
   // http.request.completed ตามสัญญา telemetry — แทน log แบบข้อความเดิม (ticket 24)

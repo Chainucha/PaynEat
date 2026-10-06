@@ -4,6 +4,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/features/auth/domain/entities/user.dart';
+import 'package:payneat_pos/features/menu/data/models/menu_item_model.dart';
 import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item.dart';
 import 'package:payneat_pos/features/order/data/models/order_model.dart';
@@ -255,5 +256,59 @@ void main() {
       expect(preview.vatIncluded, isFalse);
       expect(preview.adjustment, 0);
     });
+  });
+
+  group('MenuItemModel (เมนูฝั่งลูกค้า QR)', () {
+    test(
+      'อ่านเมนูที่มีแค่ฟิลด์ของหน้า QR ได้ครบ ฟิลด์ฝั่งพนักงานที่ไม่ได้ส่งมาใช้ค่าเริ่มต้น',
+      () {
+        // ชุดคีย์เดียวกับ public-order.service.js#toPublicMenuItem
+        final item = MenuItemModel.fromJson({
+          'id': 7,
+          'categoryId': 2,
+          'name': 'ผัดกะเพราหมูสับ',
+          'nameEn': 'Basil Pork',
+          'description': null,
+          'price': 75,
+          'imageUrl': null,
+          'isAvailable': true,
+          'isRecommended': true,
+          'optionGroups': [
+            {
+              'id': 3,
+              'name': 'เพิ่มท็อปปิ้ง',
+              'minSelect': 1,
+              'maxSelect': 1,
+              'isRequired': true,
+              'options': [
+                {
+                  'id': 10,
+                  'name': 'ไม่เพิ่ม',
+                  'priceDelta': 0,
+                  'isDefault': true,
+                },
+                {
+                  'id': 11,
+                  'name': 'ไข่ดาว',
+                  'priceDelta': 15,
+                  'isDefault': false,
+                },
+              ],
+            },
+          ],
+        });
+
+        expect(item.displayName, isNotEmpty);
+        expect(item.price, 75);
+        expect(item.isRecommended, isTrue);
+        expect(item.requiresSelection, isTrue);
+        expect(item.optionGroups.single.options.last.priceDelta, 15);
+        expect(item.optionGroups.single.defaults.single.id, 10);
+        expect(item.ingredients, isEmpty);
+        expect(item.soldByWeight, isFalse);
+        expect(item.barcode, isNull);
+        expect(item.scalePlu, isNull);
+      },
+    );
   });
 }

@@ -76,6 +76,51 @@ test('GET /public/tables/:qrToken/menu — เห็นเฉพาะเมน�
   assert.ok(res.body.data.items.every((item) => item.isAvailable));
 });
 
+test('GET /public/tables/:qrToken/menu — ส่งเฉพาะฟิลด์ที่หน้า QR ใช้ (ชุดคีย์ตายตัว)', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'KEYS');
+
+  const res = await publicGetMenu(table.qrToken);
+
+  assert.equal(res.status, 200);
+  assert.deepEqual(Object.keys(res.body.data).sort(), ['categories', 'items', 'staffOnlyCount']);
+  // ล็อกชุดคีย์ไว้ทุกระดับ — เพิ่มฟิลด์ใน DTO เมนูของพนักงานแล้วต้องไม่ติดมาเมนูลูกค้าเอง
+  // ต้องตั้งใจเพิ่มใน toPublicMenuItem (public-order.service.js) พร้อมแก้เทสต์นี้
+  for (const category of res.body.data.categories) {
+    assert.deepEqual(Object.keys(category).sort(), ['icon', 'id', 'name', 'nameEn']);
+  }
+  for (const item of res.body.data.items) {
+    assert.deepEqual(Object.keys(item).sort(), [
+      'categoryId',
+      'description',
+      'id',
+      'imageUrl',
+      'isAvailable',
+      'isRecommended',
+      'name',
+      'nameEn',
+      'optionGroups',
+      'price',
+    ]);
+  }
+
+  const groups = res.body.data.items.flatMap((item) => item.optionGroups);
+  assert.ok(groups.length > 0, 'ข้อมูลตั้งต้นต้องมีเมนูที่มีกลุ่มตัวเลือกอย่างน้อย 1 กลุ่ม');
+  for (const group of groups) {
+    assert.deepEqual(Object.keys(group).sort(), [
+      'id',
+      'isRequired',
+      'maxSelect',
+      'minSelect',
+      'name',
+      'options',
+    ]);
+    for (const option of group.options) {
+      assert.deepEqual(Object.keys(option).sort(), ['id', 'isDefault', 'name', 'priceDelta']);
+    }
+  }
+});
+
 test('POST /public/tables/:qrToken/items — ยังไม่มีออเดอร์เปิดอยู่ → เปิดออเดอร์ใหม่ให้อัตโนมัติ', async () => {
   const { token } = await login('admin', 'admin123');
   const table = await createTableWithQrToken(token, 'NEW');

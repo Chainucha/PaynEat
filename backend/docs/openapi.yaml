@@ -274,6 +274,54 @@ components:
           description: >-
             สถานีครัวของจานนี้ (ดู ticket 34) — null = ตามหมวดหมู่ ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้า
             หมวดหมู่ก็ไม่ได้กำหนดไว้ สถานีถูกตัดสินและประทับลงรายการตอนบันทึก ไม่ใช่ตอนอ่านคิวครัว
+    PublicCategory:
+      type: object
+      description: หมวดหมู่ในเมนูฝั่งลูกค้า (ticket 17) — เฉพาะที่แถบหมวดหมู่หน้า QR ใช้ เรียงตาม sortOrder มาแล้ว
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        name: { type: string, example: อาหารจานเดียว }
+        nameEn: { type: string, nullable: true, example: Rice & Noodles }
+        icon: { type: string, nullable: true, example: 🍛 }
+    PublicMenuOption:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        name: { type: string, example: ไข่ดาว }
+        priceDelta: { type: number, example: 15 }
+        isDefault: { type: boolean }
+    PublicMenuOptionGroup:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        name: { type: string, example: ระดับความเผ็ด }
+        minSelect: { type: integer }
+        maxSelect: { type: integer }
+        isRequired: { type: boolean }
+        options:
+          type: array
+          items: { $ref: '#/components/schemas/PublicMenuOption' }
+    PublicMenuItem:
+      type: object
+      description: >-
+        เมนู 1 รายการในเมนูฝั่งลูกค้า (ticket 17) — เลือกเฉพาะฟิลด์ที่หน้า QR ใช้จาก MenuItem
+        (public-order.service.js#toPublicMenuItem) ฟิลด์ที่เพิ่มใน MenuItem ภายหลังไม่ติดมาเอง
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        categoryId: { type: integer }
+        name: { type: string, example: ผัดกะเพราหมูสับ }
+        nameEn: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        price: { type: number, example: 75 }
+        imageUrl: { type: string, nullable: true }
+        isAvailable: { type: boolean }
+        isRecommended: { type: boolean }
+        optionGroups:
+          type: array
+          items: { $ref: '#/components/schemas/PublicMenuOptionGroup' }
     Ingredient:
       type: object
       properties:
@@ -2782,10 +2830,16 @@ paths:
                     properties:
                       categories:
                         type: array
-                        items: { $ref: '#/components/schemas/Category' }
+                        items: { $ref: '#/components/schemas/PublicCategory' }
                       items:
                         type: array
-                        items: { $ref: '#/components/schemas/MenuItem' }
+                        description: เฉพาะเมนูที่สั่งเองได้ — ไม่รวมเมนูขายตามน้ำหนัก (ticket 18)
+                        items: { $ref: '#/components/schemas/PublicMenuItem' }
+                      staffOnlyCount:
+                        type: integer
+                        description: >-
+                          จำนวนเมนูที่เปิดขายแต่ต้องสั่งกับพนักงาน (ขายตามน้ำหนัก) — หน้า QR
+                          ใช้บอกลูกค้า (DECISIONS #64)
         '404': { description: ไม่พบโต๊ะนี้ / โต๊ะหรือสาขาปิดใช้งานอยู่ }
   /public/tables/{qrToken}/items:
     parameters:

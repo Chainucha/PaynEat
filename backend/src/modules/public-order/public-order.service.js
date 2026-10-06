@@ -65,6 +65,50 @@ const toPublicOrderPreview = (order) => {
   };
 };
 
+/**
+ * เมนูฝั่งลูกค้าเลือกฟิลด์ทีละตัวจาก DTO เมนูของพนักงาน (แทนการตัดบางฟิลด์ทิ้ง) ให้ตรงกับที่หน้า
+ * QR ใช้จริง (app/lib/features/self_order/ → MenuItemModel.fromJson) — ฟิลด์ใหม่ที่เพิ่มเข้า DTO
+ * ฝั่งพนักงานภายหลังจะไม่ติดมาในเมนูลูกค้าเอง ต้องตั้งใจเพิ่มตรงนี้ (เทสต์ล็อกชุดคีย์ไว้ใน
+ * tests/public-order.test.js) ส่วน minSelect ของกลุ่มตัวเลือกส่งไปด้วยแม้หน้าจอยังไม่อ่าน เพราะเป็น
+ * กฎที่ order.service.js ใช้ตรวจตอนลูกค้ากดสั่ง
+ */
+const toPublicMenuOption = (option) => ({
+  id: option.id,
+  name: option.name,
+  priceDelta: option.priceDelta,
+  isDefault: option.isDefault,
+});
+
+const toPublicMenuOptionGroup = (group) => ({
+  id: group.id,
+  name: group.name,
+  minSelect: group.minSelect,
+  maxSelect: group.maxSelect,
+  isRequired: group.isRequired,
+  options: group.options.map(toPublicMenuOption),
+});
+
+const toPublicMenuItem = (item) => ({
+  id: item.id,
+  categoryId: item.categoryId,
+  name: item.name,
+  nameEn: item.nameEn,
+  description: item.description,
+  price: item.price,
+  imageUrl: item.imageUrl,
+  isAvailable: item.isAvailable,
+  isRecommended: item.isRecommended,
+  optionGroups: item.optionGroups.map(toPublicMenuOptionGroup),
+});
+
+// แถบหมวดหมู่หน้า QR ใช้แค่ชื่อ/ไอคอน ลำดับมากับ array อยู่แล้ว (เรียง sort_order มาจาก repository)
+const toPublicCategory = (category) => ({
+  id: category.id,
+  name: category.name,
+  nameEn: category.nameEn,
+  icon: category.icon,
+});
+
 export const publicOrderService = {
   getTable(qrToken) {
     const { table, branch } = resolveTable(qrToken);
@@ -78,13 +122,11 @@ export const publicOrderService = {
 
   getMenu(qrToken) {
     const { table } = resolveTable(qrToken);
-    const categories = categoryService.list({ activeOnly: true });
+    const categories = categoryService.list({ activeOnly: true }).map(toPublicCategory);
     const { items } = menuService.list({ availableOnly: true }, table.branch_id);
     // สินค้าขายตามน้ำหนักต้องให้พนักงานชั่งจริงก่อนถึงรู้ราคา ลูกค้าสั่งเองจากโต๊ะไม่ได้ จึงไม่แสดง
-    // ในเมนูฝั่งลูกค้าเลย (ดู docs/tickets/18-sell-by-weight.md) — ไม่ส่งรหัสสินค้าภายในไปด้วย
-    const orderable = items
-      .filter((item) => !item.soldByWeight)
-      .map(({ barcode: _barcode, scalePlu: _scalePlu, ...item }) => item);
+    // ในเมนูฝั่งลูกค้าเลย (ดู docs/tickets/18-sell-by-weight.md)
+    const orderable = items.filter((item) => !item.soldByWeight).map(toPublicMenuItem);
     // บอกจำนวนที่ซ่อนไว้ด้วย หน้า QR จะได้บอกลูกค้าว่ามีของที่ต้องสั่งกับพนักงาน แทนที่จะหายเงียบ
     // (DECISIONS #64) — ส่งแค่จำนวน ไม่ส่งชื่อ/ราคา เพราะราคาขึ้นกับน้ำหนักที่ชั่งจริง
     const staffOnlyCount = items.length - orderable.length;

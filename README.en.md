@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1240%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1270%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1240 automated tests.
+control and 1270 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -700,6 +700,10 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   on the web · if the backup after a shift close fails, the shift still closes and the shift summary card tells the cashier to inform
   the owner
 
+- (Options A/B/D) On the login screen, enter `waiter2` with a wrong password 10 times → the next try, even with the correct
+  `waiter123`, says to wait 15 minutes, while other accounts on other devices still sign in normally — the count lives in the
+  server's memory, so restarting the server starts it over
+
 - Log in as `admin` → **Staff** → the signed-in user's own row has no ⋮ menu, only a **"You"** badge (users cannot
   demote, deactivate, or delete their own account; a direct API call returns 400). Other rows allow role changes and
   deactivation, but only after a confirmation dialog that describes the effect. Deleting `cashier` (which has already
@@ -803,6 +807,12 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   numeric table id, because the token is a separate random value, not a sequential id. The behaviour is
   identical in Demo Mode and with the real backend, including a genuine link truncated when forwarded over
   LINE (#46)
+- Open a table's QR link (step 23) → put one dish in the cart and keep tapping **+** → the **+** button stops at
+  **10**, with the line "Max 10 · call staff for more" (11 of one dish can't be ordered through QR; a direct API call
+  gets a 409 with the same message) — keep ordering through QR until the table's bill would pass **60** in total
+  (items staff added count too) → the whole round is refused with a message saying how many are already ordered and
+  asking the customer to call staff, while staff can still add to the same bill as usual — the shop can change the
+  limits with `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY` in `backend/.env` (see `docs/DECISIONS.md` #99)
 - Log in as `manager` → open a bill paid in **cash** → **refund** 20 THB → log in as
   `cashier` → **close the shift**, counting exactly the cash in the drawer (starting float + cash
   received − 20) → the variance is **0**, because the system automatically subtracts cash returned to
@@ -856,9 +866,9 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 570 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 617 cases — domain / controller / widget
-cd app && flutter test test_e2e   # 53 cases — the real app talking to the real backend (run npm ci in backend first)
+cd backend && npm test      # 593 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 623 cases — domain / controller / widget
+cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
 ---
@@ -944,6 +954,10 @@ cd app && flutter test test_e2e   # 53 cases — the real app talking to the rea
 - **Sold-by-weight items (fresh meat by the kg) are hidden, with an explanatory line** — "Meat sold by weight —
   order it from staff", so customers do not assume the items are sold out (#64); staff must weigh these items,
   and a direct API call is also rejected
+- **Large orders go through staff** — a QR order can have at most 10 of each item, and the table's bill can reach at
+  most 60 in total through QR (items staff added count too). The **+** button stops at the limit the shop has set, and
+  beyond it the customer sees a message asking them to call staff — staff can still order beyond it, and the shop can
+  change the limits with `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY` (#99)
 - **Payment is handled by the cashier** — this feature covers order taking only, not self-checkout
   (see `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37)
 - **An invalid link is reported clearly as invalid** — whether the QR has been regenerated, the
@@ -1240,6 +1254,11 @@ cd app && flutter test test_e2e   # 53 cases — the real app talking to the rea
   `npm run db:restore -- <file>`, which refuses while the server runs, for a damaged file or one from a newer PaynEat, always backs up
   the current database first and records a `system.restore` audit entry · metrics `payneat_backup_last_success_timestamp_seconds` /
   `payneat_backup_failures_total` (see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
+- **Sign-in pauses for a while after repeated wrong passwords** — 10 wrong passwords within 15 minutes (counted per username
+  and per device) means waiting until that time is up before trying again; the login screen shows how many minutes are left in
+  the chosen language, a successful sign-in clears the count right away, and the same applies to entering the wrong current
+  password when changing it. Tune it with `AUTH_MAX_FAILED_ATTEMPTS` / `AUTH_FAILED_ATTEMPT_WINDOW_MINUTES` · when the server sits
+  behind a reverse proxy (nginx, a tunnel), set `TRUST_PROXY` so the server sees the user's real device (see `backend/.env.example`)
 
 ---
 
@@ -1560,17 +1579,17 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 570 cases
-cd app && flutter test      # 617 cases
-cd app && flutter test test_e2e   # 53 cases (run npm ci in backend first)
+cd backend && npm test      # 593 cases
+cd app && flutter test      # 623 cases
+cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (570 + 617 + 53). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (593 + 623 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
-**E2E — the real app against the real backend (53 cases)** — `app/test_e2e/` starts the real backend
+**E2E — the real app against the real backend (54 cases)** — `app/test_e2e/` starts the real backend
 (`node src/server.js`) on a random port with a new temporary database per file, then exercises the
 app's production data/domain code (`ApiClient` → data source → repository, the same stack the app assembles at
 startup) against it following a restaurant's workflow, with each role using its own "device". It is the only
@@ -1585,8 +1604,8 @@ and the backend tests are pure JavaScript), and it runs as a separate CI job:
 > table freed → full tax invoice → refund (cashier cannot, manager can) → shift closes with zero variance →
 > Z-report + CSV → reports count exactly one more bill → the audit log holds every money event
 >
-> `self_order_and_access_e2e_test.dart` (16 cases) — a customer scans the QR and orders all the way to the
-> kitchen screen, every type of invalid link, regenerating the QR invalidates the old link immediately, no personal
+> `self_order_and_access_e2e_test.dart` (17 cases) — a customer scans the QR and orders all the way to the
+> kitchen screen, an order over the QR limit returns an error the app can tell apart (#99), every type of invalid link, regenerating the QR invalidates the old link immediately, no personal
 > data is exposed on the public page, multi-branch staff/branch switching, a 403 at every money-related
 > permission, a bad token, and a deactivated staff member's signed-in device losing access
 >
@@ -1626,7 +1645,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (570 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (593 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1829,14 +1848,19 @@ combined); a newly created staff member is assigned automatically to the branch 
 working; and RBAC on `GET /branches`/`GET /branches/mine`/`PATCH /branches/:id` is correct (see
 `docs/tickets/11-multi-branch.md`, `docs/DECISIONS.md` #36).
 
-`public-order.test.js` (13 cases) tests the public, login-free QR self-order endpoints: every
+`public-order.test.js` (21 cases) tests the public, login-free QR self-order endpoints: every
 table has a unique `qrToken` from `GET /tables`, a bad token or a deactivated table returns 404,
-viewing the menu/current order for a table works correctly, adding the first item opens a new
+viewing the menu/current order for a table works correctly, the customer menu has a fixed key set at every level
+(item/option group/option/category, so new fields on the staff menu DTO do not flow into it), adding the first item opens a new
 order automatically (later additions go into the same order), ordering a sold-out item returns 409, sending more than 20
 items in one call returns 422, `PATCH /tables/:id/qr-token/regenerate` invalidates the old token
 immediately with RBAC (admin/manager only; waiters cannot call it), and `POST .../items` is rate
 limited to 30 requests/5 minutes per table, returning 429 beyond that (see
-`docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37).
+`docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37), plus the QR limits: the menu reports `limits` to the
+customer page, exactly 10 of an item passes while 11 gets a 409 (the whole request is refused, no bill left open) with a
+translated message, a bill with 55 added by staff takes QR additions up to exactly 60, cancelled items don't count, and
+staff can still add 70 in one line to the same bill — `public-order-limits-env.test.js` (1 case) sets the limits to 3/5
+through env and both the menu and the checks follow the new values (`docs/DECISIONS.md` #99).
 
 `sell-by-weight.test.js` (10 cases) covers selling by weight: price = per-kg price × grams rounded to
 the satang (including per-kg modifiers), weight required/forbidden by item type, one bag per line with no
@@ -1947,7 +1971,14 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (617 cases)** — organized into 3 levels:
+`login-attempts.test.js` (7 cases), `trust-proxy.test.js` (2 cases) and `failed-attempts.test.js` (5 cases) cover pausing
+sign-in after repeated wrong passwords: reaching the limit returns 429 with `Retry-After` even if the next try is correct,
+counting per username across devices (ignoring case and surrounding spaces) and per IP without affecting other accounts,
+a successful sign-in clearing the count, the message following the request language, the same pause for a wrong current
+password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
+counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
+
+**Flutter (623 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -1955,10 +1986,10 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Domain | `promotion_engine_test.dart` | The backend's promotion-matching test suite ported to Dart (percent/amount/bogo, every condition type, `findBestAutoPromotion`, `describeIneligibility`) |
 | Domain | `cart_line_test.dart` | Merging duplicate cart lines + a weighed line priced in satang before rounding, matching the backend (including prices with fractional satang), per-kg modifiers, two bags of equal weight never merging (ticket 18) |
 | Domain | `barcode_resolver_test.dart` | Reading product barcodes/EAN-13 scale labels: PLUs with leading zeros, no guessing on a bad check digit, store-defined label formats, labels matching only weighed items, and a registered exact barcode winning over label parsing (ticket 19) |
-| Domain | `entities_test.dart` | Role-based permissions, order-item status transitions, an item the kitchen started and then undid still cannot be edited or removed (T05), PaymentSummary/SplitPreview read refunds, included VAT and the adjustment line from the backend (T06, T10) |
+| Domain | `entities_test.dart` | Role-based permissions, order-item status transitions, an item the kitchen started and then undid still cannot be edited or removed (T05), PaymentSummary/SplitPreview read refunds, included VAT and the adjustment line from the backend (T06, T10), `MenuItemModel` reads the QR customer menu that carries only that page's fields, with staff-only fields falling back to defaults |
 | Domain | `loyalty_points_test.dart` | App-side loyalty points (mirrors the backend): computed in satang and rounded down, a rate of 0 / below 0.01 / NaN / Infinity gives 0 points instead of an exception, a point value below 0.01 baht can't be redeemed, and 0.01 baht is the lowest rate that can be set (T15) |
 | Domain | `split_share_test.dart` | The app-side split share (mirrors the backend): 50% off on 160 + 320 gives 94.16/188.32 whoever pays first, included VAT on 160 + 80 gives 176/88, and a property test over 2,000 random bills adds up to the bill (T10) |
-| Domain | `demo_store_test.dart` | Verifies `demo_store.dart`, split into 20 files, still works correctly across domains, including the full auto/code/remove/eligible-list promotion flow, the full stock-deduction / auto sold-out flow, the tax-invoice issue/void/reissue flow with running numbers, the audit-log flow covering every risky action (ticket 08), the customer/loyalty flow: creating/searching customers, linking `customerId` at order creation, earning points exactly once when fully paid (including split-payment rounds), redeeming points for a discount without changing the order's `amount`, and rejecting every invalid redemption (ticket 09), and the takeaway queue number: only assigned for `type=takeaway`, running correctly per day even with dine-in/delivery orders interleaved (ticket 10), and the financial/accounting audit flow: menu price changes only log when the price actually changes, promotion create/edit/delete, manual ingredient stock adjustments, and `auditLogExportCsv` returning CSV correctly filtered by action (ticket 14), and every table having a unique `qrToken`, `resolveTableByQrToken` finding the right table / rejecting a bad token or a deactivated table, and `regenerateQrToken` invalidating the old token immediately (ticket 17), selling by weight/duplicate codes/kg stock deduction on payment/QR self-order hiding weighed items (tickets 18–19), credit sales/payments applied oldest first/cash into the shift/no voiding a receipt after its shift closed/billing notes/credit reduction/debt aging (ticket 20), and late interest on the seeded bill (8 days at 12%, no double charge)/no voiding paid interest/the 15% cap/credit notes + VAT on the difference/simulated e-mail defaulting to the customer's address and refusing voided documents (tickets 21, 23), and credit-sale points earned on full payment / taken back on a void as far as possible / withheld while interest is owed / net of credit notes (#59), and closed bills or items paid in a split cannot have an item cancelled while the kitchen can still move them on (T04), and an item the kitchen started then undid: only a manager can cancel it (403 for waiters/kitchen), the audit names the stage reached and matches the backend letter for letter, it cannot be edited or removed, and the stage reached never goes down (T05), and split by item in Demo Mode gives the backend's figures for 50% off and for included VAT, with the adjustment line after a fixed-amount payment (T10), and a points rate below 0.01 baht can't be set, a stored rate of 0 earns 0 points on a cash sale or a fully collected credit sale, and a stored point value of 0 can't be redeemed (T15), and a manager sees only waiter/cashier/kitchen accounts and cannot touch manager/admin accounts, create or promote a manager, or delete an account (403), while still managing staff (T22), and a discount/removal/reduction that would take a bill below the money received is refused with the whole store (order, stock, audit) back as it was, a total that equals the money received closes the bill and frees the table, and a bill holding more than its total takes no payment or split preview (T07) |
+| Domain | `demo_store_test.dart` | Verifies `demo_store.dart`, split into 20 files, still works correctly across domains, including the full auto/code/remove/eligible-list promotion flow, the full stock-deduction / auto sold-out flow, the tax-invoice issue/void/reissue flow with running numbers, the audit-log flow covering every risky action (ticket 08), the customer/loyalty flow: creating/searching customers, linking `customerId` at order creation, earning points exactly once when fully paid (including split-payment rounds), redeeming points for a discount without changing the order's `amount`, and rejecting every invalid redemption (ticket 09), and the takeaway queue number: only assigned for `type=takeaway`, running correctly per day even with dine-in/delivery orders interleaved (ticket 10), and the financial/accounting audit flow: menu price changes only log when the price actually changes, promotion create/edit/delete, manual ingredient stock adjustments, and `auditLogExportCsv` returning CSV correctly filtered by action (ticket 14), and every table having a unique `qrToken`, `resolveTableByQrToken` finding the right table / rejecting a bad token or a deactivated table, and `regenerateQrToken` invalidating the old token immediately (ticket 17), the QR limits matching the backend: 11 of an item or a bill past 60 gets a 409 without leaving a bill open (#99), selling by weight/duplicate codes/kg stock deduction on payment/QR self-order hiding weighed items (tickets 18–19), credit sales/payments applied oldest first/cash into the shift/no voiding a receipt after its shift closed/billing notes/credit reduction/debt aging (ticket 20), and late interest on the seeded bill (8 days at 12%, no double charge)/no voiding paid interest/the 15% cap/credit notes + VAT on the difference/simulated e-mail defaulting to the customer's address and refusing voided documents (tickets 21, 23), and credit-sale points earned on full payment / taken back on a void as far as possible / withheld while interest is owed / net of credit notes (#59), and closed bills or items paid in a split cannot have an item cancelled while the kitchen can still move them on (T04), and an item the kitchen started then undid: only a manager can cancel it (403 for waiters/kitchen), the audit names the stage reached and matches the backend letter for letter, it cannot be edited or removed, and the stage reached never goes down (T05), and split by item in Demo Mode gives the backend's figures for 50% off and for included VAT, with the adjustment line after a fixed-amount payment (T10), and a points rate below 0.01 baht can't be set, a stored rate of 0 earns 0 points on a cash sale or a fully collected credit sale, and a stored point value of 0 can't be redeemed (T15), and a manager sees only waiter/cashier/kitchen accounts and cannot touch manager/admin accounts, create or promote a manager, or delete an account (403), while still managing staff (T22), and a discount/removal/reduction that would take a bill below the money received is refused with the whole store (order, stock, audit) back as it was, a total that equals the money received closes the bill and frees the table, and a bill holding more than its total takes no payment or split preview (T07) |
 | Controller | `cart_controller_test.dart` | Cart logic, using a fake repository, including the case of no `Get.arguments` at all (coming straight from the "New takeaway/delivery" button) still defaulting to takeaway rather than dine-in (ticket 10), weighed items sending `weightGrams` to the backend/no quantity edits but re-weighing allowed, scanning labels/barcodes into the cart, and a bad scan leaving the cart unchanged (tickets 18–19) |
 | Controller | `request_id_error_test.dart` | The request ID on error messages, through the real ApiClient → repository → controller chain: 500/409 give the backend's translated message + "Request ID: …" matching what was sent, 422 gets no ID, every request gets a fresh `x-request-id` in the format the backend accepts, `ServerFailure.requestId` (ticket 24) |
 | Controller | `receivable_controllers_test.dart` | Totals of what's owed/overdue, splitting open bills/unbilled bills/open billing notes, document voiding limited to managers and up, a successful payment sending the chosen billing note then reloading / a failed one not reloading (ticket 20), late interest/credit notes limited to managers and up and reloading on success, e-mail with no recipient using the customer's address (tickets 21, 23) |
@@ -1966,7 +1997,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Controller | `auth_controller_test.dart` | Validators, fillDemoAccount, guard when the form is invalid, `loadMyBranches` success populates `myBranches`, guard clauses in `submitBranchSelection`/`switchBranch` when there's no pendingToken/session token yet (ticket 11) |
 | Controller | `order_list_controller_test.dart` | Order status filters, sending activeOnly/dateFrom correctly |
 | Controller | `table_controller_test.dart` | Combined zone/status filtering, counting available/occupied tables, `canManageQrToken` restricted to admin/manager (mirrors the backend's RBAC — ticket 17) |
-| Controller | `self_order_controller_test.dart` | Loading a table + menu from a qrToken (success/failure), a link with no qrToken sets an error immediately without calling the repository, filtering the menu by category, adding/removing cart lines, tapping the same dish again merging into one line with a higher quantity (same rule as the staff cart), and dropping a line's quantity to 0 removing it from the cart (ticket 17) |
+| Controller | `self_order_controller_test.dart` | Loading a table + menu from a qrToken (success/failure), a link with no qrToken sets an error immediately without calling the repository, filtering the menu by category, adding/removing cart lines, tapping the same dish again merging into one line with a higher quantity (same rule as the staff cart), and dropping a line's quantity to 0 removing it from the cart (ticket 17), plus the QR per-item limit: read from the menu, tapping the same dish again or raising the quantity stops at the limit, and the limit message shows without the request-ID line while other errors show as before (#99) |
 | Controller | `home_controller_test.dart` | Per-role menu visibility, tab switching |
 | Controller | `menu_browse_controller_test.dart` | Menu filtering/search (debounced), counts per category |
 | Controller | `menu_management_controller_test.dart` | Menu filtering on the management screen, counting sold-out items |
@@ -2074,7 +2105,7 @@ Completed work, planned work, and known limitations, with the reasoning for each
   Added to support Korean restaurants in Thailand (see `docs/DECISIONS.md` #39). **Korean menu names are
   intentionally not stored in the database**, because menu names are each restaurant's own data, not system text
 - [x] **Flutter integration tests against a real backend** — implemented as the E2E suite `app/test_e2e/`
-  (53 cases): it starts the real backend on a new temporary database per file and exercises the app's
+  (54 cases): it starts the real backend on a new temporary database per file and exercises the app's
   data/domain code through a full restaurant business day, a customer scanning the QR, and
   branches/permissions. It operates at the data/domain layer rather than through `integration_test`, which
   requires a physical device, and runs as a separate CI job. The suite uncovered 5 defects not detected by the

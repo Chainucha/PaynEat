@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1240%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1270%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -337,6 +337,9 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
 - 장바구니에 담은 주문을 손님이 직접 주방으로 전송합니다
 - 직원이 입력한 주문과 동일한 경로로 처리됩니다 (재고 차감, 프로모션 적용 포함)
 - 계량이 필요한 정육 상품은 손님 메뉴(QR 메뉴)에 표시되지 않으며, 대신 "무게로 파는 정육은 직원에게 주문해 주세요" 안내가 표시됩니다
+- 큰 주문은 직원을 통해 받습니다 — QR 주문은 메뉴당 최대 10개, 테이블 계산서 합계 최대 60개(직원이 입력한 항목 포함)까지이며,
+  + 버튼은 매장이 설정한 한도에서 멈추고 한도를 넘으면 직원을 부르라는 안내가 표시됩니다. 직원은 한도와 관계없이 주문할 수 있고,
+  매장은 `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY`로 한도를 바꿀 수 있습니다 (`docs/DECISIONS.md` #99)
 
 ### 주방
 - 대기 / 조리 중 / 조리 완료의 3열 구성
@@ -458,6 +461,10 @@ POS는 매출 데이터와 고객 정보를 함께 다루므로, 보안은 사�
   JSON 형식이며 모든 요청에 `x-request-id`가 부여됩니다. 실제 백엔드에 연결된 경우 오류 메시지 끝에 **요청 ID**가 표시되므로,
   매장에서 이 ID와 함께 문제를 알려 주면 해당 요청의 로그를 즉시 찾을 수 있습니다. `/metrics`(Prometheus)는 API와 별도의
   포트(9464)에서 제공되며, docker compose 구성에서는 외부에 공개되지 않습니다 (`docs/DECISIONS.md` #68)
+- **비밀번호를 반복해서 잘못 입력하면 로그인이 잠시 중지됩니다** — 15분 안에 10번 틀리면(사용자 이름별·기기별로 집계) 그 시간이
+  지날 때까지 기다려야 하며, 로그인 화면에 남은 시간(분)이 선택한 언어로 표시됩니다. 로그인에 성공하면 횟수가 바로 초기화되고,
+  비밀번호 변경 시 현재 비밀번호를 잘못 입력한 경우에도 같은 규칙이 적용됩니다 (`AUTH_MAX_FAILED_ATTEMPTS` /
+  `AUTH_FAILED_ATTEMPT_WINDOW_MINUTES`로 조정). 서버가 리버스 프록시(nginx, 터널) 뒤에 있다면 `TRUST_PROXY`를 설정하십시오
 - **앱은 개발자에게 어떠한 데이터도 전송하지 않습니다** — 광고와 사용 분석 기능이 없습니다. 유일한 예외는 바코드 스캐너가
   사용하는 Google ML Kit로, Google에 진단 데이터를 전송합니다. 이 내용은 [개인정보 처리방침](https://suruchboss.github.io/PaynEat/privacy.ko.html)에
   명시되어 있습니다 (`docs/DECISIONS.md` #75)
@@ -515,16 +522,16 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1240건**의 자동화 테스트를 통과합니다.
+공개 전 **1270건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 570건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 617건 — domain / controller / widget
-cd app && flutter test test_e2e   # 53건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1240건에 미포함)
+cd backend && npm test      # 593건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 623건 — domain / controller / widget
+cd app && flutter test test_e2e   # 54건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1270건에 미포함)
 ```
 
-`app/test_e2e/`의 E2E 테스트 53건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의
+`app/test_e2e/`의 E2E 테스트 54건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의
 실제 data/domain 코드로 매장의 하루 업무를 처음부터 끝까지 수행합니다. 대상 업무는 로그인, 주문, 주방, 근무 시작,
 결제, 세금계산서, 환불, 근무 마감(차액 0), Z-report와 CSV, 감사 로그, 손님의 QR 주문, 지점·권한입니다. 나머지
 Flutter 테스트는 모두 데모 모드에서 실행되므로, 앱이 **백엔드가 실제로 반환한 JSON을 해석하는지** 검증하는 테스트는
@@ -540,6 +547,12 @@ PDF로 내려받기 → 청구서 이메일 발송 (`scale_documents_e2e_test.da
 직접 검사합니다. 검사 항목은 두 가지 형식, `x-request-id` 왕복, 상태 코드별 severity, route template별 `/metrics`, 그리고
 로그인·고객 등록·수정·전화번호 검색 이후에도 이름·전화번호·이메일·비밀번호가 로그에 남지 않는지 여부입니다. 앱 측의
 `request_id_error_test.dart`(5건)는 오류 메시지 끝에 표시되는 요청 ID가 실제로 전송한 ID와 일치하는지 확인합니다 (`docs/DECISIONS.md` #68).
+
+로그인 일시 중지는 `login-attempts.test.js`(7건), `trust-proxy.test.js`(2건), `failed-attempts.test.js`(5건)가 검증합니다:
+한도에 도달하면 다음 시도가 맞더라도 `Retry-After`와 함께 429, 사용자 이름별(대소문자·앞뒤 공백 무시)·IP별 집계와 다른 계정에
+영향 없음, 로그인 성공 시 초기화, 요청 언어에 맞춘 메시지, 비밀번호 변경 시 현재 비밀번호 오입력에도 같은 중지, `TRUST_PROXY`
+설정 전달(기본값은 `X-Forwarded-For`를 읽지 않음), 그리고 메모리 카운터(QR 주문의 `core/rateLimit.js` 포함)가 만료된 키를
+스스로 삭제하는지 가짜 시계로 확인합니다.
 
 한국어 지원에 대해서는 다음 전용 테스트가 있습니다.
 

@@ -7,6 +7,7 @@ import '../../../menu/data/models/category_model.dart';
 import '../../../menu/data/models/menu_item_model.dart';
 import '../../../order/data/models/order_model.dart';
 import '../../../order/domain/entities/order_item_payload.dart';
+import '../../domain/self_order_limits.dart';
 import '../models/self_order_table_model.dart';
 
 /// คุยกับ endpoint สาธารณะ `/public/tables/:qrToken/*` (ดู docs/tickets/17-qr-self-order.md) —
@@ -17,6 +18,7 @@ typedef SelfOrderMenuModel = ({
   List<CategoryModel> categories,
   List<MenuItemModel> items,
   int staffOnlyCount,
+  int maxQuantityPerLine,
 });
 
 abstract class SelfOrderRemoteDataSource {
@@ -68,6 +70,12 @@ class SelfOrderRemoteDataSourceImpl implements SelfOrderRemoteDataSource {
       items: items,
       // เมนูชั่งน้ำหนักที่ซ่อนจากลูกค้า — หน้า QR บอกให้สั่งกับพนักงาน (DECISIONS #64)
       staffOnlyCount: (data['staffOnlyCount'] as num?)?.toInt() ?? 0,
+      // เพดานต่อรายการที่ร้านตั้งไว้ (DECISIONS #99) — ปุ่มเพิ่มจำนวนในหน้า QR หยุดที่ค่านี้
+      maxQuantityPerLine:
+          ((data['limits'] as Map<String, dynamic>?)?['maxQuantityPerLine']
+                  as num?)
+              ?.toInt() ??
+          defaultSelfOrderMaxQuantityPerLine,
     );
   }
 

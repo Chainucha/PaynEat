@@ -10,6 +10,7 @@ import 'package:payneat_pos/core/demo/demo_store.dart';
 import 'package:payneat_pos/core/errors/exceptions.dart';
 import 'package:payneat_pos/core/utils/app_clock.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item_payload.dart';
+import 'package:payneat_pos/features/self_order/domain/self_order_limits.dart';
 
 import '../helpers/audit_summary_expectations.dart';
 
@@ -2176,6 +2177,56 @@ void main() {
         expect(order.status, OrderStatus.inKitchen);
         final queue = store.kitchenQueue(['pending', 'cooking', 'ready']);
         expect(queue.where((row) => row['orderId'] == order.id), hasLength(1));
+      },
+    );
+
+    test(
+      'เพดานของ QR เหมือน backend: เกิน 10 ที่ต่อรายการ หรือรวมเกิน 60 ที่ต่อบิล → 409 (DECISIONS #99)',
+      () async {
+        final table = store.tableList().firstWhere(
+          (t) => t['status'] == 'available',
+        );
+        final token = table['qrToken'] as String;
+        final itemId =
+            store
+                    .menuList(availableOnly: true)
+                    .firstWhere((m) => m['soldByWeight'] != true)['id']
+                as int;
+        final source = DemoSelfOrderDataSource(store);
+        Matcher limitError() => throwsA(
+          isA<ApiException>()
+              .having((e) => e.statusCode, 'statusCode', 409)
+              .having((e) => e.code, 'code', selfOrderLimitErrorCode),
+        );
+
+        expect((await source.getMenu(token)).maxQuantityPerLine, 10);
+        await expectLater(
+          source.addItems(token, [
+            OrderItemPayload(menuItemId: itemId, quantity: 11),
+          ]),
+          limitError(),
+        );
+        expect(
+          store.openOrderByTable(table['id'] as int),
+          isNull,
+          reason: 'ปฏิเสธทั้งคำขอ ไม่เปิดบิลค้างไว้',
+        );
+
+        // พนักงานเปิดบิลไว้ 55 ที่ (ร่าง ยังไม่ตัดสต๊อก) — QR เพิ่มอีก 6 จะรวมเกิน 60 จึงถูกปฏิเสธ
+        store.createOrder(
+          type: OrderType.dineIn,
+          tableId: table['id'] as int,
+          guestCount: 1,
+          items: [
+            {'menuItemId': itemId, 'quantity': 55, 'optionIds': <int>[]},
+          ],
+        );
+        await expectLater(
+          source.addItems(token, [
+            OrderItemPayload(menuItemId: itemId, quantity: 6),
+          ]),
+          limitError(),
+        );
       },
     );
 

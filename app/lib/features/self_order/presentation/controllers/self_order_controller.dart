@@ -1,8 +1,12 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:math' as math;
+
 import 'package:get/get.dart';
 
+import '../../../../core/errors/failure_mapper.dart';
+import '../../../../core/errors/failures.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../menu/domain/entities/category.dart';
 import '../../../menu/domain/entities/menu_item.dart';
@@ -11,6 +15,7 @@ import '../../../order/domain/entities/order.dart';
 import '../../../order/domain/entities/order_item_payload.dart';
 import '../../../order/presentation/widgets/option_selection_sheet.dart';
 import '../../domain/entities/self_order_table.dart';
+import '../../domain/self_order_limits.dart';
 import '../../domain/self_order_link.dart';
 import '../../domain/usecases/add_self_order_items_usecase.dart';
 import '../../domain/usecases/get_self_order_menu_usecase.dart';
@@ -48,6 +53,10 @@ class SelfOrderController extends GetxController {
   /// ลูกค้าที่เห็นเนื้อสดในตู้แต่หาในเมนูไม่เจอไม่รู้ว่าต้องทำยังไง (DECISIONS #64)
   final RxInt staffOnlyCount = 0.obs;
   final RxnInt selectedCategoryId = RxnInt();
+
+  /// จำนวนสูงสุดต่อรายการที่สั่งผ่าน QR ได้ ตามที่ร้านตั้งไว้ใน backend (DECISIONS #99) — ปุ่ม + ทุกจุด
+  /// ในหน้านี้หยุดที่ค่านี้ ลูกค้าจึงไม่ต้องรอส่งแล้วโดนปฏิเสธ
+  final RxInt maxQuantityPerLine = defaultSelfOrderMaxQuantityPerLine.obs;
 
   final RxList<CartLine> cart = <CartLine>[].obs;
   final RxBool isSubmitting = false.obs;
@@ -106,6 +115,7 @@ class SelfOrderController extends GetxController {
         categories.assignAll(data.categories);
         items.assignAll(data.items);
         staffOnlyCount.value = data.staffOnlyCount;
+        maxQuantityPerLine.value = data.maxQuantityPerLine;
       },
       onFailure: (menuFailure) => errorMessage.value = menuFailure.message,
     );
@@ -123,7 +133,10 @@ class SelfOrderController extends GetxController {
       return;
     }
 
-    final result = await OptionSelectionSheet.show(item);
+    final result = await OptionSelectionSheet.show(
+      item,
+      maxQuantity: maxQuantityPerLine.value,
+    );
     if (result == null) return;
     final note = result.note?.trim();
     _addLine(
@@ -136,16 +149,26 @@ class SelfOrderController extends GetxController {
     );
   }
 
+  /// รายการนี้ถึงเพดานต่อรายการของ QR แล้ว — หน้าตะกร้าบอกให้เรียกพนักงานถ้าต้องการมากกว่านี้
+  bool isAtLineLimit(CartLine line) =>
+      line.quantity >= maxQuantityPerLine.value;
+
   /// รวมบรรทัดที่เมนู/ตัวเลือก/โน้ตเหมือนกันเข้าด้วยกันแทนที่จะขึ้นบรรทัดใหม่ซ้ำ ๆ — กฎเดียวกับ
   /// ตะกร้าฝั่งพนักงาน (CartController.addItem) เพราะลูกค้ากดการ์ดเมนูเดิมซ้ำเป็นเรื่องปกติ
+  /// ยอดรวมของบรรทัดหยุดที่เพดานต่อรายการ (กดการ์ดเมนูเดิมซ้ำเกินเพดานแล้วจำนวนไม่เพิ่ม)
   void _addLine(CartLine candidate) {
+    final max = maxQuantityPerLine.value;
     final index = cart.indexWhere(
       (line) => line.signature == candidate.signature,
     );
     if (index >= 0) {
-      cart[index].quantity += candidate.quantity;
+      cart[index].quantity = math.min(
+        max,
+        cart[index].quantity + candidate.quantity,
+      );
       cart.refresh();
     } else {
+      candidate.quantity = math.min(max, candidate.quantity);
       cart.add(candidate);
     }
   }
@@ -157,7 +180,7 @@ class SelfOrderController extends GetxController {
       cart.removeAt(index);
       return;
     }
-    cart[index].quantity = quantity;
+    cart[index].quantity = math.min(quantity, maxQuantityPerLine.value);
     cart.refresh();
   }
 
@@ -190,7 +213,23 @@ class SelfOrderController extends GetxController {
         cart.clear();
         AppDialogs.success('self_order_submit_success'.tr);
       },
-      onFailure: (failure) => AppDialogs.error(failure.message),
+      onFailure: (failure) => AppDialogs.error(submitErrorMessage(failure)),
     );
+  }
+
+  /// ข้อความที่ลูกค้าเห็นเมื่อส่งไม่สำเร็จ — เกินเพดานของ QR (DECISIONS #99) เป็นกติกาของร้าน ไม่ใช่
+  /// ระบบขัดข้องที่ต้องแจ้งรหัสคำขอให้ใคร จึงตัดบรรทัดรหัสคำขอที่ failure_mapper ต่อท้ายไว้ออก ให้ลูกค้า
+  /// เห็นแค่ข้อความของร้าน error อื่นแสดงตามเดิมทุกตัวอักษร
+  static String submitErrorMessage(Failure failure) {
+    if (failure is ServerFailure && isSelfOrderLimit(failure)) {
+      final suffix = withRequestId('', failure.requestId);
+      if (suffix.isNotEmpty && failure.message.endsWith(suffix)) {
+        return failure.message.substring(
+          0,
+          failure.message.length - suffix.length,
+        );
+      }
+    }
+    return failure.message;
   }
 }

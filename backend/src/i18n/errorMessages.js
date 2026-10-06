@@ -595,6 +595,16 @@ export const ERROR_MESSAGES = [
     en: '"{menu}" is sold by weight and has to be weighed by staff — please call a staff member',
     ko: '"{menu}"은(는) 무게로 팔아 직원이 달아야 합니다 — 직원을 불러 주세요',
   },
+  {
+    th: 'สั่งผ่าน QR ได้ไม่เกิน {max} ที่ต่อรายการ ถ้าต้องการมากกว่านี้กรุณาเรียกพนักงาน',
+    en: 'QR orders are limited to {max} per item — for more, please call a staff member',
+    ko: 'QR 주문은 메뉴당 {max}개까지 가능합니다 — 더 필요하시면 직원을 불러 주세요',
+  },
+  {
+    th: 'โต๊ะนี้สั่งผ่าน QR ได้รวมไม่เกิน {max} ที่ต่อบิล (สั่งไปแล้ว {current} ที่) ถ้าต้องการสั่งเพิ่มกรุณาเรียกพนักงาน',
+    en: 'QR orders for this table are limited to {max} in total per bill ({current} ordered so far) — to order more, please call a staff member',
+    ko: '이 테이블의 QR 주문은 계산서당 총 {max}개까지 가능합니다 (지금까지 {current}개 주문) — 더 주문하시려면 직원을 불러 주세요',
+  },
 
   // ---------------------------------------------------------------- ลูกหนี้ / เอกสาร
   { th: 'ไม่พบลูกค้านี้', en: 'Customer not found', ko: '고객을 찾을 수 없습니다' },

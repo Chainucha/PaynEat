@@ -83,7 +83,12 @@ test('GET /public/tables/:qrToken/menu — ส่งเฉพาะฟิลด�
   const res = await publicGetMenu(table.qrToken);
 
   assert.equal(res.status, 200);
-  assert.deepEqual(Object.keys(res.body.data).sort(), ['categories', 'items', 'staffOnlyCount']);
+  assert.deepEqual(Object.keys(res.body.data).sort(), [
+    'categories',
+    'items',
+    'limits',
+    'staffOnlyCount',
+  ]);
   // ล็อกชุดคีย์ไว้ทุกระดับ — เพิ่มฟิลด์ใน DTO เมนูของพนักงานแล้วต้องไม่ติดมาเมนูลูกค้าเอง
   // ต้องตั้งใจเพิ่มใน toPublicMenuItem (public-order.service.js) พร้อมแก้เทสต์นี้
   for (const category of res.body.data.categories) {
@@ -256,4 +261,154 @@ test('POST /public/tables/:qrToken/items — ยิงถี่เกิน limi
   }
 
   assert.equal(lastStatus, 429);
+});
+
+// ---- เพดานของออเดอร์ที่สั่งผ่าน QR (DECISIONS #99) — ค่าเริ่มต้น 10 ที่ต่อรายการ / รวม 60 ที่ต่อบิล
+
+// เมนูที่สั่งได้โดยไม่ต้องเลือกตัวเลือกบังคับ — เทสต์ "ปิดขาย" ด้านบนปิดเมนูแรกไว้ เมนูถัดไปอาจมีตัวเลือก
+// บังคับ (ระดับความเผ็ด) ซึ่งทำให้คำขอล้มด้วยเหตุผลอื่นก่อนถึงเพดาน
+const plainMenuItem = async (token) => {
+  const res = await get('/api/v1/menu-items?availableOnly=true&limit=200', token);
+  const item = res.body.data.find(
+    (row) => !row.soldByWeight && (row.optionGroups ?? []).every((group) => !group.isRequired),
+  );
+  assert.ok(item, 'ต้องมีเมนูที่ไม่มีตัวเลือกบังคับอย่างน้อย 1 รายการสำหรับเทสต์นี้');
+  return item;
+};
+
+const staffOpenOrder = async (token, tableId, items) => {
+  const res = await post('/api/v1/orders', token, { type: 'dine_in', tableId, items });
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  return res.body.data;
+};
+
+test('GET /public/tables/:qrToken/menu — บอกเพดานของ QR ให้หน้าลูกค้าใช้จำกัดปุ่มเพิ่มจำนวน', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'LIM');
+
+  const res = await publicGetMenu(table.qrToken);
+
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.data.limits, { maxQuantityPerLine: 10, maxOrderQuantity: 60 });
+});
+
+test('POST /public/tables/:qrToken/items — สั่งได้ถึง 10 ที่ต่อรายการพอดี', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'LINE10');
+  const item = await plainMenuItem(token);
+
+  const res = await publicAddItems(table.qrToken, [
+    { menuItemId: item.id, quantity: 10, optionIds: [] },
+  ]);
+
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.items[0].quantity, 10);
+});
+
+test('POST /public/tables/:qrToken/items — รายการเกิน 10 ที่ปฏิเสธทั้งคำขอ (409) พร้อมบอกให้เรียกพนักงาน', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'LINE11');
+  const item = await plainMenuItem(token);
+
+  const res = await publicAddItems(table.qrToken, [
+    { menuItemId: item.id, quantity: 1, optionIds: [] },
+    { menuItemId: item.id, quantity: 11, optionIds: [] },
+  ]);
+
+  assert.equal(res.status, 409);
+  assert.equal(res.body.error.code, 'SELF_ORDER_LIMIT');
+  assert.equal(
+    res.body.error.message,
+    'สั่งผ่าน QR ได้ไม่เกิน 10 ที่ต่อรายการ ถ้าต้องการมากกว่านี้กรุณาเรียกพนักงาน',
+  );
+  // ปฏิเสธทั้งคำขอ — บรรทัดที่ไม่เกินก็ไม่ถูกบันทึก และไม่มีออเดอร์ค้างเปิดไว้ที่โต๊ะ
+  const view = await publicGetTable(table.qrToken);
+  assert.equal(view.body.data.order, null);
+});
+
+test('POST /public/tables/:qrToken/items — ข้อความเพดานแปลตามภาษาของลูกค้า', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'LINEEN');
+  const item = await plainMenuItem(token);
+
+  const res = await api()
+    .post(`/api/v1/public/tables/${table.qrToken}/items`)
+    .set('Accept-Language', 'en')
+    .send({ items: [{ menuItemId: item.id, quantity: 12, optionIds: [] }] });
+
+  assert.equal(res.status, 409);
+  assert.equal(
+    res.body.error.message,
+    'QR orders are limited to 10 per item — for more, please call a staff member',
+  );
+});
+
+test('POST /public/tables/:qrToken/items — นับรวมรายการที่พนักงานสั่งไว้แล้ว บิลไปได้ถึง 60 ที่พอดี', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'SUM60');
+  const item = await plainMenuItem(token);
+  // พนักงานสั่งให้ก่อน 55 ที่ในบรรทัดเดียว (เพดานต่อรายการของพนักงานยังเป็น 99 เหมือนเดิม)
+  await staffOpenOrder(token, table.id, [{ menuItemId: item.id, quantity: 55, optionIds: [] }]);
+
+  const over = await publicAddItems(table.qrToken, [
+    { menuItemId: item.id, quantity: 3, optionIds: [] },
+    { menuItemId: item.id, quantity: 3, optionIds: [] },
+  ]);
+  assert.equal(over.status, 409);
+  assert.equal(over.body.error.code, 'SELF_ORDER_LIMIT');
+  assert.equal(
+    over.body.error.message,
+    'โต๊ะนี้สั่งผ่าน QR ได้รวมไม่เกิน 60 ที่ต่อบิล (สั่งไปแล้ว 55 ที่) ถ้าต้องการสั่งเพิ่มกรุณาเรียกพนักงาน',
+  );
+
+  const exact = await publicAddItems(table.qrToken, [
+    { menuItemId: item.id, quantity: 5, optionIds: [] },
+  ]);
+  assert.equal(exact.status, 200);
+  const total = exact.body.data.items.reduce((sum, row) => sum + row.quantity, 0);
+  assert.equal(total, 60);
+
+  const next = await publicAddItems(table.qrToken, [
+    { menuItemId: item.id, quantity: 1, optionIds: [] },
+  ]);
+  assert.equal(next.status, 409);
+});
+
+test('POST /public/tables/:qrToken/items — รายการที่ถูกยกเลิกไม่นับรวมในเพดานของบิล', async () => {
+  const { token } = await login('admin', 'admin123');
+  const table = await createTableWithQrToken(token, 'CANCEL');
+  const item = await plainMenuItem(token);
+  const order = await staffOpenOrder(token, table.id, [
+    { menuItemId: item.id, quantity: 50, optionIds: [] },
+    { menuItemId: item.id, quantity: 10, optionIds: [], note: 'บรรทัดที่จะยกเลิก' },
+  ]);
+  const cancelled = order.items.find((row) => row.note === 'บรรทัดที่จะยกเลิก');
+  const res = await patch(`/api/v1/orders/${order.id}/items/${cancelled.id}/status`, token, {
+    status: 'cancelled',
+  });
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+
+  const added = await publicAddItems(table.qrToken, [
+    { menuItemId: item.id, quantity: 10, optionIds: [] },
+  ]);
+
+  assert.equal(added.status, 200, JSON.stringify(added.body));
+});
+
+test('พนักงานยังสั่งเกินเพดานของ QR ได้ตามปกติ ทั้งต่อรายการและรวมทั้งบิล', async () => {
+  const { token } = await login('admin', 'admin123');
+  const waiter = await login('waiter1', 'waiter123');
+  const table = await createTableWithQrToken(token, 'STAFF');
+  const item = await plainMenuItem(token);
+  await publicAddItems(table.qrToken, [{ menuItemId: item.id, quantity: 10, optionIds: [] }]);
+  const open = await get(`/api/v1/orders/table/${table.id}/open`, waiter.token);
+  assert.equal(open.status, 200, JSON.stringify(open.body));
+
+  const res = await post(`/api/v1/orders/${open.body.data.id}/items`, waiter.token, {
+    items: [{ menuItemId: item.id, quantity: 70, optionIds: [] }],
+  });
+
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  const total = res.body.data.items.reduce((sum, row) => sum + row.quantity, 0);
+  assert.equal(total, 80);
 });

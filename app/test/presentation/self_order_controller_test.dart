@@ -3,6 +3,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:payneat_pos/core/errors/failure_mapper.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
 import 'package:payneat_pos/features/menu/domain/entities/category.dart';
@@ -11,6 +12,7 @@ import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item_payload.dart';
 import 'package:payneat_pos/features/self_order/domain/entities/self_order_table.dart';
 import 'package:payneat_pos/features/self_order/domain/repositories/self_order_repository.dart';
+import 'package:payneat_pos/features/self_order/domain/self_order_limits.dart';
 import 'package:payneat_pos/features/self_order/domain/usecases/add_self_order_items_usecase.dart';
 import 'package:payneat_pos/features/self_order/domain/usecases/get_self_order_menu_usecase.dart';
 import 'package:payneat_pos/features/self_order/domain/usecases/get_self_order_table_usecase.dart';
@@ -23,6 +25,7 @@ class _FakeSelfOrderRepository implements SelfOrderRepository {
     categories: const [],
     items: const [],
     staffOnlyCount: 0,
+    maxQuantityPerLine: 10,
   ));
   Result<Order> nextAddItemsResult = Result.success(_order());
 
@@ -110,6 +113,7 @@ void main() {
         categories: [const Category(id: 1, name: 'อาหารจานเดียว')],
         items: [_menuItem(1), _menuItem(2, categoryId: 2)],
         staffOnlyCount: 3,
+        maxQuantityPerLine: 4,
       ));
 
       _setRouteQrToken('demo-table-9');
@@ -123,6 +127,8 @@ void main() {
       expect(controller.categories.length, 1);
       // เมนูชั่งน้ำหนักที่ซ่อนไว้ — หน้า QR ใช้ค่านี้บอกลูกค้าว่าต้องสั่งกับพนักงาน (#64)
       expect(controller.staffOnlyCount.value, 3);
+      // เพดานต่อรายการตามที่ร้านตั้งใน backend (#99) — ปุ่ม + ในหน้า QR หยุดที่ค่านี้
+      expect(controller.maxQuantityPerLine.value, 4);
       expect(controller.errorMessage.value, isNull);
       expect(controller.isLoading.value, isFalse);
     });
@@ -214,6 +220,7 @@ void main() {
           _menuItem(3, categoryId: 1),
         ],
         staffOnlyCount: 0,
+        maxQuantityPerLine: 10,
       ));
       _setRouteQrToken('t');
       controller.onInit();
@@ -295,5 +302,80 @@ void main() {
       expect(controller.cart.length, 1);
       expect(controller.cart.first.menuItem.id, 2);
     });
+    // ---- เพดานต่อรายการของ QR (DECISIONS #99)
+
+    Future<void> loadWithLineLimit(int max) async {
+      repository.nextGetMenuResult = Result.success((
+        categories: const [],
+        items: const [],
+        staffOnlyCount: 0,
+        maxQuantityPerLine: max,
+      ));
+      _setRouteQrToken('t');
+      controller.onInit();
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    test(
+      'กดการ์ดเมนูเดิมซ้ำเกินเพดานต่อรายการ จำนวนหยุดที่เพดาน และรู้ว่าถึงเพดานแล้ว',
+      () async {
+        await loadWithLineLimit(3);
+
+        for (var i = 0; i < 5; i++) {
+          await controller.addToCart(_menuItem(1, price: 40));
+        }
+
+        expect(controller.cart.single.quantity, 3);
+        expect(controller.isAtLineLimit(controller.cart.single), isTrue);
+        expect(controller.cartSubtotalPreview, 120);
+      },
+    );
+
+    test('updateCartQuantity เกินเพดานต่อรายการ → หยุดที่เพดาน', () async {
+      await loadWithLineLimit(10);
+      await controller.addToCart(_menuItem(1, price: 40));
+
+      controller.updateCartQuantity(0, 9);
+      expect(controller.isAtLineLimit(controller.cart.first), isFalse);
+
+      controller.updateCartQuantity(0, 11);
+      expect(controller.cart.first.quantity, 10);
+      expect(controller.isAtLineLimit(controller.cart.first), isTrue);
+    });
+
+    test(
+      'submitErrorMessage — เกินเพดานของ QR แสดงแค่ข้อความของร้าน ไม่มีบรรทัดรหัสคำขอ',
+      () {
+        const text =
+            'สั่งผ่าน QR ได้ไม่เกิน 10 ที่ต่อรายการ ถ้าต้องการมากกว่านี้กรุณาเรียกพนักงาน';
+        final limit = ServerFailure(
+          withRequestId(text, 'req-1'),
+          statusCode: 409,
+          code: selfOrderLimitErrorCode,
+          requestId: 'req-1',
+        );
+
+        expect(SelfOrderController.submitErrorMessage(limit), text);
+      },
+    );
+
+    test(
+      'submitErrorMessage — error อื่นแสดงเหมือนเดิม รวมรหัสคำขอที่ร้านใช้ค้น log',
+      () {
+        final other = ServerFailure(
+          withRequestId('เมนูนี้ปิดขายอยู่', 'req-2'),
+          statusCode: 409,
+          code: 'CONFLICT',
+          requestId: 'req-2',
+        );
+        final network = NetworkFailure('ต่อเซิร์ฟเวอร์ไม่ได้');
+
+        expect(SelfOrderController.submitErrorMessage(other), other.message);
+        expect(
+          SelfOrderController.submitErrorMessage(network),
+          'ต่อเซิร์ฟเวอร์ไม่ได้',
+        );
+      },
+    );
   });
 }

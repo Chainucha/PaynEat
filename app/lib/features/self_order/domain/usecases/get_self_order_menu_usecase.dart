@@ -3,20 +3,9 @@
 
 import '../../../../core/usecases/result.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../../menu/domain/entities/category.dart';
-import '../../../menu/domain/entities/menu_item.dart';
 import '../repositories/self_order_repository.dart';
 
-class GetSelfOrderMenuUseCase
-    implements
-        UseCase<
-          ({
-            List<Category> categories,
-            List<MenuItem> items,
-            int staffOnlyCount,
-          }),
-          String
-        > {
+class GetSelfOrderMenuUseCase implements UseCase<SelfOrderMenu, String> {
   const GetSelfOrderMenuUseCase(this._repository);
 
   final SelfOrderRepository _repository;

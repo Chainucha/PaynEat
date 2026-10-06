@@ -34,6 +34,7 @@ class SelfOrderRepositoryImpl implements SelfOrderRepository {
       categories: result.categories.cast<Category>(),
       items: result.items.cast<MenuItem>(),
       staffOnlyCount: result.staffOnlyCount,
+      maxQuantityPerLine: result.maxQuantityPerLine,
     );
   });
 

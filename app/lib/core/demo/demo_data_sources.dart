@@ -46,6 +46,7 @@ import '../../features/self_order/data/datasources/self_order_remote_data_source
 import '../../features/scale/data/datasources/scale_remote_data_source.dart';
 import '../../features/scale/domain/entities/scale_status.dart';
 import '../../features/self_order/data/models/self_order_table_model.dart';
+import '../../features/self_order/domain/self_order_limits.dart';
 import '../../features/settings/data/datasources/settings_remote_data_source.dart';
 import '../../features/settings/domain/entities/store_settings.dart';
 import '../../features/shift/data/datasources/shift_remote_data_source.dart';

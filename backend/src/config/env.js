@@ -82,6 +82,16 @@ export const env = {
     pointsEarnRateBaht: Number(process.env.POINTS_EARN_RATE_BAHT ?? 25),
     pointsRedeemValueBaht: Number(process.env.POINTS_REDEEM_VALUE_BAHT ?? 1),
   },
+  // เพดานของออเดอร์ที่ลูกค้าสั่งเองผ่าน QR (DECISIONS #99) — ใช้เฉพาะ /public/* พนักงานสั่งได้ตามกฎเดิม
+  //   SELF_ORDER_MAX_QTY_PER_LINE — จำนวนสูงสุดต่อรายการ (1–99 เท่าเพดานของพนักงาน)
+  //   SELF_ORDER_MAX_ORDER_QTY    — จำนวนรวมของรายการที่ไม่ถูกยกเลิกในบิลเดียว ที่ QR เพิ่มไปถึงได้
+  selfOrder: {
+    maxQuantityPerLine: Math.min(
+      99,
+      Math.max(1, toInt(process.env.SELF_ORDER_MAX_QTY_PER_LINE, 10)),
+    ),
+    maxOrderQuantity: Math.max(1, toInt(process.env.SELF_ORDER_MAX_ORDER_QTY, 60)),
+  },
   // ผู้ช่วย AI ถามตอบข้อมูลร้าน (ดู docs/tickets/15-ai-ask-your-data.md) — ปิดเองอัตโนมัติถ้าไม่ตั้ง
   // ANTHROPIC_API_KEY (คืน 503 ที่ endpoint แทนที่จะ throw ตอน start เหมือน JWT_SECRET เพราะฟีเจอร์นี้
   // เป็นของเสริมที่ปิดได้โดยไม่กระทบ POS หลัก ต่างจาก auth ที่ทั้งระบบพังถ้าไม่มี)

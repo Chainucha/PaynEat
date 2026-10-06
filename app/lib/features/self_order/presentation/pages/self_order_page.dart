@@ -206,6 +206,8 @@ class SelfOrderPage extends GetView<SelfOrderController> {
               });
               return const SizedBox.shrink();
             }
+            // อ่านที่ scope บนสุดของ Obx (CODING_STANDARDS 3.2) แล้วส่งต่อเข้า itemBuilder
+            final maxPerLine = controller.maxQuantityPerLine.value;
             return Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -227,6 +229,7 @@ class SelfOrderPage extends GetView<SelfOrderController> {
                     itemBuilder: (context, index) => _CartLineTile(
                       line: controller.cart[index],
                       index: index,
+                      maxQuantity: maxPerLine,
                     ),
                   ),
                 ),
@@ -362,10 +365,17 @@ class _TableHeader extends GetView<SelfOrderController> {
 }
 
 class _CartLineTile extends GetView<SelfOrderController> {
-  const _CartLineTile({required this.line, required this.index});
+  const _CartLineTile({
+    required this.line,
+    required this.index,
+    required this.maxQuantity,
+  });
 
   final CartLine line;
   final int index;
+
+  /// เพดานต่อรายการของ QR (DECISIONS #99) — ปุ่ม + หยุดที่ค่านี้ และบอกให้เรียกพนักงานถ้าต้องการมากกว่า
+  final int maxQuantity;
 
   @override
   Widget build(BuildContext context) {
@@ -408,6 +418,17 @@ class _CartLineTile extends GetView<SelfOrderController> {
                     fontSize: 13.5,
                   ),
                 ),
+                if (line.quantity >= maxQuantity)
+                  Text(
+                    'self_order_line_limit_hint'.trParams({
+                      'max': '$maxQuantity',
+                    }),
+                    key: const ValueKey('self-order-line-limit'),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -415,6 +436,7 @@ class _CartLineTile extends GetView<SelfOrderController> {
           QuantityStepper(
             value: line.quantity,
             min: 0,
+            max: maxQuantity,
             onChanged: (quantity) =>
                 controller.updateCartQuantity(index, quantity),
           ),

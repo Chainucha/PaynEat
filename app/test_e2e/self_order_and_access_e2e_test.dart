@@ -11,6 +11,7 @@ import 'package:payneat_pos/features/auth/domain/entities/login_result.dart';
 import 'package:payneat_pos/features/menu/domain/entities/menu_item.dart';
 import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item_payload.dart';
+import 'package:payneat_pos/features/self_order/domain/self_order_limits.dart';
 import 'package:payneat_pos/features/self_order/domain/self_order_link.dart';
 import 'package:payneat_pos/features/table/domain/entities/dining_table.dart';
 
@@ -181,6 +182,35 @@ void main() {
         );
         expect(view.order?.items, hasLength(2));
         order = second;
+      },
+    );
+
+    flow.step(
+      'สั่งผ่าน QR เกิน 10 ที่ต่อรายการ ร้านปฏิเสธทั้งคำขอและบอกให้เรียกพนักงาน (DECISIONS #99)',
+      () async {
+        final menu = expectOk(
+          await customer.selfOrder.getMenu(qrToken),
+          'เมนูลูกค้า',
+        );
+        expect(menu.maxQuantityPerLine, 10);
+
+        final result = await customer.selfOrder.addItems(qrToken, [
+          OrderItemPayload(menuItemId: customerMenu[0].id, quantity: 11),
+        ]);
+        final failure = result.failureOrNull;
+        expect(failure, isNotNull);
+        expect(isSelfOrderLimit(failure!), isTrue);
+        expect(failure.message, contains('10'));
+
+        final view = expectOk(
+          await customer.selfOrder.getTable(qrToken),
+          'ลูกค้าดูออเดอร์',
+        );
+        expect(
+          view.order?.items,
+          hasLength(2),
+          reason: 'ไม่มีรายการใหม่เข้าบิล',
+        );
       },
     );
 

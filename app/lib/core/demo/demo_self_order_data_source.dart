@@ -42,6 +42,7 @@ class DemoSelfOrderDataSource implements SelfOrderRemoteDataSource {
       staffOnlyCount: available
           .where((item) => item['soldByWeight'] == true)
           .length,
+      maxQuantityPerLine: defaultSelfOrderMaxQuantityPerLine,
     );
   });
 
@@ -63,11 +64,12 @@ class DemoSelfOrderDataSource implements SelfOrderRemoteDataSource {
         );
       }
     }
+    final existing = _store.openOrderByTable(tableId);
+    _assertWithinSelfOrderLimits(items, existing);
     final itemsJson = items
         .map((item) => item.toJson())
         .toList(growable: false);
 
-    final existing = _store.openOrderByTable(tableId);
     final order = existing == null
         ? _store.createOrder(
             type: OrderType.dineIn,
@@ -83,4 +85,38 @@ class DemoSelfOrderDataSource implements SelfOrderRemoteDataSource {
         : order;
     return OrderModel.fromJson(sent);
   });
+
+  /// mirror ของ public-order.service.js#assertWithinSelfOrderLimits (DECISIONS #99) — โหมดสาธิตใช้
+  /// ค่าเริ่มต้นของ backend เสมอ เพราะไม่มี env ให้ร้านตั้ง
+  void _assertWithinSelfOrderLimits(
+    List<OrderItemPayload> items,
+    Map<String, dynamic>? existing,
+  ) {
+    if (items.any(
+      (item) => item.quantity > defaultSelfOrderMaxQuantityPerLine,
+    )) {
+      throw ApiException(
+        message: 'self_order_error_line_limit'.trParams({
+          'max': '$defaultSelfOrderMaxQuantityPerLine',
+        }),
+        statusCode: 409,
+        code: selfOrderLimitErrorCode,
+      );
+    }
+    final current = ((existing?['items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((row) => row['status'] != OrderItemStatus.cancelled)
+        .fold<int>(0, (sum, row) => sum + (row['quantity'] as num).toInt());
+    final requested = items.fold<int>(0, (sum, item) => sum + item.quantity);
+    if (current + requested > defaultSelfOrderMaxOrderQuantity) {
+      throw ApiException(
+        message: 'self_order_error_order_limit'.trParams({
+          'max': '$defaultSelfOrderMaxOrderQuantity',
+          'current': '$current',
+        }),
+        statusCode: 409,
+        code: selfOrderLimitErrorCode,
+      );
+    }
+  }
 }

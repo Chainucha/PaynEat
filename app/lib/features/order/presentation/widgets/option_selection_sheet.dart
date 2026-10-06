@@ -27,14 +27,24 @@ class OptionSelectionResult {
 ///
 /// บังคับกฎเดียวกับ backend: กลุ่มที่ required ต้องเลือก และเลือกได้ไม่เกิน maxSelect
 class OptionSelectionSheet extends StatefulWidget {
-  const OptionSelectionSheet({super.key, required this.item});
+  const OptionSelectionSheet({
+    super.key,
+    required this.item,
+    this.maxQuantity = 99,
+  });
 
   final MenuItem item;
 
+  /// จำนวนสูงสุดที่ปุ่ม + ไปถึงได้ — พนักงานใช้ค่าเริ่มต้น หน้า QR ส่งเพดานของ QR มา (DECISIONS #99)
+  final int maxQuantity;
+
   /// เปิดแผ่นแล้วคืนค่าที่ผู้ใช้เลือก (null = ยกเลิก)
-  static Future<OptionSelectionResult?> show(MenuItem item) {
+  static Future<OptionSelectionResult?> show(
+    MenuItem item, {
+    int maxQuantity = 99,
+  }) {
     return Get.bottomSheet<OptionSelectionResult>(
-      OptionSelectionSheet(item: item),
+      OptionSelectionSheet(item: item, maxQuantity: maxQuantity),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
     );
@@ -235,6 +245,7 @@ class _OptionSelectionSheetState extends State<OptionSelectionSheet> {
                 if (!widget.item.soldByWeight) ...[
                   QuantityStepper(
                     value: _quantity,
+                    max: widget.maxQuantity,
                     size: 38,
                     onChanged: (value) => setState(() => _quantity = value),
                   ),

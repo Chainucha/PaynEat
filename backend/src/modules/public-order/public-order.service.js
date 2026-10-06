@@ -1,6 +1,7 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import { env } from '../../config/env.js';
 import { ApiError } from '../../core/ApiError.js';
 import { tableRepository } from '../tables/table.repository.js';
 import { branchRepository } from '../branches/branch.repository.js';
@@ -13,6 +14,40 @@ import { orderService } from '../orders/order.service.js';
 // audit log เห็นชัดว่ารายการนี้ลูกค้าสั่งเองผ่าน QR ไม่ใช่พนักงานคนไหนกดให้ (ดู
 // docs/tickets/17-qr-self-order.md, docs/DECISIONS.md #36) — id เป็น null เสมอ ไม่ผูกกับ user จริง
 const SELF_ORDER_ACTOR = { id: null, name: 'ลูกค้า (สแกน QR สั่งเอง)' };
+
+// code ของ error เพดาน QR (DECISIONS #99) — แอปใช้แยกข้อความนี้ออกจาก error อื่น แสดงให้ลูกค้าตรงๆ
+export const SELF_ORDER_LIMIT_CODE = 'SELF_ORDER_LIMIT';
+
+/** จำนวนรวมของรายการที่ยังไม่ถูกยกเลิกในออเดอร์ (รวมที่พนักงานสั่งให้ด้วย) */
+const activeQuantity = (order) =>
+  (order?.items ?? [])
+    .filter((item) => item.status !== 'cancelled')
+    .reduce((sum, item) => sum + item.quantity, 0);
+
+/**
+ * เพดานของการสั่งผ่าน QR (DECISIONS #99): จำนวนต่อรายการ และจำนวนรวมของบิลหลังเพิ่มรอบนี้ — เกินข้อไหน
+ * ปฏิเสธทั้งคำขอ ไม่ตัดเหลือบางส่วน ลูกค้าจะได้รู้ว่าต้องเรียกพนักงาน กฎนี้อยู่ที่ service นี้ที่เดียว
+ * orderService ที่พนักงานใช้ไม่รู้จักเพดานนี้ พนักงานจึงสั่งเกินได้ตามปกติ
+ */
+const assertWithinSelfOrderLimits = (items, existingOrder) => {
+  const { maxQuantityPerLine, maxOrderQuantity } = env.selfOrder;
+  if (items.some((item) => item.quantity > maxQuantityPerLine)) {
+    throw new ApiError(
+      409,
+      `สั่งผ่าน QR ได้ไม่เกิน ${maxQuantityPerLine} ที่ต่อรายการ ถ้าต้องการมากกว่านี้กรุณาเรียกพนักงาน`,
+      { code: SELF_ORDER_LIMIT_CODE },
+    );
+  }
+  const current = activeQuantity(existingOrder);
+  const requested = items.reduce((sum, item) => sum + item.quantity, 0);
+  if (current + requested > maxOrderQuantity) {
+    throw new ApiError(
+      409,
+      `โต๊ะนี้สั่งผ่าน QR ได้รวมไม่เกิน ${maxOrderQuantity} ที่ต่อบิล (สั่งไปแล้ว ${current} ที่) ถ้าต้องการสั่งเพิ่มกรุณาเรียกพนักงาน`,
+      { code: SELF_ORDER_LIMIT_CODE },
+    );
+  }
+};
 
 /**
  * โต๊ะต้อง active และถ้ามีสาขาผูกอยู่ สาขานั้นต้อง active ด้วย (เหมือนกฎที่ authenticate เช็คให้
@@ -130,7 +165,14 @@ export const publicOrderService = {
     // บอกจำนวนที่ซ่อนไว้ด้วย หน้า QR จะได้บอกลูกค้าว่ามีของที่ต้องสั่งกับพนักงาน แทนที่จะหายเงียบ
     // (DECISIONS #64) — ส่งแค่จำนวน ไม่ส่งชื่อ/ราคา เพราะราคาขึ้นกับน้ำหนักที่ชั่งจริง
     const staffOnlyCount = items.length - orderable.length;
-    return { categories, items: orderable, staffOnlyCount };
+    // เพดานของ QR (DECISIONS #99) — หน้า QR ใช้ค่านี้จำกัดปุ่มเพิ่มจำนวน ตามค่าที่ร้านตั้งไว้จริง
+    const { maxQuantityPerLine, maxOrderQuantity } = env.selfOrder;
+    return {
+      categories,
+      items: orderable,
+      staffOnlyCount,
+      limits: { maxQuantityPerLine, maxOrderQuantity },
+    };
   },
 
   /**
@@ -151,6 +193,7 @@ export const publicOrderService = {
       }
     }
     const existingOrder = orderService.getOpenByTable(table.id);
+    assertWithinSelfOrderLimits(items, existingOrder);
 
     const order = existingOrder
       ? orderService.addItems(existingOrder.id, items, SELF_ORDER_ACTOR)

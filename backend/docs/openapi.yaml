@@ -2840,6 +2840,14 @@ paths:
                         description: >-
                           จำนวนเมนูที่เปิดขายแต่ต้องสั่งกับพนักงาน (ขายตามน้ำหนัก) — หน้า QR
                           ใช้บอกลูกค้า (DECISIONS #64)
+                      limits:
+                        type: object
+                        description: >-
+                          เพดานของออเดอร์ที่สั่งผ่าน QR ตามที่ร้านตั้งไว้ (DECISIONS #99) — หน้า QR
+                          ใช้จำกัดปุ่มเพิ่มจำนวน
+                        properties:
+                          maxQuantityPerLine: { type: integer, example: 10 }
+                          maxOrderQuantity: { type: integer, example: 60 }
         '404': { description: ไม่พบโต๊ะนี้ / โต๊ะหรือสาขาปิดใช้งานอยู่ }
   /public/tables/{qrToken}/items:
     parameters:

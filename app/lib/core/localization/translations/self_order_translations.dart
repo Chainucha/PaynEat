@@ -22,6 +22,13 @@ const Map<String, String> selfOrderTranslationsTh = {
   'self_order_error_weighed_item':
       '"@name" ขายตามน้ำหนัก ต้องให้พนักงานชั่งให้ กรุณาเรียกพนักงาน',
   'self_order_staff_only_hint': 'เนื้อสดชั่งกิโล สั่งกับพนักงานได้เลย',
+
+  // เพดานของ QR (DECISIONS #99) — ข้อความ error ตรงกับของ backend (src/i18n/errorMessages.js)
+  'self_order_error_line_limit':
+      'สั่งผ่าน QR ได้ไม่เกิน @max ที่ต่อรายการ ถ้าต้องการมากกว่านี้กรุณาเรียกพนักงาน',
+  'self_order_error_order_limit':
+      'โต๊ะนี้สั่งผ่าน QR ได้รวมไม่เกิน @max ที่ต่อบิล (สั่งไปแล้ว @current ที่) ถ้าต้องการสั่งเพิ่มกรุณาเรียกพนักงาน',
+  'self_order_line_limit_hint': 'สูงสุด @max ที่ · มากกว่านี้เรียกพนักงาน',
 };
 
 const Map<String, String> selfOrderTranslationsEn = {
@@ -45,6 +52,12 @@ const Map<String, String> selfOrderTranslationsEn = {
   'self_order_error_weighed_item':
       '"@name" is sold by weight and must be weighed by staff — please call a staff member',
   'self_order_staff_only_hint': 'Meat sold by weight — order it from staff',
+
+  'self_order_error_line_limit':
+      'QR orders are limited to @max per item — for more, please call a staff member',
+  'self_order_error_order_limit':
+      'QR orders for this table are limited to @max in total per bill (@current ordered so far) — to order more, please call a staff member',
+  'self_order_line_limit_hint': 'Max @max · call staff for more',
 };
 
 const Map<String, String> selfOrderTranslationsKo = {
@@ -65,4 +78,10 @@ const Map<String, String> selfOrderTranslationsKo = {
   'self_order_error_weighed_item':
       '"@name" 은(는) 무게 단위 상품이라 직원이 계량해야 합니다 — 직원을 불러 주세요',
   'self_order_staff_only_hint': '무게로 파는 정육은 직원에게 주문해 주세요',
+
+  'self_order_error_line_limit':
+      'QR 주문은 메뉴당 @max개까지 가능합니다 — 더 필요하시면 직원을 불러 주세요',
+  'self_order_error_order_limit':
+      '이 테이블의 QR 주문은 계산서당 총 @max개까지 가능합니다 (지금까지 @current개 주문) — 더 주문하시려면 직원을 불러 주세요',
+  'self_order_line_limit_hint': '최대 @max개 · 더 필요하면 직원 호출',
 };

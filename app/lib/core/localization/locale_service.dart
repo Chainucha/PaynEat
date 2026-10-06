@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../demo/demo_names.dart';
+import '../services/korean_font_service.dart';
 import '../services/storage_service.dart';
 
 /// สลับภาษาทั้งแอปและจำค่าไว้ในเครื่อง
@@ -44,6 +45,9 @@ class LocaleService {
   };
 
   static Future<void> change(Locale locale) async {
+    // สลับเป็นเกาหลีก่อนฟอนต์เบื้องหลังโหลดเสร็จ ทั้งจอจะเป็นกล่องชั่วครู่ — รอให้เสร็จก่อน
+    // (ปกติโหลดเสร็จไปแล้วตั้งแต่หลังเฟรมแรก ได้ Future เดิมทันที ดู KoreanFontService)
+    if (locale.languageCode == 'ko') await KoreanFontService.ensureLoaded();
     Get.updateLocale(locale);
     syncDemoNames();
     if (Get.isRegistered<StorageService>()) {

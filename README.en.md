@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1240%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1244%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1240 automated tests.
+control and 1244 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -857,7 +857,7 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 
 ```bash
 cd backend && npm test      # 570 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 617 cases — domain / controller / widget
+cd app && flutter test      # 621 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 53 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1240,6 +1240,10 @@ cd app && flutter test test_e2e   # 53 cases — the real app talking to the rea
   `npm run db:restore -- <file>`, which refuses while the server runs, for a damaged file or one from a newer PaynEat, always backs up
   the current database first and records a `system.restore` audit entry · metrics `payneat_backup_last_success_timestamp_seconds` /
   `payneat_backup_failures_total` (see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
+- **First web load about 3× faster on phones** — the Docker image (`app/nginx.conf`) now compresses `canvaskit.wasm` and fonts, not only
+  JavaScript, and the Korean font (1.5 MB) loads after the first frame for users of other languages. What loads before the first screen
+  drops from 10.6 MB to 3.9 MB (fast 4G: ~11 s → ~5 s); QR customers gain the most. After an app update, a browser that opened it before
+  gets the new version on its next load instead of keeping the old one for up to 7 days (see `docs/DECISIONS.md` #100)
 
 ---
 
@@ -1561,12 +1565,12 @@ All endpoints share the same response format:
 
 ```bash
 cd backend && npm test      # 570 cases
-cd app && flutter test      # 617 cases
+cd app && flutter test      # 621 cases
 cd app && flutter test test_e2e   # 53 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (570 + 617 + 53). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (570 + 621 + 53). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1947,7 +1951,7 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-**Flutter (617 cases)** — organized into 3 levels:
+**Flutter (621 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -2000,6 +2004,7 @@ table QR token in the log (see `docs/DECISIONS.md` #68)
 | Core | `api_client_test.dart` | Every request carries `Accept-Language` for the language displayed at that moment; switching language mid-shift changes the next request (#64) |
 | Core | `korean_font_coverage_test.dart` | Also covers Korean Material strings (date/time pickers, buttons) and the Korean backend error messages in `backend/src/i18n/errorMessages.js`; this check identified 18 missing glyphs before they could render as empty boxes (#64) |
 | Core | `korean_font_coverage_test.dart` | (continued, #74) every Korean font weight must contain ≥ 2,350 syllables (KS X 1001) plus all jamo produced while typing; restoring the previous font makes the test fail (it contained only 474), and the test also covers the Korean name/address of the credit customer |
+| Core | `korean_font_service_test.dart` | The Korean font registers all 4 weights once even when called concurrently, a failed load does not crash the app and the next call retries, all 4 files are really in the asset bundle, and NotoSansKR stays out of pubspec `fonts:` (otherwise the web app waits for it before the first frame again — #100) |
 | Domain | `demo_store_test.dart` | (continued, #74) after every case, checks **every** audit log created by that case (28 actions): rebuilt in Thai from `summaryArgs`, it must match the recorded sentence character for character, and rebuilt in English/Korean, it must contain no Thai beyond values entered by the user — this check detected Demo Mode printing "500.0 บาท" where the backend prints "500" |
 | Presentation | `audit_summary_text_test.dart` | audit sentences for the backend-only actions (payment, shift open/close, move table, merge bills, apply/remove a code, create a branch from the ERP) in every language, a recipient e-mail containing `@` is not substituted twice, old logs and unknown actions fall back to the recorded sentence, and Thai always shows the recorded sentence, and a void of an undone item names the stage the kitchen reached in the viewer's language (T05), and the points repair on database update matches the migration's Thai sentence (T15) |
 | Core | `locale_service_test.dart` | The first launch uses the device language (Korean/English), and an unsupported language falls back to Thai (#62) |

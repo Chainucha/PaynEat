@@ -96,20 +96,36 @@ class ApiClient {
   Future<ApiResult> get(String path, {Map<String, dynamic>? query}) =>
       _request(() => _dio.get(path, queryParameters: _clean(query)));
 
+  /// [receiveTimeout] แทนค่าเริ่มต้นสำหรับคำขอที่ backend ทำงานนานก่อนตอบ เช่น ปิดกะและ
+  /// "สำรองข้อมูลตอนนี้" ที่รอสำรองฐานข้อมูลเสร็จก่อน (ticket 33)
   Future<ApiResult> post(
     String path, {
     Object? body,
     Map<String, String>? headers,
+    Duration? receiveTimeout,
   }) => _request(
     () => _dio.post(
       path,
       data: body,
-      options: headers == null ? null : Options(headers: headers),
+      options: headers == null && receiveTimeout == null
+          ? null
+          : Options(headers: headers, receiveTimeout: receiveTimeout),
     ),
   );
 
-  Future<ApiResult> patch(String path, {Object? body}) =>
-      _request(() => _dio.patch(path, data: body));
+  Future<ApiResult> patch(
+    String path, {
+    Object? body,
+    Duration? receiveTimeout,
+  }) => _request(
+    () => _dio.patch(
+      path,
+      data: body,
+      options: receiveTimeout == null
+          ? null
+          : Options(receiveTimeout: receiveTimeout),
+    ),
+  );
 
   Future<ApiResult> put(String path, {Object? body}) =>
       _request(() => _dio.put(path, data: body));

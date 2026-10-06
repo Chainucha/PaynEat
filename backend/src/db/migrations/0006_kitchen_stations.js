@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** Migration 0006 — สถานีครัว (ticket 34, docs/DECISIONS.md #94) ทั้งหมดอยู่ใน .sql */
+/** Migration 0006 — สถานีครัว (ticket 34, docs/DECISIONS.md #97) ทั้งหมดอยู่ใน .sql */
 
 const sql = path.join(path.dirname(fileURLToPath(import.meta.url)), '0006_kitchen_stations.sql');
 

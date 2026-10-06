@@ -24,6 +24,7 @@ import publicOrderRoutes from './modules/public-order/public-order.routes.js';
 import receivableRoutes from './modules/receivables/receivable.routes.js';
 import scaleRoutes from './modules/scale/scale.routes.js';
 import erpRoutes from './modules/erp/erp.routes.js';
+import backupRoutes from './modules/backups/backup.routes.js';
 
 const router = Router();
 
@@ -49,5 +50,6 @@ router.use('/public', publicOrderRoutes);
 router.use('/receivables', receivableRoutes);
 router.use('/scale', scaleRoutes);
 router.use('/erp', erpRoutes);
+router.use('/backups', backupRoutes);
 
 export default router;

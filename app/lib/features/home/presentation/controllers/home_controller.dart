@@ -63,4 +63,8 @@ class HomeController extends GetxController {
     if (index < 0 || index >= destinations.length) return;
     currentIndex.value = index;
   }
+
+  /// ปุ่มบนแถบเตือนการสำรองข้อมูล (ticket 33) — ไปแท็บตั้งค่าที่มีส่วนสำรองข้อมูล
+  void openSettings() =>
+      changeTab(destinations.indexWhere((d) => d.label == 'home_nav_settings'));
 }

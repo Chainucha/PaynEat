@@ -1,7 +1,7 @@
 -- Copyright 2026 Suruch Chakrapeesirisuk
 -- SPDX-License-Identifier: Apache-2.0
 
--- Migration 0006 — สถานีครัว: ครัวร้อน / ครัวเย็น / บาร์ (ticket 34, docs/DECISIONS.md #94)
+-- Migration 0006 — สถานีครัว: ครัวร้อน / ครัวเย็น / บาร์ (ticket 34, docs/DECISIONS.md #97)
 -- แต่ละจานผูกกับสถานี ตั๋วจึงเข้าจอของสถานีนั้นเอง ไม่ต้องให้ครัวไล่อ่านตั๋วที่ไม่ใช่ของตัวเอง
 --
 -- เป็นตารางอ้างอิง ไม่ใช่ CHECK (... IN (...)) เพราะ SQLite แก้ CHECK ไม่ได้ — ตอนเพิ่มวิธีชำระเงิน

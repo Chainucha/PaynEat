@@ -11,6 +11,8 @@ import '../../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../../features/auth/data/models/branch_model.dart';
 import '../../features/auth/data/models/user_model.dart';
 import '../../features/auth/domain/entities/login_result.dart';
+import '../../features/backup/data/datasources/backup_remote_data_source.dart';
+import '../../features/backup/domain/entities/backup_status.dart';
 import '../../features/customer/data/datasources/customer_remote_data_source.dart';
 import '../../features/customer/data/models/customer_model.dart';
 import '../../features/customer/domain/entities/customer.dart';
@@ -77,6 +79,7 @@ part 'demo_self_order_data_source.dart';
 part 'demo_receivable_data_source.dart';
 part 'demo_scale_data_source.dart';
 part 'demo_erp_connection_data_source.dart';
+part 'demo_backup_data_source.dart';
 
 /// Data source ชุด "Demo Mode"
 ///

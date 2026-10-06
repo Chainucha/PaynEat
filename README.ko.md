@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1178%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1240%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -89,6 +89,21 @@
 3~5분 후 브라우저에서 **http://localhost:8080** 이 자동으로 열립니다 (`admin` / `admin123`). 이 방법으로 설치한 서버는 해당 PC에서만
 접속할 수 있습니다. 매장의 휴대폰과 태블릿까지 연결하려면 [설치 안내의 방법 3](https://suruchboss.github.io/PaynEat/install.ko.html#docker)을 참고하십시오. 사용자 폴더의 `PaynEat-Demo`에
 시작 / 중지 / 데이터 초기화 파일이 있습니다. 이 구성은 데모 전용 설정입니다 (README 영문/태국어판 "Option D").
+
+### 백업과 복원 (ticket 33)
+
+서버가 교대 마감 후, 데이터가 바뀐 경우 6시간마다, 그리고 업데이트 전에 데이터베이스를 자동으로 백업합니다
+(`backend/data/backups` 또는 Docker 볼륨의 `/app/data/backups`).
+
+1. `admin`으로 로그인 → **설정** → **"백업"** 카드에서 마지막 백업 시각, 파일 크기, 기본 위치(`BACKUP_DIR`)와
+   두 번째 위치(`BACKUP_COPY_DIR`)의 상태를 각각 확인하고 **"지금 백업"**을 누릅니다 (데모 모드는 예시 상태만 표시)
+2. 디스크 고장에 대비해 `BACKUP_COPY_DIR`을 USB 드라이브나 매장 NAS 같은 다른 디스크로 지정합니다
+3. 복원: 서버를 멈춘 뒤 `backend`에서 `npm run db:restore -- data/backups/<파일 이름>`을 실행합니다. 서버가 실행 중이거나
+   파일이 손상되었거나 더 새로운 버전의 파일이면 거부하며, 현재 데이터는 항상 `pre-restore` 파일로 먼저 백업됩니다.
+   다시 시작하면 **변경 이력**에 **"백업에서 복원"**이 기록됩니다
+
+Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github.io/PaynEat/install.ko.html#backup)을 참고하십시오
+(`docs/DECISIONS.md` #90, #94).
 
 > ⚠️ **위 계정은 데모 체험 전용입니다.** 운영 환경에 배포할 때는 반드시 비밀번호를
 > 변경하거나 `AUTO_SEED`를 비활성화해야 하며, 그렇지 않으면 서버가 시작되지 않습니다.
@@ -332,11 +347,11 @@
   주문표가 해당 스테이션 화면으로 전달됩니다. 선택한 스테이션은 기기별로 기억되므로 바의 태블릿은 누가
   로그인해도 바에 머물며, 대기 수와 지연 수도 선택한 스테이션만 집계합니다. 스테이션은 항목을 저장할 때
   주문표에 각인되므로, 나중에 메뉴를 다른 스테이션으로 옮기거나 스테이션 이름을 바꿔도 이미 조리 중인
-  주문표는 화면을 넘나들지 않습니다 (`docs/DECISIONS.md` #94)
+  주문표는 화면을 넘나들지 않습니다 (`docs/DECISIONS.md` #97)
 - **직원 계정에 스테이션 지정** (한 사람에게 여러 개 가능) — 해당 기기에서 아직 설정한 적이 없으면 주방
   화면이 계정의 스테이션으로 열립니다. 비어 있는 태블릿을 아무거나 집어 쓰는 매장도 교대마다 다시
   고르지 않아도 됩니다. 잠금이 아니라 **기본값**이므로 칩은 계속 쓸 수 있고, 기기에서 고른 값이 계정
-  설정을 덮어씁니다 (`docs/DECISIONS.md` #95)
+  설정을 덮어씁니다 (`docs/DECISIONS.md` #98)
 - **잘못 변경한 상태 되돌리기** — 상태를 변경하면 화면 하단에 **"되돌리기"** 막대가 8초 동안 표시되어 한 단계
   되돌릴 수 있습니다 (조리 중 → 대기, 조리 완료 → 조리 중). 서빙 완료 상태는 되돌릴 수 없습니다. 시스템은 주방이 어디까지
   진행했는지 항상 기억하므로, 되돌리기를 해도 이미 조리한 음식이 직원이 직접 삭제·취소할 수 있는 항목으로 바뀌지 않습니다
@@ -355,6 +370,10 @@
   결제 건마다 환불된 금액이 표시되고 매니저는 그 화면에서 바로 환불할 수 있으며, 순액을 모두 받아야만 계산서가 마감됩니다. 항목을
   골라 나눠 결제한 건을 전액 환불하면 그 항목은 다시 미결제가 되고, 마감된 계산서를 환불해도 새 미수금이 생기지 않습니다
   (`docs/DECISIONS.md` #87)
+- **계산서 금액은 이미 받은 돈보다 작아질 수 없음** — 일부 결제 후 항목 삭제·수량 감소·취소, 할인, 프로모션으로 계산서 금액이 받아 둔
+  순액보다 작아지면 먼저 환불할 금액을 알려 주며 거부되고 계산서는 그대로입니다. 새 금액이 받은 돈과 정확히 같아지면 계산서가 바로
+  마감되고 테이블이 비워집니다. 이미 총액보다 많이 받은 예전 계산서는 결제 화면에 "남은 금액 0" 대신 **"고객에게 환불할 금액"**을
+  보여 주고 환불 전까지 추가 결제를 받지 않습니다 (`docs/DECISIONS.md` #95)
 - **마감된 계산서의 항목 잠금** — 결제가 끝났거나 취소된 계산서의 항목은 관리자도 취소할 수 없고, 나눠서 결제된 항목은 환불한 뒤에만
   취소할 수 있습니다. 주방은 먼저 결제한 포장 주문도 평소처럼 조리 상태를 진행합니다 (`docs/DECISIONS.md` #85)
 
@@ -383,6 +402,10 @@
 - **주방이 조리를 시작한 음식의 취소는 항상 매니저 권한** — 주방이 되돌리기로 대기 상태까지 되돌린 항목도 포함됩니다. 이런 항목은
   직원이 수량을 바꾸거나 삭제할 수 없고, 취소할 때마다 주방이 도달했던 단계와 함께 변경 이력에 기록됩니다 (`docs/DECISIONS.md` #86)
 - 하나의 계정으로 여러 지점 관리
+- **백업** (관리자, 설정 화면) — 마지막 백업 시각과 이유(교대 마감 후 / 정기 / 업데이트 전 / 수동), 파일 크기와 개수,
+  기본·두 번째 위치의 상태를 각각 표시하고 **"지금 백업"** 버튼을 제공합니다. 26시간 넘게 백업에 성공하지 못했거나 마지막 백업이
+  실패하면 관리자와 매니저의 홈 화면에 경고가 뜹니다. 백업 파일에는 고객 전화번호와 비밀번호 해시가 있으므로 앱에는 복원·다운로드
+  버튼이 없습니다 (`docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
 - **PaynEat ERP 연동** (관리자, 설정 화면) — 체인에서 [PaynEat ERP](https://github.com/SuruchBoss/PaynEat-ERP)로 재료와 지점을
   관리하는 경우, ERP 주소와 이 POS의 자격 증명(`pnepos_…`)을 입력하면 지점 코드와 규약 버전을 확인한 후 재료·지점 데이터를
   버전 순으로 가져옵니다 (5분 주기 또는 "지금 가져오기"). 연동 중에는 재료 화면이 읽기 전용으로 전환되며, 이 기기의 재고를
@@ -446,6 +469,8 @@ POS는 매출 데이터와 고객 정보를 함께 다루므로, 보안은 사�
 (`NODE_ENV=production`)에서 데모 비밀번호로 계정을 생성하려고 하거나, `JWT_SECRET`이 예시 값이거나 32자보다 짧으면
 서버가 시작되지 않습니다. 소스에서 Docker로 실행하는 경우(`docker-compose.yml`)에도 `JWT_SECRET`을 직접 설정해야 합니다.
 PaynEat ERP에 연결한다면 `https://` 주소를 사용해야 하며, `ERP_ALLOW_INSECURE_HTTP`는 닫힌 네트워크에서만 설정하십시오.
+백업 파일은 암호화되지 않으므로 외부인이 접근할 수 없는 곳에 보관하십시오. 파일 권한은 `0600`, 폴더는 `0700`이며,
+백업 위치가 웹에 공개되는 폴더 안에 있으면 서버가 시작되지 않습니다.
 
 전체 체크리스트는 [SECURITY.md](SECURITY.md)를 참고하십시오.
 보안 취약점은 저장소의 **Security** 탭을 통해 비공개로 신고해 주십시오.
@@ -490,23 +515,23 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1178건**의 자동화 테스트를 통과합니다.
+공개 전 **1240건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 540건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 589건 — domain / controller / widget
-cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1178건에 미포함)
+cd backend && npm test      # 570건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 617건 — domain / controller / widget
+cd app && flutter test test_e2e   # 53건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1240건에 미포함)
 ```
 
-`app/test_e2e/`의 E2E 테스트 49건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의
+`app/test_e2e/`의 E2E 테스트 53건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의
 실제 data/domain 코드로 매장의 하루 업무를 처음부터 끝까지 수행합니다. 대상 업무는 로그인, 주문, 주방, 근무 시작,
 결제, 세금계산서, 환불, 근무 마감(차액 0), Z-report와 CSV, 감사 로그, 손님의 QR 주문, 지점·권한입니다. 나머지
 Flutter 테스트는 모두 데모 모드에서 실행되므로, 앱이 **백엔드가 실제로 반환한 JSON을 해석하는지** 검증하는 테스트는
 이 E2E 테스트뿐입니다. 이 테스트는 기존 659건의 테스트가 모두 통과한 상태에서도 존재하던 실제 버그 5건을 발견했으며,
 해당 버그는 모두 수정되었습니다 (`docs/DECISIONS.md` #43–#47). 정육 카운터 및 거래처 시나리오도 별도로 검증합니다: 저울
 라벨 스캔 → 장바구니 금액이 백엔드와 1사땅 단위까지 일치 → 한도 초과 외상 거부 → 외상 판매 시 kg 단위
-재고 차감 → 청구서 → 현금 수금 → 교대 마감 차액 0 (`meat_shop_b2b_e2e_test.dart`). 또한 테스트가 TCP
+재고 차감 → 청구서 → 현금 수금 → 교대 마감 차액 0 (`meat_shop_b2b_e2e_test.dart`). 백업은 교대 마감 → 백업 파일 생성 → 실제 `db:restore` 명령으로 새 데이터베이스에 복원 → 복원된 데이터베이스의 Z-report가 복원 전과 일치하는지까지 확인합니다 (`backup_restore_e2e_test.dart`). 또한 테스트가 TCP
 "저울"을 직접 열고 실제 백엔드가 여기에 연결하는 시나리오도 있습니다: 흔들리는 무게는 사용할 수 없고 안정된 무게만 사용 →
 해당 무게로 외상 판매 → 20일 연체·유예 5일이면 정확히 15일치 이자 → 감액 전표로 부가가치세 분리 → 모든 문서를 실제
 PDF로 내려받기 → 청구서 이메일 발송 (`scale_documents_e2e_test.dart`).

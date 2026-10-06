@@ -824,6 +824,8 @@ INSTALL_CSS = r"""
 .guide-side .ico{width:60px;height:60px;border-radius:18px;background:var(--cream);display:grid;place-items:center;font-size:32px}
 .guide-side h2{font-size:clamp(26px,3vw,34px);font-weight:800;letter-spacing:-.01em;text-wrap:balance}
 .guide-side p{color:var(--ink-2)}
+.guide-shot{margin:0 0 28px;width:100%}
+.guide-shot figcaption{font-size:13px;color:var(--ink-2);margin-top:8px}
 .facts2{margin:4px 0 0;display:grid;gap:0;border-top:1px dashed var(--line)}
 .facts2 div{display:grid;gap:2px;padding:10px 0;border-bottom:1px dashed var(--line)}
 .facts2 dt{font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:.03em}
@@ -992,6 +994,12 @@ def install_section(ic, sec):
         steps.append(f'<li><div><h3>{e(st["title"])}</h3>{body}{block}</div></li>')
     after = ''.join(f'<div><dt>{e(k)}</dt><dd>{v}</dd></div>' for k, v in sec['after'])
     hid = f'{sec["id"]}-h'
+    # ภาพหน้าจอประกอบขั้นตอน (ไม่บังคับ) — ไฟล์จาก story_test.dart เหมือนภาพของหน้าแรก
+    shot = ''
+    if sec.get('image'):
+        src, alt, caption = sec['image']
+        shot = (f'<figure class="guide-shot"><div class="dev desktop"><img src="{src}" width="1600" height="1000" '
+                f'alt="{e(alt)}" loading="lazy" decoding="async"></div><figcaption>{e(caption)}</figcaption></figure>')
     return f"""<section class="section" id="{sec['id']}" aria-labelledby="{hid}"><div class="wrap"><div class="guide">
   <div class="guide-side">
     <span class="ico" aria-hidden="true">{sec['icon']}</span>
@@ -999,7 +1007,7 @@ def install_section(ic, sec):
     <p>{e(sec['intro'])}</p>
     <dl class="facts2">{facts}</dl>
   </div>
-  <div>
+  <div>{shot}
     <ol class="steps">{''.join(steps)}</ol>
     <p class="ok"><i aria-hidden="true">✅</i><span>{sec['ok_html']}</span></p>
     <div class="after"><h3>{e(sec['after_title'])}</h3><dl{' class="n3"' if len(sec['after']) == 3 else ''}>{after}</dl></div>

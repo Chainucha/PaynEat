@@ -19,6 +19,12 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       AUTO_SEED: "true"
       DATABASE_FILE: data/payneat.sqlite
+      # สำรองข้อมูลอัตโนมัติ (ticket 33) — ชุดแรกอยู่ใน volume payneat-data (/app/data/backups) ซึ่งอยู่ดิสก์เดียวกับฐานข้อมูล
+      # ชุดที่สองควรอยู่นอก volume บนอีกดิสก์: เปิดบรรทัด bind mount ใน volumes: ข้างล่าง แล้วตั้ง BACKUP_COPY_DIR=/backup-copy
+      # ในไฟล์ .env (โฟลเดอร์บนเครื่องต้องให้ uid 1000 เขียนได้ เช่น sudo chown 1000:1000 /mnt/usb-backup/payneat)
+      # กู้คืน: docker compose stop api แล้ว docker compose run --rm api npm run db:restore -- data/backups/<ชื่อไฟล์>.sqlite
+      BACKUP_COPY_DIR: ${BACKUP_COPY_DIR:-}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
       SEED_MANAGER_PASSWORD: ${SEED_MANAGER_PASSWORD:-}
       SEED_WAITER1_PASSWORD: ${SEED_WAITER1_PASSWORD:-}
@@ -41,6 +47,8 @@ services:
       - "3000:3000"
     volumes:
       - payneat-data:/app/data
+      # ที่เก็บไฟล์สำรองชุดที่สองบนอีกดิสก์ (เปิดคู่กับ BACKUP_COPY_DIR=/backup-copy ใน .env)
+      # - /mnt/usb-backup/payneat:/backup-copy
     restart: unless-stopped
 
   web:

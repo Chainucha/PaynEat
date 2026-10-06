@@ -51,13 +51,15 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
     required List<OrderItemPayload> items,
   }) => _delayed(
     () => OrderModel.fromJson(
-      _store.createOrder(
-        type: type,
-        tableId: tableId,
-        customerId: customerId,
-        guestCount: guestCount,
-        waiterId: _auth.currentUserId,
-        items: items.map((item) => item.toJson()).toList(growable: false),
+      _store.atomically(
+        () => _store.createOrder(
+          type: type,
+          tableId: tableId,
+          customerId: customerId,
+          guestCount: guestCount,
+          waiterId: _auth.currentUserId,
+          items: items.map((item) => item.toJson()).toList(growable: false),
+        ),
       ),
     ),
   );
@@ -66,10 +68,12 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
   Future<OrderModel> addItems(int orderId, List<OrderItemPayload> items) =>
       _delayed(
         () => OrderModel.fromJson(
-          _store.addItems(
-            orderId,
-            items.map((item) => item.toJson()).toList(growable: false),
-            actorId: _auth.currentUserId,
+          _store.atomically(
+            () => _store.addItems(
+              orderId,
+              items.map((item) => item.toJson()).toList(growable: false),
+              actorId: _auth.currentUserId,
+            ),
           ),
         ),
       );
@@ -82,12 +86,14 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
     String? note,
   }) => _delayed(
     () => OrderModel.fromJson(
-      _store.updateItem(
-        orderId,
-        itemId,
-        quantity: quantity,
-        note: note,
-        actorId: _auth.currentUserId,
+      _store.atomically(
+        () => _store.updateItem(
+          orderId,
+          itemId,
+          quantity: quantity,
+          note: note,
+          actorId: _auth.currentUserId,
+        ),
       ),
     ),
   );
@@ -95,7 +101,9 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
   @override
   Future<OrderModel> removeItem(int orderId, int itemId) => _delayed(
     () => OrderModel.fromJson(
-      _store.removeItem(orderId, itemId, actorId: _auth.currentUserId),
+      _store.atomically(
+        () => _store.removeItem(orderId, itemId, actorId: _auth.currentUserId),
+      ),
     ),
   );
 
@@ -103,11 +111,13 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
   Future<OrderModel> updateItemStatus(int orderId, int itemId, String status) =>
       _delayed(
         () => OrderModel.fromJson(
-          _store.updateItemStatus(
-            orderId,
-            itemId,
-            status,
-            actorId: _auth.currentUserId,
+          _store.atomically(
+            () => _store.updateItemStatus(
+              orderId,
+              itemId,
+              status,
+              actorId: _auth.currentUserId,
+            ),
           ),
         ),
       );
@@ -120,11 +130,13 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
   Future<OrderModel> applyDiscount(int orderId, String type, double value) =>
       _delayed(
         () => OrderModel.fromJson(
-          _store.applyDiscount(
-            orderId,
-            type,
-            value,
-            actorId: _auth.currentUserId,
+          _store.atomically(
+            () => _store.applyDiscount(
+              orderId,
+              type,
+              value,
+              actorId: _auth.currentUserId,
+            ),
           ),
         ),
       );
@@ -132,7 +144,9 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
   @override
   Future<OrderModel> cancelOrder(int orderId, String reason) => _delayed(
     () => OrderModel.fromJson(
-      _store.cancelOrder(orderId, reason, actorId: _auth.currentUserId),
+      _store.atomically(
+        () => _store.cancelOrder(orderId, reason, actorId: _auth.currentUserId),
+      ),
     ),
   );
 
@@ -147,10 +161,12 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
   Future<OrderModel> mergeOrders(int targetOrderId, int sourceOrderId) =>
       _delayed(
         () => OrderModel.fromJson(
-          _store.mergeOrders(
-            targetOrderId,
-            sourceOrderId,
-            actorId: _auth.currentUserId,
+          _store.atomically(
+            () => _store.mergeOrders(
+              targetOrderId,
+              sourceOrderId,
+              actorId: _auth.currentUserId,
+            ),
           ),
         ),
       );
@@ -173,12 +189,17 @@ class DemoOrderDataSource implements OrderRemoteDataSource {
 
   @override
   Future<OrderModel> redeemPromotionCode(int orderId, String code) => _delayed(
-    () => OrderModel.fromJson(_store.redeemPromotionCode(orderId, code)),
+    () => OrderModel.fromJson(
+      _store.atomically(() => _store.redeemPromotionCode(orderId, code)),
+    ),
   );
 
   @override
-  Future<OrderModel> removePromotion(int orderId) =>
-      _delayed(() => OrderModel.fromJson(_store.removePromotion(orderId)));
+  Future<OrderModel> removePromotion(int orderId) => _delayed(
+    () => OrderModel.fromJson(
+      _store.atomically(() => _store.removePromotion(orderId)),
+    ),
+  );
 
   @override
   Future<List<EligiblePromotionModel>> getEligiblePromotions(int orderId) =>

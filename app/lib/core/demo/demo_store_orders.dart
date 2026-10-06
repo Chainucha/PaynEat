@@ -398,8 +398,72 @@ extension DemoStoreOrders on DemoStore {
     }
   }
 
-  /// คิดยอดใหม่ทั้งบิลด้วยกฎเดียวกับ backend
-  Map<String, dynamic> _recalculate(Map<String, dynamic> order) {
+  /// แก้ออเดอร์แบบทั้งหมดหรือไม่มีเลย — mirror ของ transaction ใน order.service.js#changeOrder (T02 #81)
+  /// การแก้ในโหมดสาธิตเปลี่ยนข้อมูลในหน่วยความจำทีละขั้น (สต๊อก, audit, โต๊ะ) ถ้ากติกาหลังคำนวณยอดปฏิเสธ (T07) จึงคืนทุกอย่าง
+  /// กลับเป็นก่อนกด บิลไม่ค้างครึ่งทาง
+  T atomically<T>(T Function() change) {
+    List<Map<String, dynamic>> copyRows(List<Map<String, dynamic>> rows) =>
+        rows.map((row) => _deepCopy(row) as Map<String, dynamic>).toList();
+    final savedOrders = copyRows(orders);
+    final savedIngredients = copyRows(ingredients);
+    final savedTables = copyRows(tables);
+    final savedCustomers = copyRows(customers);
+    final auditCount = auditLogs.length;
+    try {
+      return change();
+    } catch (_) {
+      orders
+        ..clear()
+        ..addAll(savedOrders);
+      ingredients = savedIngredients;
+      tables = savedTables;
+      customers
+        ..clear()
+        ..addAll(savedCustomers);
+      auditLogs.removeRange(auditCount, auditLogs.length);
+      rethrow;
+    }
+  }
+
+  static dynamic _deepCopy(dynamic value) {
+    if (value is Map) {
+      return <String, dynamic>{
+        for (final entry in value.entries)
+          '${entry.key}': _deepCopy(entry.value),
+      };
+    }
+    if (value is List) return value.map(_deepCopy).toList();
+    return value;
+  }
+
+  /// ยอดบิลที่ยังเปิดต้องไม่ต่ำกว่าเงินที่ร้านถือไว้สุทธิ — mirror ของ order.service.js#settleIfCovered (T07 #105,
+  /// docs/DECISIONS.md #95) ยอดใหม่ต่ำกว่า = ปฏิเสธพร้อมยอดที่ต้องคืน, เท่ากันพอดี = ปิดบิลเหมือนรอบจ่ายสุดท้าย
+  void _settleIfCovered(Map<String, dynamic> order) {
+    const open = [OrderStatus.open, OrderStatus.inKitchen, OrderStatus.served];
+    if (!open.contains(order['status'])) return;
+    final paidSatang = (paidAmount(order['id'] as int) * 100).round();
+    final totalSatang = ((order['total'] as num).toDouble() * 100).round();
+    if (paidSatang > 0 && totalSatang == paidSatang) {
+      _closeFullyPaidOrder(order);
+      return;
+    }
+    if (totalSatang >= paidSatang) return;
+    throw ApiException(
+      message: 'order_error_total_below_paid'.trParams({
+        'total': (totalSatang / 100).toStringAsFixed(2),
+        'paid': (paidSatang / 100).toStringAsFixed(2),
+        'refund': ((paidSatang - totalSatang) / 100).toStringAsFixed(2),
+      }),
+      statusCode: 409,
+    );
+  }
+
+  /// คิดยอดใหม่ทั้งบิลด้วยกฎเดียวกับ backend แล้วตรวจกติกายอดบิลกับเงินที่รับไว้ (T07) — ข้อมูลตัวอย่างย้อนหลังส่ง
+  /// `settle: false` เพราะสร้างบิลก่อนแล้วค่อยใส่การชำระ
+  Map<String, dynamic> _recalculate(
+    Map<String, dynamic> order, {
+    bool settle = true,
+  }) {
     final items = (order['items'] as List).cast<Map<String, dynamic>>();
     final subtotal = items
         .where((item) => item['status'] != OrderItemStatus.cancelled)
@@ -430,6 +494,7 @@ extension DemoStoreOrders on DemoStore {
     order['total'] = bill.total;
     order['updatedAt'] = _now();
 
+    if (settle) _settleIfCovered(order);
     return order;
   }
 }

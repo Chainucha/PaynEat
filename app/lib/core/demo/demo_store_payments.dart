@@ -20,6 +20,51 @@ extension DemoStorePayments on DemoStore {
     orderId,
   ).fold<double>(0, (sum, row) => sum + (row['amount'] as num).toDouble());
 
+  /// ปิดบิลที่เก็บเงินครบยอดสุทธิแล้ว — mirror ของ order.closing.js#closeFullyPaidOrder ใช้ทั้งรอบจ่ายสุดท้ายและตอนแก้บิลจน
+  /// ยอดเท่ากับเงินที่รับไว้พอดี (T07 #105, docs/DECISIONS.md #95)
+  void _closeFullyPaidOrder(Map<String, dynamic> order) {
+    final orderId = order['id'] as int;
+    final customerId = order['customerId'] as int?;
+    // ของที่ขายไปต้องออกจากสต๊อกเสมอ แม้บิลนี้ไม่เคยกด "ส่งเข้าครัว" — mirror ของ
+    // payment.service.js#pay (docs/DECISIONS.md #51)
+    for (final item in (order['items'] as List).cast<Map<String, dynamic>>()) {
+      if (item['status'] != OrderItemStatus.cancelled &&
+          item['stockDeducted'] != true) {
+        deductForOrderItem(item);
+        item['stockDeducted'] = true;
+      }
+    }
+    order['status'] = OrderStatus.paid;
+    order['closedAt'] = _now();
+    _freeTable(order);
+    // สะสมแต้มให้ลูกค้าที่ผูกไว้ครั้งเดียวตอนออเดอร์นี้จ่ายครบ (ไม่ผูกลูกค้า = ไม่ได้แต้ม)
+    // ออเดอร์ที่มีส่วนขายเชื่อ แต้มรอไปให้ตอนรับชำระหนี้ครบ (DECISIONS #59)
+    if (customerId != null && _hasCreditPayment(orderId)) {
+      _syncCreditPoints(orderId);
+    } else if (customerId != null) {
+      final pointsEarned = pointsForAmount(
+        (order['total'] as num).toDouble(),
+        (settings['pointsEarnRateBaht'] as num).toDouble(),
+      );
+      if (pointsEarned > 0) {
+        order['pointsEarned'] = pointsEarned;
+        adjustCustomerPoints(customerId, pointsEarned);
+      }
+    }
+  }
+
+  /// บิลที่ถือเงินเกินยอดบิลอยู่แล้วรับเงินเพิ่มไม่ได้ ต้องคืนส่วนเกินก่อน — mirror ของ payment.service.js#assertNotOverpaid (T07)
+  void _assertNotOverpaid(double total, double alreadyPaid) {
+    final over = ((alreadyPaid - total) * 100).round();
+    if (over <= 0) return;
+    throw ApiException(
+      message: 'payment_error_overpaid_refund_first'.trParams({
+        'amount': (over / 100).toStringAsFixed(2),
+      }),
+      statusCode: 409,
+    );
+  }
+
   Map<String, dynamic> paymentSummary(int orderId) {
     final order = findOrder(orderId);
     final paid = paidAmount(orderId);
@@ -33,6 +78,12 @@ extension DemoStorePayments on DemoStore {
       'remaining': order['status'] == OrderStatus.paid
           ? 0.0
           : max(0, total - paid),
+      // บิลที่ยังเปิดแต่ถือเงินเกินยอดบิล (T07 #105) — mirror ของ payment.service.js#summary
+      'refundDue':
+          order['status'] == OrderStatus.paid ||
+              order['status'] == OrderStatus.cancelled
+          ? 0.0
+          : _roundMoney(max<double>(0, paid - total)),
       'payments': payments
           .where((row) => row['orderId'] == orderId)
           .toList(growable: false),
@@ -145,6 +196,7 @@ extension DemoStorePayments on DemoStore {
 
     final total = (order['total'] as num).toDouble();
     final alreadyPaid = paidAmount(orderId);
+    _assertNotOverpaid(total, alreadyPaid);
     // ปัดเป็นสตางค์ กันเศษทศนิยมของ double (เช่น 188.32000000000002) หลุดไปเป็นยอดที่เก็บจริง
     final remaining = _roundMoney(max<double>(0, total - alreadyPaid));
     final share = _itemsShare(order, itemIds);
@@ -202,6 +254,7 @@ extension DemoStorePayments on DemoStore {
 
     final total = (order['total'] as num).toDouble();
     final alreadyPaid = paidAmount(orderId);
+    _assertNotOverpaid(total, alreadyPaid);
     final remaining = _roundMoney(total - alreadyPaid);
 
     double resolvedAmount;
@@ -337,35 +390,7 @@ extension DemoStorePayments on DemoStore {
     }
 
     final isFullyPaid = alreadyPaid + resolvedAmount >= total - 0.001;
-    if (isFullyPaid) {
-      // ของที่ขายไปต้องออกจากสต๊อกเสมอ แม้บิลนี้ไม่เคยกด "ส่งเข้าครัว" — mirror ของ
-      // payment.service.js#pay (docs/DECISIONS.md #51)
-      for (final item
-          in (order['items'] as List).cast<Map<String, dynamic>>()) {
-        if (item['status'] != OrderItemStatus.cancelled &&
-            item['stockDeducted'] != true) {
-          deductForOrderItem(item);
-          item['stockDeducted'] = true;
-        }
-      }
-      order['status'] = OrderStatus.paid;
-      order['closedAt'] = _now();
-      _freeTable(order);
-      // สะสมแต้มให้ลูกค้าที่ผูกไว้ครั้งเดียวตอนออเดอร์นี้จ่ายครบ (ไม่ผูกลูกค้า = ไม่ได้แต้ม)
-      // ออเดอร์ที่มีส่วนขายเชื่อ แต้มรอไปให้ตอนรับชำระหนี้ครบ (DECISIONS #59)
-      if (customerId != null && _hasCreditPayment(orderId)) {
-        _syncCreditPoints(orderId);
-      } else if (customerId != null) {
-        final pointsEarned = pointsForAmount(
-          total,
-          (settings['pointsEarnRateBaht'] as num).toDouble(),
-        );
-        if (pointsEarned > 0) {
-          order['pointsEarned'] = pointsEarned;
-          adjustCustomerPoints(customerId, pointsEarned);
-        }
-      }
-    }
+    if (isFullyPaid) _closeFullyPaidOrder(order);
 
     return {
       'payment': payment,

@@ -16,6 +16,9 @@ import '../../../audit_log/domain/usecases/audit_log_usecases.dart';
 import '../../../audit_log/presentation/controllers/audit_log_controller.dart';
 import '../../../audit_log/presentation/pages/audit_log_page.dart';
 import '../../../auth/presentation/pages/profile_page.dart';
+import '../../../backup/domain/usecases/backup_usecases.dart';
+import '../../../backup/presentation/controllers/backup_controller.dart';
+import '../../../backup/presentation/controllers/backup_warning_controller.dart';
 import '../../../customer/domain/usecases/customer_usecases.dart';
 import '../../../customer/presentation/controllers/customers_controller.dart';
 import '../../../customer/presentation/pages/customers_page.dart';
@@ -64,6 +67,7 @@ class HomeBinding extends Bindings {
   @override
   void dependencies() {
     _bindTabControllers();
+    _bindBackupWarning();
 
     Get.put<HomeController>(
       HomeController(
@@ -71,6 +75,18 @@ class HomeBinding extends Bindings {
         destinationsBuilder: destinationsForRole,
       ),
     );
+  }
+
+  /// แถบเตือนการสำรองข้อมูล — admin และ manager เท่านั้น (ticket 33) บทบาทอื่นไม่โหลดสถานะเลย
+  void _bindBackupWarning() {
+    final role = Get.find<SessionService>().currentUser?.role;
+    if (showsBackupWarning(role)) {
+      Get.put(
+        BackupWarningController(getStatus: Get.find<GetBackupStatusUseCase>()),
+      );
+    } else if (Get.isRegistered<BackupWarningController>()) {
+      Get.delete<BackupWarningController>();
+    }
   }
 
   void _bindTabControllers() {
@@ -165,6 +181,19 @@ class HomeBinding extends Bindings {
       fenix: true,
     );
     Get.lazyPut(
+      () => BackupController(
+        getStatus: Get.find<GetBackupStatusUseCase>(),
+        backupNow: Get.find<BackupNowUseCase>(),
+        // กดสำรองแล้วแถบเตือนบนหน้าหลักอัปเดตตามทันที
+        onStatus: (status) {
+          if (Get.isRegistered<BackupWarningController>()) {
+            Get.find<BackupWarningController>().apply(status);
+          }
+        },
+      ),
+      fenix: true,
+    );
+    Get.lazyPut(
       () => StaffController(
         getStaff: Get.find<GetStaffUseCase>(),
         getStations: Get.find<GetKitchenStationsUseCase>(),
@@ -215,6 +244,10 @@ class HomeBinding extends Bindings {
       fenix: true,
     );
   }
+
+  /// บทบาทที่เห็นแถบเตือนการสำรองข้อมูล (ticket 33) — เจ้าของร้านและผู้จัดการ ไม่ใช่พนักงานหน้าร้าน
+  static bool showsBackupWarning(String? role) =>
+      role == UserRole.admin || role == UserRole.manager;
 
   /// เมนูที่แต่ละบทบาทเห็น — เป็นฟังก์ชันบริสุทธิ์จึงเขียนเทสต์ได้ง่าย
   static List<HomeDestination> destinationsForRole(String role) {

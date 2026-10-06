@@ -4,6 +4,6 @@
   "0003_order_item_kitchen_reached": "08c7a967845eefa618603b73bb520d77451578278caff2dce54cd006109b196f",
   "0004_order_item_paid_by_payment": "63560104b9599dae5449b79461947827c6fb6a7b436bdfec7f15e5978f04459e",
   "0005_repair_customer_points": "fd860b622f9d8689a107380cacdf33ac22ac69beeb5d537d9ad04ed4b1217aea",
-  "0006_kitchen_stations": "df9d60afc37d1a241271a82bb6c61eabcf7e5e89856c330e81574f4873a7b6ae",
-  "0007_user_stations": "972b18ab7a1740abbd15a8fffe9ede766fe8e458ab072efca7b2c31677f076b4"
+  "0006_kitchen_stations": "bafbca2b3ab8651d7fa913f9b1333cfbda8e0b224aa14d0c1409e85e6692abb2",
+  "0007_user_stations": "ff0aad843c54b032a8451e5aa29433c1eed47a8c6987c95f7152048d008fad73"
 }

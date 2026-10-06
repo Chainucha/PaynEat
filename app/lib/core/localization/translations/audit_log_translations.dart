@@ -9,6 +9,10 @@ const Map<String, String> auditLogTranslationsTh = {
   'audit_summary_erp_disconnect':
       'ออกจากการเชื่อมต่อ PaynEat ERP (POS @instance)',
   'audit_log_action_erp_branch_create': 'สร้างสาขาจาก PaynEat ERP',
+  'audit_log_action_system_restore': 'กู้คืนข้อมูลจากไฟล์สำรอง',
+  'audit_summary_system_restore':
+      'กู้คืนข้อมูลจากไฟล์ @file (ฐานข้อมูลก่อนกู้คืนสำรองไว้ที่ @preRestore)',
+  'audit_summary_system_restore_fresh': 'กู้คืนข้อมูลจากไฟล์ @file',
   'audit_summary_erp_branch_create':
       'สร้างสาขา "@name" (@code) จาก PaynEat ERP',
   'audit_log_empty_state': 'ยังไม่มีประวัติการทำรายการ',
@@ -144,6 +148,10 @@ const Map<String, String> auditLogTranslationsEn = {
   'audit_summary_erp_connect': 'Connected to PaynEat ERP as POS @instance',
   'audit_summary_erp_disconnect': 'Left PaynEat ERP (POS @instance)',
   'audit_log_action_erp_branch_create': 'Create branch from PaynEat ERP',
+  'audit_log_action_system_restore': 'Restore from a backup',
+  'audit_summary_system_restore':
+      'Restored the data from @file (the database it replaced is kept as @preRestore)',
+  'audit_summary_system_restore_fresh': 'Restored the data from @file',
   'audit_summary_erp_branch_create':
       'Created branch "@name" (@code) from PaynEat ERP',
   'audit_log_empty_state': 'No activity recorded yet',
@@ -279,6 +287,10 @@ const Map<String, String> auditLogTranslationsKo = {
   'audit_summary_erp_connect': 'POS @instance(으)로 PaynEat ERP에 연결',
   'audit_summary_erp_disconnect': 'PaynEat ERP 연결 해제 (POS @instance)',
   'audit_log_action_erp_branch_create': 'PaynEat ERP에서 지점 만들기',
+  'audit_log_action_system_restore': '백업에서 복원',
+  'audit_summary_system_restore':
+      '@file에서 데이터를 복원함 (교체된 데이터베이스는 @preRestore로 보관)',
+  'audit_summary_system_restore_fresh': '@file에서 데이터를 복원함',
   'audit_summary_erp_branch_create': 'PaynEat ERP에서 "@name"(@code) 지점을 만듦',
   'audit_log_empty_state': '기록된 활동이 없습니다',
   'audit_log_reason_prefix': '사유: @reason',

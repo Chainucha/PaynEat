@@ -238,33 +238,66 @@ class _PaidHistory extends GetView<CheckoutController> {
             ),
           ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'payment_remaining_due_label'.tr,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
+        // ร้านถือเงินเกินยอดบิล (ข้อมูลก่อน T07) — โชว์ยอดที่ต้องคืนแทน "คงเหลือ 0" ที่ทำให้เข้าใจว่าเก็บครบแล้ว
+        if (summary.needsRefund)
+          Container(
+            key: const ValueKey('checkout-refund-due'),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'payment_refund_due_label'.tr,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                Formatters.baht(summary.remaining),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.warningInk,
+                Text(
+                  Formatters.baht(summary.refundDue),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.dangerInk,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          )
+        else
+          Container(
+            key: const ValueKey('checkout-remaining-due'),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'payment_remaining_due_label'.tr,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  Formatters.baht(summary.remaining),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.warningInk,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }

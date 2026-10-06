@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import http from 'node:http';
-import { collectDefaultMetrics, Counter, Histogram, Registry } from 'prom-client';
+import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from 'prom-client';
 import { env } from '../../config/env.js';
 import { APP_NAME, logger } from './logger.js';
 
@@ -28,6 +28,29 @@ const duration = new Histogram({
   buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
   registers: [registry],
 });
+
+// สำรองข้อมูล (ticket 33) — ร้านที่ต่อ monitoring ตั้งเตือนจากสองตัวนี้ได้ เช่น ไม่สำเร็จเกิน 26 ชั่วโมง
+const backupLastSuccess = new Gauge({
+  name: 'payneat_backup_last_success_timestamp_seconds',
+  help: 'Unix time of the last backup written and verified in BACKUP_DIR (0 = none yet).',
+  labelNames: ['app'],
+  registers: [registry],
+});
+backupLastSuccess.set({ app: APP_NAME }, 0);
+
+const backupFailures = new Counter({
+  name: 'payneat_backup_failures_total',
+  help: 'Backups that failed, by destination: primary (BACKUP_DIR) or copy (BACKUP_COPY_DIR).',
+  labelNames: ['app', 'destination'],
+  registers: [registry],
+});
+
+export const recordBackupSuccess = (at) =>
+  backupLastSuccess.set({ app: APP_NAME }, Math.floor(at.getTime() / 1000));
+
+/** `destination` เป็น `primary` หรือ `copy` เท่านั้น — ไม่ใส่ path หรือข้อความ error ลง label */
+export const recordBackupFailure = (destination) =>
+  backupFailures.inc({ app: APP_NAME, destination });
 
 /** `route` ต้องเป็น template (`/api/v1/orders/:id`) เสมอ ห้าม path จริง — ไม่งั้นจำนวน series โตไม่จำกัด */
 export const observeRequest = (method, route, status, seconds) => {

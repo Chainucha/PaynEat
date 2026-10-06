@@ -7,7 +7,7 @@ export const kitchenStationRepository = {
   /**
    * `item_count` นับ "จานที่ตกลงสถานีนี้จริง" ตามกฎการตัดสิน (เมนู → หมวดหมู่ → ค่าเริ่มต้น)
    * ไม่ใช่แค่จานที่ผูกตรง ๆ เพราะคำถามเดียวที่ผู้จัดการถามคือ "บาร์ต้องทำกี่เมนู"
-   * ไม่แยกตามสาขาเหมือน categories.itemCount (docs/DECISIONS.md #94)
+   * ไม่แยกตามสาขาเหมือน categories.itemCount (docs/DECISIONS.md #97)
    */
   findAll({ activeOnly = false } = {}) {
     const where = activeOnly ? 'WHERE s.is_active = 1' : '';

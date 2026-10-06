@@ -93,6 +93,11 @@ const Map<String, String> paymentTranslationsTh = {
   'payment_error_order_cancelled': 'ออเดอร์นี้ถูกยกเลิกแล้ว',
   'payment_error_shift_required': 'ต้องเปิดกะก่อนจึงจะรับชำระเงินได้',
   'payment_error_refund_shift_required': 'ต้องเปิดกะก่อนจึงจะคืนเงินสดได้',
+  'payment_error_overpaid_refund_first':
+      'บิลนี้รับเงินไว้เกินยอดบิล @amount บาท ต้องคืนเงินส่วนเกินก่อน',
+  'payment_refund_due_label': 'ต้องคืนเงินลูกค้า',
+  'payment_refund_due_hint':
+      'บิลนี้รับเงินไว้เกินยอดบิล กดคืนเงินที่รายการชำระด้านบนก่อน แล้วบิลจะปิดได้',
   'payment_error_amount_exceeds_remaining':
       'ยอดชำระเกินยอดคงเหลือ (คงเหลือ @remaining บาท)',
   'payment_error_received_less_than_amount':
@@ -241,6 +246,11 @@ const Map<String, String> paymentTranslationsEn = {
       'You must open a shift before accepting payment',
   'payment_error_refund_shift_required':
       'You must open a shift before refunding cash',
+  'payment_error_overpaid_refund_first':
+      'This bill holds @amount THB more than its total — refund the excess first',
+  'payment_refund_due_label': 'Refund owed to the customer',
+  'payment_refund_due_hint':
+      'This bill holds more money than its total — refund from a payment above first, then the bill can close',
   'payment_error_amount_exceeds_remaining':
       'Payment amount exceeds the remaining balance (remaining @remaining THB)',
   'payment_error_received_less_than_amount':
@@ -367,6 +377,11 @@ const Map<String, String> paymentTranslationsKo = {
   'payment_error_order_cancelled': '취소된 주문입니다',
   'payment_error_shift_required': '결제를 받으려면 먼저 근무를 시작해야 합니다',
   'payment_error_refund_shift_required': '현금을 환불하려면 먼저 근무를 시작해야 합니다',
+  'payment_error_overpaid_refund_first':
+      '이 계산서는 총액보다 @amount THB를 더 받았습니다 — 먼저 초과분을 환불하세요',
+  'payment_refund_due_label': '고객에게 환불할 금액',
+  'payment_refund_due_hint':
+      '이 계산서는 총액보다 많은 금액을 받았습니다 — 위의 결제 내역에서 먼저 환불하면 계산서를 닫을 수 있습니다',
   'payment_error_amount_exceeds_remaining':
       '결제 금액이 남은 금액을 초과합니다 (남은 금액 @remaining THB)',
   'payment_error_received_less_than_amount': '받은 금액은 청구 금액보다 적을 수 없습니다',

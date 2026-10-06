@@ -75,6 +75,21 @@ class Formatters {
 
   static String date(DateTime value) => _date.format(value);
 
+  /// เวลาที่แปลงเป็นเวลาเครื่องแล้ว เช่น เวลาสำรองข้อมูลล่าสุด (ticket 33)
+  static String dateTimeOf(DateTime value) => _dateTime.format(value.toLocal());
+
+  /// ขนาดไฟล์แบบอ่านง่าย เช่น "4.2 MB" — หน่วยเป็นสากลจึงไม่ผ่านคำแปล
+  static String fileSize(int bytes) {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    var size = bytes.toDouble();
+    var unit = 0;
+    while (size >= 1024 && unit < units.length - 1) {
+      size /= 1024;
+      unit++;
+    }
+    return unit == 0 ? '$bytes B' : '${size.toStringAsFixed(1)} ${units[unit]}';
+  }
+
   static String isoDate(DateTime value) => _isoDate.format(value);
 
   /// วันครบกำหนดชำระ — backend ส่งมาเป็นวันที่ล้วน "2026-10-11" (ไม่มีเวลา/โซนเวลา)

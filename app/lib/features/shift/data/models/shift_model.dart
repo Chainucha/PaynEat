@@ -19,6 +19,7 @@ class ShiftModel extends Shift {
     super.countedCash,
     super.variance,
     super.note,
+    super.backupFailed,
   });
 
   factory ShiftModel.fromJson(Map<String, dynamic> json) => ShiftModel(
@@ -35,5 +36,7 @@ class ShiftModel extends Shift {
     countedCash: (json['countedCash'] as num?)?.toDouble(),
     variance: (json['variance'] as num?)?.toDouble(),
     note: json['note'] as String?,
+    // คำตอบของการปิดกะมี `backup: {ok, ...}` (ticket 33) — ไม่มีฟิลด์นี้ = ไม่ได้เพิ่งปิดกะ
+    backupFailed: (json['backup'] as Map?)?['ok'] == false,
   );
 }

@@ -44,7 +44,7 @@ export const kitchenStationService = {
   },
 
   /**
-   * กฎการตัดสินสถานีของหนึ่งจาน: เมนู → หมวดหมู่ → ค่าเริ่มต้น (docs/DECISIONS.md #94)
+   * กฎการตัดสินสถานีของหนึ่งจาน: เมนู → หมวดหมู่ → ค่าเริ่มต้น (docs/DECISIONS.md #97)
    * รับแถวจาก `menuRepository.findById` ที่ join หมวดหมู่มาให้แล้ว (`category_station_id`)
    * จึงเป็นฟังก์ชันบริสุทธิ์ของแถวเดียว ไม่ต้องยิง query เพิ่มต่อจาน
    */

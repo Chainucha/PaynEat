@@ -86,6 +86,9 @@ class AuditSummaryText {
           'audit_summary_document_${args['document']}',
           args['document'],
         );
+      // ฐานข้อมูลเดิมไม่มีอยู่ก่อนกู้คืน (เครื่องใหม่) จึงไม่มีไฟล์ pre-restore — ticket 33
+      case 'system.restore' when (args['preRestore'] ?? '') == '':
+        key = '${key}_fresh';
       case 'settings.update':
         values['changes'] = [
           for (final change in args['changes'] as List? ?? const [])

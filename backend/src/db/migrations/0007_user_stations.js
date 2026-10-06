@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** Migration 0007 — ผูกพนักงานกับสถานีครัว (ticket 35, docs/DECISIONS.md #95) ทั้งหมดอยู่ใน .sql */
+/** Migration 0007 — ผูกพนักงานกับสถานีครัว (ticket 35, docs/DECISIONS.md #98) ทั้งหมดอยู่ใน .sql */
 
 const sql = path.join(path.dirname(fileURLToPath(import.meta.url)), '0007_user_stations.sql');
 

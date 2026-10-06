@@ -1,7 +1,7 @@
 -- Copyright 2026 Suruch Chakrapeesirisuk
 -- SPDX-License-Identifier: Apache-2.0
 
--- Migration 0007 — พนักงานคนหนึ่งรับผิดชอบได้หลายสถานีครัว (ticket 35, docs/DECISIONS.md #95)
+-- Migration 0007 — พนักงานคนหนึ่งรับผิดชอบได้หลายสถานีครัว (ticket 35, docs/DECISIONS.md #98)
 -- รูปเดียวกับ user_branches ทุกจุด เพราะเป็นคำถามเดียวกัน ("คนนี้ทำงานที่ไหนได้บ้าง") คนทำครัวร้อน
 -- ที่ช่วยดูเตาย่างด้วยจึงไม่ต้องมีสองบัญชี
 --

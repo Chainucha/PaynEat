@@ -189,6 +189,9 @@ class CheckoutController extends GetxController {
   /// กรณีขายเชื่อเกินวงเงินมีข้อความในกล่องวงเงินอยู่แล้ว จึงไม่ซ้ำตรงนี้ (คืน null)
   String? get payBlockedHint {
     if (!hasOpenShift.value) return 'payment_blocked_no_shift'.tr;
+    if (summary.value?.needsRefund ?? false) {
+      return 'payment_refund_due_hint'.tr;
+    }
     if (amount.value <= 0 || amount.value > remaining + 0.001) {
       return 'payment_blocked_amount'.trParams({
         'amount': Formatters.baht(remaining),
@@ -204,6 +207,7 @@ class CheckoutController extends GetxController {
 
   bool get canPay {
     if (!hasOpenShift.value) return false;
+    if (summary.value?.needsRefund ?? false) return false;
     if (amount.value <= 0 || amount.value > remaining + 0.001) return false;
     if (isCash && received.value + 0.001 < chargedAmount) return false;
     if (isCredit) {

@@ -12,6 +12,7 @@ import { tableRepository } from '../tables/table.repository.js';
 import { settingsService } from '../settings/settings.service.js';
 import { promotionRepository } from '../promotions/promotion.repository.js';
 import { ingredientService } from '../ingredients/ingredient.service.js';
+import { kitchenStationService } from '../kitchen-stations/kitchen-station.service.js';
 import { auditLogService } from '../audit-logs/audit-log.service.js';
 import { customerRepository } from '../customers/customer.repository.js';
 import { orderRepository } from './order.repository.js';
@@ -103,9 +104,15 @@ const buildItemRow = (input) => {
   }
   const weightGrams = soldByWeight ? input.weightGrams : null;
 
+  // สถานีครัวตัดสินตอนนี้ครั้งเดียวแล้วประทับลงรายการ (ticket 34, docs/DECISIONS.md #94) —
+  // ทุกทางที่เพิ่มรายการ (พนักงานเปิดบิล, สั่งเพิ่ม, ลูกค้าสแกน QR) ผ่าน buildItemRow ทางเดียว
+  const station = kitchenStationService.resolveForMenuItem(menuItem);
+
   return {
     menuItemId: menuItem.id,
     nameSnapshot: menuItem.name,
+    stationId: station.id,
+    stationNameSnapshot: station.name,
     unitPrice: menuItem.price,
     quantity: input.quantity,
     weightGrams,
@@ -835,9 +842,15 @@ export const orderService = {
     return dto;
   },
 
-  /** คิวครัว (KDS) — รายการที่ถูกส่งครัวแล้วและยังไม่เสิร์ฟ */
-  kitchenQueue(statuses = ['pending', 'cooking', 'ready']) {
-    return orderRepository.findItemsByStatuses(statuses).map(toOrderItemDto);
+  /**
+   * คิวครัว (KDS) — รายการที่ถูกส่งครัวแล้วและยังไม่เสิร์ฟ
+   * `stationCode` กรองเฉพาะตั๋วของสถานีนั้น (ticket 34) และ `branchId` จำกัดให้เห็นแค่สาขาของผู้ใช้
+   */
+  kitchenQueue(statuses = ['pending', 'cooking', 'ready'], { branchId, stationCode } = {}) {
+    const station = stationCode ? kitchenStationService.getByCode(stationCode) : null;
+    return orderRepository
+      .findItemsByStatuses(statuses, { branchId, stationId: station?.id })
+      .map(toOrderItemDto);
   },
 };
 

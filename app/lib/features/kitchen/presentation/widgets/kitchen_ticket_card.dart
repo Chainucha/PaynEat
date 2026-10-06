@@ -16,11 +16,16 @@ class KitchenTicketCard extends StatelessWidget {
     required this.item,
     required this.isLate,
     required this.onAdvance,
+    this.stationLabel,
   });
 
   final OrderItem item;
   final bool isLate;
   final VoidCallback onAdvance;
+
+  /// ชื่อสถานีครัวที่ประทับไว้บนตั๋ว (ticket 34) — ส่งมาเฉพาะตอนจอดู "ทุกสถานี"
+  /// วางไว้แถวเดียวกับจำนวน ไม่ใช่หัวตั๋วที่แน่นอยู่แล้ว (docs/DECISIONS.md #62)
+  final String? stationLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +126,27 @@ class KitchenTicketCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (stationLabel != null && stationLabel!.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primarySoft,
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Text(
+                          stationLabel!,
+                          style: TextStyle(
+                            color: AppColors.brandInk,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(

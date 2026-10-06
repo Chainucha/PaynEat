@@ -4,6 +4,7 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../models/category_model.dart';
+import '../models/kitchen_station_model.dart';
 import '../../domain/entities/menu_item_payload.dart';
 import '../models/menu_item_model.dart';
 
@@ -12,6 +13,14 @@ abstract class MenuRemoteDataSource {
   Future<CategoryModel> createCategory(Map<String, dynamic> body);
   Future<CategoryModel> updateCategory(int id, Map<String, dynamic> body);
   Future<void> deleteCategory(int id);
+
+  Future<List<KitchenStationModel>> getKitchenStations({bool activeOnly});
+  Future<KitchenStationModel> createKitchenStation(Map<String, dynamic> body);
+  Future<KitchenStationModel> updateKitchenStation(
+    int id,
+    Map<String, dynamic> body,
+  );
+  Future<void> deleteKitchenStation(int id);
 
   Future<List<MenuItemModel>> getMenuItems({
     int? categoryId,
@@ -59,6 +68,43 @@ class MenuRemoteDataSourceImpl implements MenuRemoteDataSource {
   @override
   Future<void> deleteCategory(int id) =>
       _client.delete(ApiEndpoints.category(id));
+
+  @override
+  Future<List<KitchenStationModel>> getKitchenStations({
+    bool activeOnly = false,
+  }) async {
+    final result = await _client.get(
+      ApiEndpoints.kitchenStations,
+      query: {if (activeOnly) 'activeOnly': 'true'},
+    );
+    return result.asList
+        .map(KitchenStationModel.fromJson)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<KitchenStationModel> createKitchenStation(
+    Map<String, dynamic> body,
+  ) async {
+    final result = await _client.post(ApiEndpoints.kitchenStations, body: body);
+    return KitchenStationModel.fromJson(result.asMap);
+  }
+
+  @override
+  Future<KitchenStationModel> updateKitchenStation(
+    int id,
+    Map<String, dynamic> body,
+  ) async {
+    final result = await _client.patch(
+      ApiEndpoints.kitchenStation(id),
+      body: body,
+    );
+    return KitchenStationModel.fromJson(result.asMap);
+  }
+
+  @override
+  Future<void> deleteKitchenStation(int id) =>
+      _client.delete(ApiEndpoints.kitchenStation(id));
 
   @override
   Future<List<MenuItemModel>> getMenuItems({

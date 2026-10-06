@@ -106,4 +106,11 @@ class StorageService {
 
   Future<void> saveContrast(String value) =>
       _write(StorageKeys.contrast, value);
+
+  /// สถานีครัวที่จอนี้เลือกไว้ (ticket 34) — ผูกกับเครื่อง ไม่ใช่กับบัญชี จึงไม่ถูกล้างตอน [clear]
+  /// (logout) เหมือน [printerProfileJson]: แท็บเล็ตของบาร์ติดอยู่ที่บาร์ ไม่ว่าใครจะล็อกอินอยู่
+  String? get kitchenStation => _read(StorageKeys.kitchenStation);
+
+  Future<void> saveKitchenStation(String value) =>
+      _write(StorageKeys.kitchenStation, value);
 }

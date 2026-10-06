@@ -270,3 +270,72 @@ test('token เก่าใช้สิทธิ์เดิมต่อไม�
   });
   assert.equal(afterDemote.status, 403);
 });
+
+test('POST/PATCH /users — ผูกพนักงานกับสถานีครัวได้หลายสถานี และถอดออกทั้งหมดได้ (ticket 35)', async () => {
+  const { token } = await login('admin', 'admin123');
+  const stations = await get('/api/v1/kitchen-stations', token);
+  const hot = stations.body.data.find((row) => row.code === 'hot');
+  const bar = stations.body.data.find((row) => row.code === 'bar');
+
+  const created = await post('/api/v1/users', token, {
+    name: 'เชฟบาร์',
+    username: `barchef${Date.now()}`,
+    password: 'secret123',
+    role: 'kitchen',
+    branchId: 1,
+    stationIds: [bar.id],
+  });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  assert.deepEqual(created.body.data.stationIds, [bar.id]);
+  assert.deepEqual(created.body.data.stationCodes, ['bar']);
+
+  // ส่งเป็นชุดเต็ม — คนทำครัวร้อนที่ช่วยดูบาร์ด้วยได้สองสถานี เรียงตาม sort_order
+  const both = await patch(`/api/v1/users/${created.body.data.id}`, token, {
+    stationIds: [bar.id, hot.id],
+  });
+  assert.equal(both.status, 200);
+  assert.deepEqual(both.body.data.stationCodes, ['hot', 'bar']);
+
+  // [] = ถอดออกทั้งหมด กลับไปเห็นทุกสถานี
+  const cleared = await patch(`/api/v1/users/${created.body.data.id}`, token, { stationIds: [] });
+  assert.deepEqual(cleared.body.data.stationIds, []);
+
+  // ไม่ส่งมาเลย = ไม่แตะ
+  await patch(`/api/v1/users/${created.body.data.id}`, token, { stationIds: [hot.id] });
+  const untouched = await patch(`/api/v1/users/${created.body.data.id}`, token, {
+    name: 'เชฟบาร์ 2',
+  });
+  assert.deepEqual(untouched.body.data.stationIds, [hot.id]);
+
+  const bogus = await patch(`/api/v1/users/${created.body.data.id}`, token, {
+    stationIds: [999999],
+  });
+  assert.equal(bogus.status, 400);
+});
+
+test('GET /auth/me — session พกรหัสสถานีที่ผูกไว้ ให้จอครัวเลือกชิปล่วงหน้า (ticket 35)', async () => {
+  const { token: admin } = await login('admin', 'admin123');
+  const stations = await get('/api/v1/kitchen-stations', admin);
+  const cold = stations.body.data.find((row) => row.code === 'cold');
+
+  const username = `coldchef${Date.now()}`;
+  const created = await post('/api/v1/users', admin, {
+    name: 'เชฟครัวเย็น',
+    username,
+    password: 'secret123',
+    role: 'kitchen',
+    branchId: 1,
+    stationIds: [cold.id],
+  });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+
+  const session = await login(username, 'secret123');
+  assert.deepEqual(session.user.stationCodes, ['cold']);
+
+  const me = await get('/api/v1/auth/me', session.token);
+  assert.deepEqual(me.body.data.stationCodes, ['cold']);
+
+  // บัญชีที่ไม่ได้ผูกสถานี (บัญชีเดิมทุกบัญชี) ต้องได้ชุดว่าง = เห็นทุกสถานีเหมือนเดิม
+  const legacy = await login('kitchen', 'kitchen123');
+  assert.deepEqual(legacy.user.stationCodes, []);
+});

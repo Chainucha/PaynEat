@@ -9,6 +9,8 @@ import erpConnection from './0002_erp_connection.js';
 import orderItemKitchenReached from './0003_order_item_kitchen_reached.js';
 import orderItemPaidByPayment from './0004_order_item_paid_by_payment.js';
 import repairCustomerPoints from './0005_repair_customer_points.js';
+import kitchenStations from './0006_kitchen_stations.js';
+import userStations from './0007_user_stations.js';
 
 /**
  * Migrations ทั้งหมดตามลำดับ (T01 #80, docs/DECISIONS.md #79) — ตัวรันอยู่ที่ ../migrate.js
@@ -28,6 +30,8 @@ const DEFINITIONS = [
   orderItemKitchenReached,
   orderItemPaidByPayment,
   repairCustomerPoints,
+  kitchenStations,
+  userStations,
 ];
 
 /** sha256 ของไฟล์ของ migration — ปรับบรรทัดเป็น \n ก่อน เพื่อให้ checkout บน Windows (CRLF) ได้ค่าเดียวกัน */

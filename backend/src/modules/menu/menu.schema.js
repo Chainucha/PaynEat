@@ -60,6 +60,9 @@ export const createMenuItemSchema = z.object({
     .regex(/^\d{1,6}$/, 'รหัสสินค้าบนตาชั่ง (PLU) ต้องเป็นตัวเลข 1–6 หลัก')
     .optional()
     .or(z.literal('')),
+  // สถานีครัวของจานนี้ (ticket 34) — null = "ตามหมวดหมู่" ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้าหมวดหมู่
+  // ก็ไม่ได้กำหนดไว้ nullable จึงจำเป็น ไม่ใช่แค่ optional: ต้องแยก "ไม่ได้ส่งมา" ออกจาก "ล้างค่า"
+  stationId: z.number().int().positive().nullable().optional(),
   // ใช้เฉพาะตอนผู้สร้างเป็น admin ในโหมด "ทุกสาขา" (ดู docs/DECISIONS.md #36) — คนอื่นถูกกำหนด
   // สาขาให้อัตโนมัติจาก req.branchId เสมอ
   branchId: z.number().int().positive().optional(),

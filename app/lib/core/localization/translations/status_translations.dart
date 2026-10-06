@@ -3,6 +3,9 @@
 
 /// ป้ายชื่อสถานะ/enum ต่างๆ ที่มาจาก [AppConstants] — โต๊ะ, ออเดอร์, การชำระเงิน ฯลฯ
 const Map<String, String> statusTranslationsTh = {
+  'station_hot': 'ครัวร้อน',
+  'station_cold': 'ครัวเย็น',
+  'station_bar': 'บาร์',
   'role_admin': 'ผู้ดูแลระบบ',
   'role_manager': 'ผู้จัดการ',
   'role_waiter': 'พนักงานเสิร์ฟ',
@@ -40,6 +43,9 @@ const Map<String, String> statusTranslationsTh = {
 };
 
 const Map<String, String> statusTranslationsEn = {
+  'station_hot': 'Hot Kitchen',
+  'station_cold': 'Cold Kitchen',
+  'station_bar': 'Bar',
   'role_admin': 'Admin',
   'role_manager': 'Manager',
   'role_waiter': 'Waiter',
@@ -77,6 +83,9 @@ const Map<String, String> statusTranslationsEn = {
 };
 
 const Map<String, String> statusTranslationsKo = {
+  'station_hot': '온주방',
+  'station_cold': '냉주방',
+  'station_bar': '바',
   'role_admin': '관리자',
   'role_manager': '매니저',
   'role_waiter': '홀 직원',

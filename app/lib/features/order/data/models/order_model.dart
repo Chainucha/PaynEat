@@ -42,6 +42,9 @@ class OrderItemModel extends OrderItem {
     super.tableName,
     super.orderType,
     super.weightGrams,
+    super.stationId,
+    super.stationName,
+    super.stationCode,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) => OrderItemModel(
@@ -63,6 +66,9 @@ class OrderItemModel extends OrderItem {
     orderCode: json['orderCode'] as String?,
     tableName: json['tableName'] as String?,
     orderType: json['orderType'] as String?,
+    stationId: (json['stationId'] as num?)?.toInt(),
+    stationName: json['stationName'] as String?,
+    stationCode: json['stationCode'] as String?,
     options: (json['options'] as List? ?? const [])
         .whereType<Map<String, dynamic>>()
         .map(SelectedOptionModel.fromJson)

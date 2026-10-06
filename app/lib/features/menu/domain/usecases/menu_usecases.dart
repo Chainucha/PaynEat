@@ -5,6 +5,7 @@ import '../../../../core/usecases/result.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/menu_item_payload.dart';
 import '../entities/category.dart';
+import '../entities/kitchen_station.dart';
 import '../entities/menu_item.dart';
 import '../repositories/menu_repository.dart';
 
@@ -108,12 +109,21 @@ class SaveCategoryParams {
     required this.name,
     this.nameEn,
     this.icon,
+    this.stationId,
+    this.stationChanged = false,
   });
 
   final int? id;
   final String name;
   final String? nameEn;
   final String? icon;
+
+  /// สถานีครัวตั้งต้นของหมวดหมู่ (ticket 34) — null = ใช้สถานีค่าเริ่มต้นของร้าน
+  final int? stationId;
+
+  /// true = ผู้ใช้แตะช่องสถานีจริง จึงส่ง `stationId` ไปแม้เป็น null (= ล้างค่า)
+  /// ถ้าไม่แยกไว้ การแก้แค่ชื่อหมวดหมู่จะล้างสถานีทิ้งทุกครั้ง
+  final bool stationChanged;
 }
 
 class SaveCategoryUseCase implements UseCase<Category, SaveCategoryParams> {
@@ -128,12 +138,14 @@ class SaveCategoryUseCase implements UseCase<Category, SaveCategoryParams> {
         name: params.name,
         nameEn: params.nameEn,
         icon: params.icon,
+        stationId: params.stationId,
       );
     }
     return _repository.updateCategory(params.id!, {
       'name': params.name,
       if (params.nameEn != null) 'nameEn': params.nameEn,
       if (params.icon != null) 'icon': params.icon,
+      if (params.stationChanged) 'stationId': params.stationId,
     });
   }
 }
@@ -145,4 +157,69 @@ class DeleteCategoryUseCase implements UseCase<void, int> {
 
   @override
   Future<Result<void>> call(int params) => _repository.deleteCategory(params);
+}
+
+/// จัดการสถานีครัว (ticket 34)
+class GetKitchenStationsUseCase implements UseCase<List<KitchenStation>, bool> {
+  const GetKitchenStationsUseCase(this._repository);
+
+  final MenuRepository _repository;
+
+  @override
+  Future<Result<List<KitchenStation>>> call(bool activeOnly) =>
+      _repository.getKitchenStations(activeOnly: activeOnly);
+}
+
+class SaveKitchenStationParams {
+  const SaveKitchenStationParams({
+    this.id,
+    required this.name,
+    this.code,
+    this.nameEn,
+    this.nameKo,
+    this.icon,
+    this.isActive,
+    this.isDefault,
+  });
+
+  final int? id;
+  final String name;
+
+  /// ต้องมีเฉพาะตอนสร้าง — รหัสของสถานีที่มีอยู่แล้วแก้ไม่ได้
+  final String? code;
+  final String? nameEn;
+  final String? nameKo;
+  final String? icon;
+  final bool? isActive;
+  final bool? isDefault;
+}
+
+class SaveKitchenStationUseCase
+    implements UseCase<KitchenStation, SaveKitchenStationParams> {
+  const SaveKitchenStationUseCase(this._repository);
+
+  final MenuRepository _repository;
+
+  @override
+  Future<Result<KitchenStation>> call(SaveKitchenStationParams params) =>
+      _repository.saveKitchenStation(
+        id: params.id,
+        name: params.name,
+        code: params.code,
+        nameEn: params.nameEn,
+        nameKo: params.nameKo,
+        icon: params.icon,
+        isActive: params.isActive,
+        isDefault: params.isDefault,
+      );
+}
+
+class DeleteKitchenStationUseCase implements UseCase<void, int> {
+  const DeleteKitchenStationUseCase(this._repository);
+
+  final MenuRepository _repository;
+
+  @override
+  Future<Result<void>> call(int params) =>
+      _repository.deleteKitchenStation(params);
 }

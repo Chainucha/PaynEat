@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1139%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1178%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -328,6 +328,15 @@
 - 가장 오래 대기한 주문을 항상 맨 위에 표시
 - 대기 15분 초과 시 자동 경고 표시
 - 매장·포장·배달 주문을 아이콘으로 구분
+- **주방 스테이션별 화면 분리** (온주방 / 냉주방 / 바 — 매장이 직접 추가 가능) — 메뉴마다 스테이션을 지정하면
+  주문표가 해당 스테이션 화면으로 전달됩니다. 선택한 스테이션은 기기별로 기억되므로 바의 태블릿은 누가
+  로그인해도 바에 머물며, 대기 수와 지연 수도 선택한 스테이션만 집계합니다. 스테이션은 항목을 저장할 때
+  주문표에 각인되므로, 나중에 메뉴를 다른 스테이션으로 옮기거나 스테이션 이름을 바꿔도 이미 조리 중인
+  주문표는 화면을 넘나들지 않습니다 (`docs/DECISIONS.md` #94)
+- **직원 계정에 스테이션 지정** (한 사람에게 여러 개 가능) — 해당 기기에서 아직 설정한 적이 없으면 주방
+  화면이 계정의 스테이션으로 열립니다. 비어 있는 태블릿을 아무거나 집어 쓰는 매장도 교대마다 다시
+  고르지 않아도 됩니다. 잠금이 아니라 **기본값**이므로 칩은 계속 쓸 수 있고, 기기에서 고른 값이 계정
+  설정을 덮어씁니다 (`docs/DECISIONS.md` #95)
 - **잘못 변경한 상태 되돌리기** — 상태를 변경하면 화면 하단에 **"되돌리기"** 막대가 8초 동안 표시되어 한 단계
   되돌릴 수 있습니다 (조리 중 → 대기, 조리 완료 → 조리 중). 서빙 완료 상태는 되돌릴 수 없습니다. 시스템은 주방이 어디까지
   진행했는지 항상 기억하므로, 되돌리기를 해도 이미 조리한 음식이 직원이 직접 삭제·취소할 수 있는 항목으로 바뀌지 않습니다
@@ -481,13 +490,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1139건**의 자동화 테스트를 통과합니다.
+공개 전 **1178건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 516건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 574건 — domain / controller / widget
+cd backend && npm test      # 540건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 589건 — domain / controller / widget
 cd app && flutter test test_e2e   # 49건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1139건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1178건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 49건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

@@ -24,6 +24,7 @@ class DemoStaffDataSource implements StaffRemoteDataSource {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
   }) => _delayed(
     () => UserModel.fromJson(
       _store.createStaff(
@@ -31,6 +32,7 @@ class DemoStaffDataSource implements StaffRemoteDataSource {
         username: username,
         password: password,
         role: role,
+        stationIds: stationIds,
         actorId: _auth.currentUserId,
       ),
     ),

@@ -42,6 +42,9 @@ class _MenuFormPageState extends State<MenuFormPage> {
 
   MenuItem? _editing;
   int? _categoryId;
+
+  /// สถานีครัวของจานนี้ (ticket 34) — null = "ตามหมวดหมู่" ซึ่งเป็นค่าปกติของเมนูส่วนใหญ่
+  int? _stationId;
   bool _isAvailable = true;
   bool _isRecommended = false;
 
@@ -76,6 +79,7 @@ class _MenuFormPageState extends State<MenuFormPage> {
       _priceController.text = item.price.toStringAsFixed(0);
       _prepController.text = '${item.prepMinutes}';
       _categoryId = item.categoryId;
+      _stationId = item.stationId;
       _isAvailable = item.isAvailable;
       _isRecommended = item.isRecommended;
       _soldByWeight = item.soldByWeight;
@@ -183,7 +187,47 @@ class _MenuFormPageState extends State<MenuFormPage> {
         // ส่ง '' เสมอเมื่อช่องว่าง = ตั้งใจล้างรหัสเดิม — PLU ใช้ได้เฉพาะเมนูขายตามน้ำหนัก
         barcode: _barcodeController.text.trim(),
         scalePlu: _soldByWeight ? _pluController.text.trim() : '',
+        stationId: _stationId,
       ),
+    );
+  }
+
+  /// สถานีครัวของจานนี้ — ตัวเลือกแรกคือ "ตามหมวดหมู่" (ค่า null) พร้อมบอกว่าหมวดหมู่ที่เลือกอยู่
+  /// ส่งจานไปสถานีไหน ไม่มี validator เพราะ null เป็นค่าที่ถูกต้อง (ticket 34)
+  Widget _stationField() {
+    final stations = _controller.stations;
+    final category = _controller.categories.firstWhereOrNull(
+      (row) => row.id == _categoryId,
+    );
+    final inherited = stations.firstWhereOrNull(
+      (row) => row.id == category?.stationId,
+    );
+    final fallback = stations.firstWhereOrNull((row) => row.isDefault);
+    final resolved = inherited ?? fallback;
+
+    return DropdownButtonFormField<int?>(
+      key: const ValueKey('menu_form_station'),
+      initialValue: stations.any((row) => row.id == _stationId)
+          ? _stationId
+          : null,
+      decoration: InputDecoration(labelText: 'menu_form_station_label'.tr),
+      items: [
+        DropdownMenuItem<int?>(
+          value: null,
+          child: Text(
+            'menu_form_station_inherit'.trParams({
+              'station': resolved?.displayName ?? 'menu_station_none'.tr,
+            }),
+          ),
+        ),
+        ...stations.map(
+          (station) => DropdownMenuItem<int?>(
+            value: station.id,
+            child: Text(station.labelWithIcon),
+          ),
+        ),
+      ],
+      onChanged: (value) => setState(() => _stationId = value),
     );
   }
 
@@ -361,6 +405,8 @@ class _MenuFormPageState extends State<MenuFormPage> {
                           : null,
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  Obx(() => _stationField()),
                   const SizedBox(height: 14),
                   Row(
                     children: [

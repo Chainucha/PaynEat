@@ -96,12 +96,11 @@ export const orderController = {
   ),
 
   kitchenQueue: asyncHandler(async (req, res) => {
-    const statuses = req.query.status
-      ? String(req.query.status)
-          .split(',')
-          .map((value) => value.trim())
-      : undefined;
-    return ok(res, orderService.kitchenQueue(statuses));
+    const { status, station } = req.validated.query;
+    return ok(
+      res,
+      orderService.kitchenQueue(status, { branchId: req.branchId, stationCode: station }),
+    );
   }),
 };
 

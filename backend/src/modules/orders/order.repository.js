@@ -141,21 +141,40 @@ export const orderRepository = {
       .all(orderId);
   },
 
-  findItemsByStatuses(statuses) {
+  findItemsByStatuses(statuses, { branchId, stationId } = {}) {
     const placeholders = statuses.map(() => '?').join(',');
+    const clauses = [`oi.status IN (${placeholders})`, "o.status IN ('in_kitchen', 'served')"];
+    const params = [...statuses];
+
+    // branchId เป็น null/undefined เฉพาะ admin โหมด "ทุกสาขา" (ดู docs/DECISIONS.md #36) — จอครัว
+    // ของสาขาหนึ่งต้องเห็นเฉพาะตั๋วของสาขาตัวเอง เหมือนที่ findAll ทำกับรายการออเดอร์
+    if (branchId) {
+      clauses.push('o.branch_id = ?');
+      params.push(branchId);
+    }
+    // ตั๋วที่ไม่มีสถานีประทับไว้ (ข้อมูลก่อน migration 0006) ถือเป็นของสถานีค่าเริ่มต้น จึงไม่หายไป
+    // จากทุกชิป — COALESCE อยู่ใน WHERE เท่านั้น ไม่แตะคอลัมน์ที่ oi.* ส่งออกไปอยู่แล้ว
+    if (stationId) {
+      clauses.push(
+        'COALESCE(oi.station_id, (SELECT id FROM kitchen_stations WHERE is_default = 1)) = ?',
+      );
+      params.push(stationId);
+    }
+
     return getDb()
       .prepare(
         `
-        SELECT oi.*, o.code AS order_code, o.type AS order_type, t.name AS table_name
+        SELECT oi.*, o.code AS order_code, o.type AS order_type, t.name AS table_name,
+               ks.code AS station_code
           FROM order_items oi
           JOIN orders o ON o.id = oi.order_id
           LEFT JOIN dining_tables t ON t.id = o.table_id
-         WHERE oi.status IN (${placeholders})
-           AND o.status IN ('in_kitchen', 'served')
+          LEFT JOIN kitchen_stations ks ON ks.id = oi.station_id
+         WHERE ${clauses.join(' AND ')}
          ORDER BY oi.created_at
       `,
       )
-      .all(...statuses);
+      .all(...params);
   },
 
   findItemById(itemId) {
@@ -189,8 +208,8 @@ export const orderRepository = {
       .prepare(
         `
         INSERT INTO order_items
-          (order_id, menu_item_id, name_snapshot, unit_price, quantity, options_json, options_price, line_total, weight_grams, note)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (order_id, menu_item_id, name_snapshot, unit_price, quantity, options_json, options_price, line_total, weight_grams, note, station_id, station_name_snapshot)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -204,6 +223,8 @@ export const orderRepository = {
         item.lineTotal,
         item.weightGrams ?? null,
         item.note ?? null,
+        item.stationId ?? null,
+        item.stationNameSnapshot ?? null,
       );
     return this.findItemById(info.lastInsertRowid);
   },

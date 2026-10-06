@@ -14,6 +14,7 @@ class Category {
     this.sortOrder = 0,
     this.isActive = true,
     this.itemCount = 0,
+    this.stationId,
   });
 
   final int id;
@@ -24,6 +25,10 @@ class Category {
   final int sortOrder;
   final bool isActive;
   final int itemCount;
+
+  /// สถานีครัวตั้งต้นของทุกเมนูในหมวดนี้ (ticket 34) — null = ใช้สถานีค่าเริ่มต้นของร้าน
+  /// เมนูรายตัวทับค่านี้ได้ที่ `MenuItem.stationId`
+  final int? stationId;
 
   /// ชื่อที่จะแสดงตามภาษาปัจจุบัน (ดู [LocalizedName.pick])
   String get displayName =>

@@ -11,12 +11,14 @@ abstract class StaffRepository {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
   });
   Future<Result<User>> update(
     int id, {
     String? name,
     String? role,
     bool? isActive,
+    List<int>? stationIds,
   });
   Future<Result<User>> resetPassword(int id, String password);
   Future<Result<void>> delete(int id);

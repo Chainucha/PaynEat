@@ -15,7 +15,9 @@ import { toBranchDto } from '../branches/branch.mapper.js';
  */
 const buildSessionResult = (user, branch) => ({
   token: signToken(user, branch?.id ?? null),
-  user: toUserDto(user, branch),
+  // สถานีครัวที่ผูกไว้ติดไปกับ session ด้วย เพื่อให้จอครัวเลือกชิปสถานีให้ล่วงหน้าได้ทันทีที่ล็อกอิน
+  // (ticket 35) ไม่ได้ใส่ใน token เพราะเปลี่ยนได้ตลอดและไม่ได้ใช้ตัดสินสิทธิ์
+  user: toUserDto(user, branch, userRepository.findStations(user.id)),
 });
 
 export const authService = {
@@ -73,7 +75,7 @@ export const authService = {
     const user = userRepository.findById(userId);
     if (!user) throw ApiError.unauthorized('ไม่พบบัญชีผู้ใช้');
     const branch = branchId === null ? null : branchRepository.findById(branchId);
-    return toUserDto(user, branch);
+    return toUserDto(user, branch, userRepository.findStations(user.id));
   },
 
   changePassword(userId, { currentPassword, newPassword }) {

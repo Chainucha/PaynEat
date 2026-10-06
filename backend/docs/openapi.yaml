@@ -84,6 +84,16 @@ components:
         isActive: { type: boolean }
         branchId: { type: integer, nullable: true, description: 'สาขาที่ token นี้ทำงานอยู่ — null เฉพาะ admin โหมด "ทุกสาขา" (ticket 11)' }
         branchName: { type: string, nullable: true }
+        stationIds:
+          type: array
+          items: { type: integer }
+          description: >-
+            สถานีครัวที่พนักงานคนนี้รับผิดชอบ (ดู ticket 35) ชุดว่าง = ไม่ผูกสถานี = เห็นทุกสถานีบนจอครัว
+            ส่งกลับมาเฉพาะ endpoint ที่รู้ค่านี้ (รายชื่อพนักงาน, login, /auth/me)
+        stationCodes:
+          type: array
+          items: { type: string, example: bar }
+          description: รหัสของสถานีชุดเดียวกัน — จอครัวใช้เลือกชิปสถานีให้ล่วงหน้า
     Branch:
       type: object
       description: สาขา (ดู ticket 11 — multi-branch)
@@ -103,6 +113,33 @@ components:
         sortOrder: { type: integer }
         isActive: { type: boolean }
         itemCount: { type: integer }
+        stationId:
+          type: integer
+          nullable: true
+          description: >-
+            สถานีครัวตั้งต้นของทุกเมนูในหมวดนี้ (ดู ticket 34) — null = ใช้สถานีค่าเริ่มต้นของร้าน
+            เมนูรายตัวทับค่านี้ได้ด้วย MenuItem.stationId
+    KitchenStation:
+      type: object
+      description: สถานีครัวที่รับผิดชอบอาหารแต่ละจาน เช่น ครัวร้อน/ครัวเย็น/บาร์ (ดู ticket 34)
+      properties:
+        id: { type: integer }
+        code:
+          type: string
+          example: bar
+          description: รหัสคงที่ที่ใช้ใน `?station=` และในค่าที่จอครัวจำไว้ต่อเครื่อง — แก้ไม่ได้หลังสร้าง
+        name: { type: string, example: บาร์ }
+        nameEn: { type: string, nullable: true, example: Bar }
+        nameKo: { type: string, nullable: true, example: 바 }
+        icon: { type: string, nullable: true, example: 🥤 }
+        sortOrder: { type: integer }
+        isActive: { type: boolean }
+        isDefault:
+          type: boolean
+          description: สถานีปลายทางของจานที่ไม่ได้กำหนดสถานีไว้เลย — มีได้สถานีเดียว
+        itemCount:
+          type: integer
+          description: จำนวนเมนูที่ตกลงสถานีนี้จริงตามกฎการตัดสิน (เมนู → หมวดหมู่ → ค่าเริ่มต้น)
     MenuOption:
       type: object
       properties:
@@ -165,6 +202,12 @@ components:
           nullable: true
           example: '101'
           description: รหัสสินค้าบนฉลากตาชั่ง 1–6 หลัก เก็บแบบตัด 0 นำหน้า ใช้ได้เฉพาะเมนูขายตามน้ำหนัก
+        stationId:
+          type: integer
+          nullable: true
+          description: >-
+            สถานีครัวของจานนี้ (ดู ticket 34) — null = ตามหมวดหมู่ ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้า
+            หมวดหมู่ก็ไม่ได้กำหนดไว้ สถานีถูกตัดสินและประทับลงรายการตอนบันทึก ไม่ใช่ตอนอ่านคิวครัว
     Ingredient:
       type: object
       properties:
@@ -794,6 +837,8 @@ paths:
         admin เห็นทุกคน (T22 #86)
       responses:
         '200': { description: สำเร็จ }
+      description: >-
+        แต่ละคนพก `stationIds`/`stationCodes` ของสถานีครัวที่รับผิดชอบมาด้วย (ดู ticket 35)
     post:
       tags: [Users]
       summary: เพิ่มพนักงาน (admin/manager) — manager สร้างได้เฉพาะ role waiter/kitchen/cashier ในสาขาที่กำลังทำงานอยู่
@@ -857,6 +902,50 @@ paths:
       summary: ลบหมวดหมู่ (ต้องไม่มีเมนูค้างอยู่)
       responses:
         '204': { description: ลบแล้ว }
+
+  /kitchen-stations:
+    get:
+      tags: [Kitchen stations]
+      summary: รายการสถานีครัว (ดูได้ทุกบทบาทที่ล็อกอิน — จอครัวใช้ทำชิปกรอง)
+      parameters:
+        - { in: query, name: activeOnly, schema: { type: string, enum: ['true', 'false'] } }
+      responses:
+        '200':
+          description: สำเร็จ
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/KitchenStation' }
+    post:
+      tags: [Kitchen stations]
+      summary: เพิ่มสถานีครัว (admin/manager)
+      responses:
+        '201': { description: สร้างสำเร็จ }
+        '409': { description: รหัสสถานีถูกใช้แล้ว }
+  /kitchen-stations/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+    get:
+      tags: [Kitchen stations]
+      summary: ดูสถานีครัวรายตัว
+      responses:
+        '200': { description: สำเร็จ }
+    patch:
+      tags: [Kitchen stations]
+      summary: แก้ไขสถานีครัว (admin/manager) — `code` แก้ไม่ได้ ส่ง isDefault เพื่อย้ายค่าเริ่มต้นมาที่สถานีนี้
+      responses:
+        '200': { description: สำเร็จ }
+        '409': { description: ปลดหรือปิดใช้งานสถานีค่าเริ่มต้นไม่ได้ }
+    delete:
+      tags: [Kitchen stations]
+      summary: ลบสถานีครัว (admin/manager) — ได้เฉพาะสถานีที่ยังไม่เคยถูกใช้
+      responses:
+        '204': { description: ลบแล้ว }
+        '409': { description: เป็นค่าเริ่มต้น หรือมีเมนู/หมวดหมู่/ตั๋วผูกอยู่ — ให้ปิดใช้งานแทน }
 
   /promotions:
     get:
@@ -1189,13 +1278,22 @@ paths:
     get:
       tags: [Orders]
       summary: คิวครัว (KDS) — รายการที่ส่งครัวแล้วและยังไม่เสิร์ฟ
+      description: >-
+        เห็นเฉพาะตั๋วของสาขาที่ล็อกอินอยู่ (admin โหมด "ทุกสาขา" เห็นทุกสาขา) แต่ละรายการมี
+        `stationId` / `stationCode` / `stationName` ของสถานีครัวที่ประทับไว้ตอนบันทึก (ดู ticket 34)
       parameters:
         - in: query
           name: status
-          description: คั่นด้วย , เช่น `pending,cooking`
+          description: คั่นด้วย , เช่น `pending,cooking` — สถานะที่ไม่รู้จักได้ 422
+          schema: { type: string }
+        - in: query
+          name: station
+          description: รหัสสถานีครัว เช่น `bar` — กรองเฉพาะตั๋วของสถานีนั้น (รหัสที่ไม่มีได้ 404)
           schema: { type: string }
       responses:
         '200': { description: สำเร็จ }
+        '404': { description: ไม่พบสถานีครัวตามรหัสที่ส่งมา }
+        '422': { description: สถานะหรือรหัสสถานีไม่ถูกต้อง }
   /orders/table/{id}/open:
     parameters:
       - in: path

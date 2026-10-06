@@ -23,17 +23,19 @@ export const categoryRepository = {
     return getDb().prepare('SELECT * FROM categories WHERE id = ?').get(id);
   },
 
-  create({ name, nameEn, icon, sortOrder }) {
+  create({ name, nameEn, icon, sortOrder, stationId }) {
     const info = getDb()
-      .prepare('INSERT INTO categories (name, name_en, icon, sort_order) VALUES (?, ?, ?, ?)')
-      .run(name, nameEn ?? null, icon ?? null, sortOrder ?? 0);
+      .prepare(
+        'INSERT INTO categories (name, name_en, icon, sort_order, station_id) VALUES (?, ?, ?, ?, ?)',
+      )
+      .run(name, nameEn ?? null, icon ?? null, sortOrder ?? 0, stationId ?? null);
     return this.findById(info.lastInsertRowid);
   },
 
-  update(id, { name, nameEn, icon, sortOrder, isActive }) {
-    getDb()
-      .prepare(
-        `
+  update(id, { name, nameEn, icon, sortOrder, isActive, stationId }) {
+    const db = getDb();
+    db.prepare(
+      `
         UPDATE categories
            SET name       = COALESCE(?, name),
                name_en    = COALESCE(?, name_en),
@@ -43,15 +45,21 @@ export const categoryRepository = {
                updated_at = datetime('now')
          WHERE id = ?
       `,
-      )
-      .run(
-        name ?? null,
-        nameEn ?? null,
-        icon ?? null,
-        sortOrder ?? null,
-        isActive === undefined ? null : Number(isActive),
-        id,
-      );
+    ).run(
+      name ?? null,
+      nameEn ?? null,
+      icon ?? null,
+      sortOrder ?? null,
+      isActive === undefined ? null : Number(isActive),
+      id,
+    );
+
+    // station_id ล้างเป็น NULL ได้ (= ใช้สถานีค่าเริ่มต้น) จึงแก้แยกจาก COALESCE ด้านบน
+    // ดูเหตุผลเต็มที่ menu.repository.js — COALESCE(?, col) ไม่มีทางเซ็ตเป็น NULL ได้เลย
+    if (stationId !== undefined) {
+      db.prepare('UPDATE categories SET station_id = ? WHERE id = ?').run(stationId, id);
+    }
+
     return this.findById(id);
   },
 

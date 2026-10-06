@@ -17,12 +17,17 @@ export const createUserSchema = z.object({
   // ใช้เฉพาะตอนผู้สร้างเป็น admin ในโหมด "ทุกสาขา" (ดู docs/DECISIONS.md #36) — คนอื่นถูกกำหนด
   // สาขาให้อัตโนมัติจากสาขาที่ตัวเองกำลังทำงานอยู่ (req.branchId) เสมอ ไม่ต้องส่งฟิลด์นี้มา
   branchId: z.number().int().positive().optional(),
+  // สถานีครัวที่รับผิดชอบ (ticket 35) — [] หรือไม่ส่งมา = ไม่ผูกสถานี ซึ่งหมายถึง "เห็นทุกสถานี"
+  // มีผลกับบทบาทที่เห็นจอครัวเท่านั้น (admin/manager/kitchen/waiter) บทบาทอื่นเก็บไว้เฉย ๆ ได้
+  stationIds: z.array(z.number().int().positive()).max(20).optional(),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).max(80).optional(),
   role: z.enum(ROLES).optional(),
   isActive: z.boolean().optional(),
+  // ส่งมาเป็นชุดเต็มเสมอ (ไม่ใช่ส่วนเพิ่ม) — [] = ถอดสถานีออกทั้งหมด, ไม่ส่ง = ไม่แตะ
+  stationIds: z.array(z.number().int().positive()).max(20).optional(),
 });
 
 export const resetPasswordSchema = z.object({

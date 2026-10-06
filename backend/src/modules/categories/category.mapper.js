@@ -10,6 +10,7 @@ export const toCategoryDto = (row) => {
     icon: row.icon,
     sortOrder: row.sort_order,
     isActive: Boolean(row.is_active),
+    stationId: row.station_id ?? null,
     itemCount: row.item_count ?? undefined,
   };
 };

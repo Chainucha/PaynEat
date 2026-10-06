@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ApiError } from '../../core/ApiError.js';
+import { kitchenStationService } from '../kitchen-stations/kitchen-station.service.js';
 import { categoryRepository } from './category.repository.js';
 import { toCategoryDto } from './category.mapper.js';
 
@@ -17,11 +18,13 @@ export const categoryService = {
   },
 
   create(payload) {
+    kitchenStationService.assertStationExists(payload.stationId);
     return toCategoryDto(categoryRepository.create(payload));
   },
 
   update(id, payload) {
     this.getById(id);
+    kitchenStationService.assertStationExists(payload.stationId);
     return toCategoryDto(categoryRepository.update(id, payload));
   },
 

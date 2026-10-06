@@ -409,3 +409,80 @@ describe('0005 repair_customer_points (T15 #84)', () => {
     );
   });
 });
+
+describe('0006 kitchen_stations (ticket 34)', () => {
+  test('seeds three stations with one default and stamps tickets still in the kitchen', () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, MIGRATIONS.slice(0, 5));
+
+    const inKitchen = db
+      .prepare("INSERT INTO orders (code, status) VALUES ('ORD-T34-1', 'in_kitchen')")
+      .run().lastInsertRowid;
+    const paid = db
+      .prepare("INSERT INTO orders (code, status) VALUES ('ORD-T34-2', 'paid')")
+      .run().lastInsertRowid;
+    const insert = db.prepare(
+      `INSERT INTO order_items (order_id, name_snapshot, unit_price, quantity, status)
+       VALUES (?, ?, 5000, 1, ?)`,
+    );
+    for (const status of ['pending', 'cooking', 'ready', 'served', 'cancelled']) {
+      insert.run(inKitchen, `in-kitchen-${status}`, status);
+    }
+    insert.run(paid, 'paid-served', 'served');
+
+    assert.deepEqual(runMigrations(db, MIGRATIONS.slice(0, 6)), ['0006_kitchen_stations']);
+
+    // สามสถานีตั้งต้น และค่าเริ่มต้นหนึ่งเดียว
+    assert.deepEqual(
+      db.prepare('SELECT code, name, is_default FROM kitchen_stations ORDER BY sort_order').all(),
+      [
+        { code: 'hot', name: 'ครัวร้อน', is_default: 1 },
+        { code: 'cold', name: 'ครัวเย็น', is_default: 0 },
+        { code: 'bar', name: 'บาร์', is_default: 0 },
+      ],
+    );
+    assert.throws(
+      () => db.prepare("UPDATE kitchen_stations SET is_default = 1 WHERE code = 'bar'").run(),
+      /UNIQUE constraint failed/,
+      'ค่าเริ่มต้นสองสถานีพร้อมกันไม่ได้',
+    );
+    assert.throws(
+      () => db.prepare("INSERT INTO kitchen_stations (code, name) VALUES ('hot', 'ซ้ำ')").run(),
+      /UNIQUE constraint failed/,
+      'รหัสสถานีซ้ำไม่ได้',
+    );
+
+    // ตั๋วที่ยังค้างอยู่บนจอครัวได้สถานีค่าเริ่มต้น ทั้ง id และชื่อ
+    const stamped = db
+      .prepare(
+        `SELECT oi.name_snapshot, ks.code, oi.station_name_snapshot
+           FROM order_items oi
+           LEFT JOIN kitchen_stations ks ON ks.id = oi.station_id
+          ORDER BY oi.id`,
+      )
+      .all();
+    assert.deepEqual(stamped, [
+      { name_snapshot: 'in-kitchen-pending', code: 'hot', station_name_snapshot: 'ครัวร้อน' },
+      { name_snapshot: 'in-kitchen-cooking', code: 'hot', station_name_snapshot: 'ครัวร้อน' },
+      { name_snapshot: 'in-kitchen-ready', code: 'hot', station_name_snapshot: 'ครัวร้อน' },
+      // เสิร์ฟแล้ว/ยกเลิกแล้ว ไม่อยู่บนจอครัวอีก จึงไม่ต้องเดาสถานีย้อนหลังให้
+      { name_snapshot: 'in-kitchen-served', code: null, station_name_snapshot: null },
+      { name_snapshot: 'in-kitchen-cancelled', code: null, station_name_snapshot: null },
+      { name_snapshot: 'paid-served', code: null, station_name_snapshot: null },
+    ]);
+
+    // เมนูและหมวดหมู่ได้ช่องสถานีที่ว่างได้ (NULL = ตามหมวดหมู่ / ตามค่าเริ่มต้น)
+    for (const table of ['menu_items', 'categories']) {
+      const column = db.pragma(`table_info(${table})`).find((row) => row.name === 'station_id');
+      assert.ok(column, `${table} ต้องมีคอลัมน์ station_id`);
+      assert.equal(column.notnull, 0);
+    }
+
+    assert.throws(
+      () => db.prepare('UPDATE order_items SET station_id = 999 WHERE id = 1').run(),
+      /FOREIGN KEY constraint failed/,
+    );
+    assert.deepEqual(db.pragma('foreign_key_check'), []);
+  });
+});

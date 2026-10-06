@@ -164,6 +164,88 @@ export const ERROR_MESSAGES = [
     ko: 'AI 어시스턴트에 연결하지 못했습니다 — 다시 시도해 주세요',
   },
 
+  // ---------------------------------------------------------------- สถานีครัว (ticket 34)
+  {
+    th: 'ไม่พบสถานีครัวนี้',
+    en: 'Kitchen station not found',
+    ko: '주방 스테이션을 찾을 수 없습니다',
+  },
+  {
+    th: 'ไม่พบสถานีครัวรหัส "{code}"',
+    en: 'No kitchen station with the code "{code}"',
+    ko: '코드가 "{code}"인 주방 스테이션이 없습니다',
+  },
+  {
+    th: 'ไม่พบสถานีครัวที่ระบุ',
+    en: 'The selected kitchen station was not found',
+    ko: '선택한 주방 스테이션을 찾을 수 없습니다',
+  },
+  {
+    th: 'ยังไม่มีสถานีครัวในระบบ กรุณาเพิ่มสถานีครัวก่อน',
+    en: 'There are no kitchen stations yet — please add one first',
+    ko: '주방 스테이션이 아직 없습니다 — 먼저 추가해 주세요',
+  },
+  {
+    th: 'รหัสสถานี "{code}" ถูกใช้แล้ว',
+    en: 'The station code "{code}" is already taken',
+    ko: '스테이션 코드 "{code}"은(는) 이미 사용 중입니다',
+  },
+  {
+    th: 'รหัสสถานีใช้ a-z 0-9 - _ ยาว 2-20 ตัว',
+    en: 'A station code uses a-z, 0-9, - and _, and is 2-20 characters long',
+    ko: '스테이션 코드는 a-z, 0-9, -, _ 를 쓰고 2~20자여야 합니다',
+  },
+  {
+    th: 'รหัสสถานีครัวไม่ถูกต้อง',
+    en: 'Invalid kitchen station code',
+    ko: '주방 스테이션 코드가 올바르지 않습니다',
+  },
+  {
+    th: 'กรุณากรอกชื่อสถานีครัว',
+    en: 'Please enter the kitchen station name',
+    ko: '주방 스테이션 이름을 입력해 주세요',
+  },
+  {
+    th: 'ตั้งสถานีอื่นเป็นค่าเริ่มต้นก่อน แล้วค่อยปลดสถานีนี้',
+    en: 'Make another station the default first, then clear this one',
+    ko: '먼저 다른 스테이션을 기본값으로 지정한 뒤 이 스테이션을 해제해 주세요',
+  },
+  {
+    th: 'ปิดใช้งานสถานีค่าเริ่มต้นไม่ได้ กรุณาตั้งสถานีอื่นเป็นค่าเริ่มต้นก่อน',
+    en: "The default station can't be deactivated — make another station the default first",
+    ko: '기본 스테이션은 비활성화할 수 없습니다 — 먼저 다른 스테이션을 기본값으로 지정해 주세요',
+  },
+  {
+    th: 'ลบสถานีค่าเริ่มต้นไม่ได้ กรุณาตั้งสถานีอื่นเป็นค่าเริ่มต้นก่อน',
+    en: "The default station can't be deleted — make another station the default first",
+    ko: '기본 스테이션은 삭제할 수 없습니다 — 먼저 다른 스테이션을 기본값으로 지정해 주세요',
+  },
+  {
+    th: 'ลบไม่ได้ เพราะยังมีเมนูผูกกับสถานีนี้ กรุณาย้ายเมนูออกก่อน',
+    en: "Can't delete — menu items are still assigned to this station. Move them out first",
+    ko: '삭제할 수 없습니다 — 이 스테이션에 연결된 메뉴가 있습니다. 먼저 옮겨 주세요',
+  },
+  {
+    th: 'ลบไม่ได้ เพราะยังมีหมวดหมู่ผูกกับสถานีนี้ กรุณาย้ายหมวดหมู่ออกก่อน',
+    en: "Can't delete — categories are still assigned to this station. Move them out first",
+    ko: '삭제할 수 없습니다 — 이 스테이션에 연결된 카테고리가 있습니다. 먼저 옮겨 주세요',
+  },
+  {
+    th: 'สถานีนี้ถูกใช้ในบิลไปแล้ว ปิดใช้งานแทนการลบ',
+    en: 'This station already appears on a bill — deactivate it instead of deleting',
+    ko: '이 스테이션은 이미 청구서에 사용되었습니다 — 삭제하지 말고 비활성화해 주세요',
+  },
+  {
+    th: 'กรุณาระบุสถานะอย่างน้อยหนึ่งสถานะ',
+    en: 'Please give at least one status',
+    ko: '상태를 최소 한 개 지정해 주세요',
+  },
+  {
+    th: 'สถานะรายการอาหารต้องเป็นหนึ่งใน: {statuses}',
+    en: 'An order item status must be one of: {statuses}',
+    ko: '주문 항목 상태는 다음 중 하나여야 합니다: {statuses}',
+  },
+
   // ---------------------------------------------------------------- เมนู / หมวด / วัตถุดิบ
   { th: 'ไม่พบหมวดหมู่นี้', en: 'Category not found', ko: '카테고리를 찾을 수 없습니다' },
   {

@@ -42,7 +42,7 @@ export const menuRepository = {
     const items = db
       .prepare(
         `
-        SELECT m.*, c.name AS category_name
+        SELECT m.*, c.name AS category_name, c.station_id AS category_station_id
           FROM menu_items m
           JOIN categories c ON c.id = m.category_id
           ${where}
@@ -59,7 +59,7 @@ export const menuRepository = {
     return getDb()
       .prepare(
         `
-        SELECT m.*, c.name AS category_name
+        SELECT m.*, c.name AS category_name, c.station_id AS category_station_id
           FROM menu_items m
           JOIN categories c ON c.id = m.category_id
          WHERE m.id = ?
@@ -143,8 +143,8 @@ export const menuRepository = {
         `
         INSERT INTO menu_items
           (category_id, name, name_en, description, price, image_url, is_available, is_recommended,
-           prep_minutes, sort_order, branch_id, sold_by_weight, barcode, scale_plu)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           prep_minutes, sort_order, branch_id, sold_by_weight, barcode, scale_plu, station_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -162,6 +162,7 @@ export const menuRepository = {
         payload.soldByWeight ? 1 : 0,
         payload.barcode ?? null,
         payload.scalePlu ?? null,
+        payload.stationId ?? null,
       );
     return this.findById(info.lastInsertRowid);
   },
@@ -206,6 +207,12 @@ export const menuRepository = {
     }
     if (payload.scalePlu !== undefined) {
       db.prepare('UPDATE menu_items SET scale_plu = ? WHERE id = ?').run(payload.scalePlu, id);
+    }
+
+    // station_id ล้างเป็น NULL ได้ และ NULL มีความหมายว่า "ตามหมวดหมู่" (ticket 34) จึงต้องแก้แยก
+    // เหมือนกัน ถ้าเอาไปใส่ใน COALESCE ด้านบน การเลือก "ตามหมวดหมู่" จะเงียบ ๆ ไม่มีผลอะไรเลย
+    if (payload.stationId !== undefined) {
+      db.prepare('UPDATE menu_items SET station_id = ? WHERE id = ?').run(payload.stationId, id);
     }
 
     // image_url ต้องแก้แยกจาก COALESCE ด้านบน — COALESCE(?, col) ไม่มีทางเซ็ตเป็น NULL ได้เลย

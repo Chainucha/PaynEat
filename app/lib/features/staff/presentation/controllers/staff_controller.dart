@@ -7,23 +7,28 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/session_service.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../auth/domain/entities/user.dart';
+import '../../../menu/domain/entities/kitchen_station.dart';
+import '../../../menu/domain/usecases/menu_usecases.dart';
 import '../../domain/usecases/staff_usecases.dart';
 
 /// จัดการบัญชีพนักงาน (admin/manager เท่านั้น)
 class StaffController extends GetxController {
   StaffController({
     required GetStaffUseCase getStaff,
+    required GetKitchenStationsUseCase getStations,
     required CreateStaffUseCase createStaff,
     required UpdateStaffUseCase updateStaff,
     required DeleteStaffUseCase deleteStaff,
     required SessionService session,
   }) : _getStaff = getStaff,
+       _getStations = getStations,
        _createStaff = createStaff,
        _updateStaff = updateStaff,
        _deleteStaff = deleteStaff,
        _session = session;
 
   final GetStaffUseCase _getStaff;
+  final GetKitchenStationsUseCase _getStations;
   final CreateStaffUseCase _createStaff;
   final UpdateStaffUseCase _updateStaff;
   final DeleteStaffUseCase _deleteStaff;
@@ -39,6 +44,7 @@ class StaffController extends GetxController {
   void onInit() {
     super.onInit();
     load();
+    loadStations();
   }
 
   int? get currentUserId => _session.currentUser?.id;
@@ -81,6 +87,32 @@ class StaffController extends GetxController {
     );
   }
 
+  /// สถานีครัวที่เปิดใช้งาน ใช้ทำช่องติ๊กในฟอร์มพนักงาน (ticket 35)
+  /// โหลดไม่ขึ้นก็ซ่อนช่องไป หน้าจัดการพนักงานยังทำงานได้ทุกอย่างเหมือนเดิม
+  final RxList<KitchenStation> stations = <KitchenStation>[].obs;
+
+  Future<void> loadStations() async {
+    final result = await _getStations(true);
+    result.fold(
+      onSuccess: stations.assignAll,
+      onFailure: (_) => stations.clear(),
+    );
+  }
+
+  /// ตั้งสถานีที่พนักงานคนนี้รับผิดชอบ — ส่งชุดเต็มเสมอ ([] = ถอดออกทั้งหมด)
+  Future<void> setStations(User user, List<int> stationIds) async {
+    final result = await _updateStaff(
+      UpdateStaffParams(id: user.id, stationIds: stationIds),
+    );
+    result.fold(
+      onSuccess: (_) {
+        AppDialogs.success('staff_stations_saved'.tr);
+        load();
+      },
+      onFailure: (failure) => AppDialogs.error(failure.message),
+    );
+  }
+
   void filterByRole(String? role) => roleFilter.value = role;
 
   Future<bool> create({
@@ -88,6 +120,7 @@ class StaffController extends GetxController {
     required String username,
     required String password,
     required String role,
+    List<int>? stationIds,
   }) async {
     isSaving.value = true;
     final result = await _createStaff(
@@ -96,6 +129,7 @@ class StaffController extends GetxController {
         username: username,
         password: password,
         role: role,
+        stationIds: stationIds,
       ),
     );
     isSaving.value = false;

@@ -30,11 +30,16 @@ export const toOrderItemDto = (row) => {
     status: row.status,
     // ขั้นที่ครัวเคยทำถึง (cooking/ready/served) ไม่ถอยลงแม้เลิกทำ — null = ครัวยังไม่เคยเริ่ม (T05 #104)
     kitchenReached: row.kitchen_reached ?? null,
+    // สถานีครัวถูกประทับลงรายการตอนบันทึก (ticket 34) ย้ายเมนูไปสถานีอื่นหรือเปลี่ยนชื่อสถานีทีหลัง
+    // จึงไม่ดึงตั๋วที่ครัวกำลังทำอยู่ข้ามจอ และไม่เปลี่ยนชื่อบนตั๋วที่ค้างอยู่
+    stationId: row.station_id ?? null,
+    stationName: row.station_name_snapshot ?? null,
     isPaid: Boolean(row.is_paid),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     // เผื่อกรณีดึงมาจากคิวครัวที่ join ข้อมูลออเดอร์มาด้วย
     orderCode: row.order_code,
+    stationCode: row.station_code,
     tableName: row.table_name,
     orderType: row.order_type,
   };

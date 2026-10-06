@@ -7,6 +7,7 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../domain/entities/menu_item_payload.dart';
 import '../../domain/entities/category.dart';
+import '../../domain/entities/kitchen_station.dart';
 import '../../domain/entities/menu_item.dart';
 import '../../domain/usecases/menu_usecases.dart';
 
@@ -21,6 +22,9 @@ class MenuManagementController extends GetxController {
     required ToggleMenuAvailabilityUseCase toggleAvailability,
     required SaveCategoryUseCase saveCategory,
     required DeleteCategoryUseCase deleteCategory,
+    required GetKitchenStationsUseCase getStations,
+    required SaveKitchenStationUseCase saveStationUseCase,
+    required DeleteKitchenStationUseCase deleteStationUseCase,
   }) : _getMenuItems = getMenuItems,
        _getCategories = getCategories,
        _createMenuItem = createMenuItem,
@@ -28,7 +32,10 @@ class MenuManagementController extends GetxController {
        _deleteMenuItem = deleteMenuItem,
        _toggleAvailability = toggleAvailability,
        _saveCategory = saveCategory,
-       _deleteCategory = deleteCategory;
+       _deleteCategory = deleteCategory,
+       _getStations = getStations,
+       _saveStation = saveStationUseCase,
+       _deleteStation = deleteStationUseCase;
 
   final GetMenuItemsUseCase _getMenuItems;
   final GetCategoriesUseCase _getCategories;
@@ -38,9 +45,13 @@ class MenuManagementController extends GetxController {
   final ToggleMenuAvailabilityUseCase _toggleAvailability;
   final SaveCategoryUseCase _saveCategory;
   final DeleteCategoryUseCase _deleteCategory;
+  final GetKitchenStationsUseCase _getStations;
+  final SaveKitchenStationUseCase _saveStation;
+  final DeleteKitchenStationUseCase _deleteStation;
 
   final RxList<MenuItem> items = <MenuItem>[].obs;
   final RxList<Category> categories = <Category>[].obs;
+  final RxList<KitchenStation> stations = <KitchenStation>[].obs;
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
   final RxnString errorMessage = RxnString();
@@ -76,6 +87,7 @@ class MenuManagementController extends GetxController {
     final results = await Future.wait([
       _getCategories(false),
       _getMenuItems(const MenuFilter()),
+      _getStations(false),
     ]);
 
     isLoading.value = false;
@@ -85,6 +97,10 @@ class MenuManagementController extends GetxController {
     );
     results[1].fold(
       onSuccess: (data) => items.assignAll(data as List<MenuItem>),
+      onFailure: (failure) => errorMessage.value = failure.message,
+    );
+    results[2].fold(
+      onSuccess: (data) => stations.assignAll(data as List<KitchenStation>),
       onFailure: (failure) => errorMessage.value = failure.message,
     );
   }
@@ -161,9 +177,17 @@ class MenuManagementController extends GetxController {
     int? id,
     required String name,
     String? icon,
+    int? stationId,
+    bool stationChanged = false,
   }) async {
     final result = await _saveCategory(
-      SaveCategoryParams(id: id, name: name, icon: icon),
+      SaveCategoryParams(
+        id: id,
+        name: name,
+        icon: icon,
+        stationId: stationId,
+        stationChanged: stationChanged,
+      ),
     );
     result.fold(
       onSuccess: (_) {
@@ -191,6 +215,63 @@ class MenuManagementController extends GetxController {
     result.fold(
       onSuccess: (_) {
         AppDialogs.success('menu_category_deleted_success'.tr);
+        load();
+      },
+      onFailure: (failure) => AppDialogs.error(failure.message),
+    );
+  }
+
+  /// สถานีครัว (ticket 34) — ไม่ส่ง [id] = สร้างใหม่ ซึ่งต้องมี [code] ด้วย
+  Future<void> saveStation({
+    int? id,
+    required String name,
+    String? code,
+    String? nameEn,
+    String? nameKo,
+    String? icon,
+    bool? isActive,
+    bool? isDefault,
+  }) async {
+    final result = await _saveStation(
+      SaveKitchenStationParams(
+        id: id,
+        name: name,
+        code: code,
+        nameEn: nameEn,
+        nameKo: nameKo,
+        icon: icon,
+        isActive: isActive,
+        isDefault: isDefault,
+      ),
+    );
+    result.fold(
+      onSuccess: (_) {
+        AppDialogs.success(
+          id == null
+              ? 'menu_station_created_success'.tr
+              : 'menu_station_updated_success'.tr,
+        );
+        load();
+      },
+      onFailure: (failure) => AppDialogs.error(failure.message),
+    );
+  }
+
+  Future<void> deleteStation(KitchenStation station) async {
+    final confirmed = await AppDialogs.confirm(
+      title: 'menu_delete_station_title'.tr,
+      message: 'menu_delete_station_confirm'.trParams({
+        'name': station.displayName,
+      }),
+      confirmLabel: 'common_delete'.tr,
+      destructive: true,
+    );
+    if (!confirmed) return;
+
+    final result = await _deleteStation(station.id);
+    result.fold(
+      onSuccess: (_) {
+        AppDialogs.success('menu_station_deleted_success'.tr);
         load();
       },
       onFailure: (failure) => AppDialogs.error(failure.message),

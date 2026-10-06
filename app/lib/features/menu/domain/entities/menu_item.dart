@@ -26,6 +26,7 @@ class MenuItem {
     this.soldByWeight = false,
     this.barcode,
     this.scalePlu,
+    this.stationId,
   });
 
   final int id;
@@ -56,6 +57,10 @@ class MenuItem {
 
   /// รหัสสินค้าบนฉลากตาชั่ง (PLU) เก็บแบบไม่มีเลข 0 นำหน้า — ใช้กับเมนูขายตามน้ำหนักเท่านั้น
   final String? scalePlu;
+
+  /// สถานีครัวของจานนี้ (ticket 34) — null = ตามหมวดหมู่ ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้าหมวดหมู่
+  /// ก็ไม่ได้กำหนดไว้ สถานีถูกตัดสินและประทับลงตั๋วตอนบันทึกรายการ ไม่ใช่ตอนอ่านคิวครัว
+  final int? stationId;
 
   /// ชื่อที่จะแสดงตามภาษาปัจจุบัน
   ///

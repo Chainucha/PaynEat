@@ -104,6 +104,18 @@ void bindUseCases() {
     () => DeleteCategoryUseCase(Get.find<MenuRepository>()),
     fenix: true,
   );
+  Get.lazyPut(
+    () => GetKitchenStationsUseCase(Get.find<MenuRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => SaveKitchenStationUseCase(Get.find<MenuRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => DeleteKitchenStationUseCase(Get.find<MenuRepository>()),
+    fenix: true,
+  );
 
   // ingredient
   Get.lazyPut(

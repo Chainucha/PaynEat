@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1201%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1205%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -337,6 +337,8 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
 - 장바구니에 담은 주문을 손님이 직접 주방으로 전송합니다
 - 직원이 입력한 주문과 동일한 경로로 처리됩니다 (재고 차감, 프로모션 적용 포함)
 - 계량이 필요한 정육 상품은 손님 메뉴(QR 메뉴)에 표시되지 않으며, 대신 "무게로 파는 정육은 직원에게 주문해 주세요" 안내가 표시됩니다
+- QR 페이지 첫 로딩이 휴대폰에서 약 3배 빨라졌습니다 — 첫 화면 전에 받는 데이터가 10.6MB에서 3.9MB로 줄었습니다 (빠른 4G 기준 약 11초 → 약 5초).
+  한국어 글꼴은 한국어 사용자에게는 첫 화면 전에, 다른 언어 사용자에게는 첫 화면 직후에 받습니다 (`docs/DECISIONS.md` #97)
 
 ### 주방
 - 대기 / 조리 중 / 조리 완료의 3열 구성
@@ -506,13 +508,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1201건**의 자동화 테스트를 통과합니다.
+공개 전 **1205건**의 자동화 테스트를 통과합니다.
 
 ```bash
 cd backend && npm test      # 546건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 602건 — domain / controller / widget
+cd app && flutter test      # 606건 — domain / controller / widget
 cd app && flutter test test_e2e   # 53건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1201건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1205건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 53건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

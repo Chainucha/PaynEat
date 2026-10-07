@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1270%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1270 automated tests.
+control and 1274 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -786,7 +786,7 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 
 ```bash
 cd backend && npm test      # 593 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 623 เคส — domain / controller / widget
+cd app && flutter test      # 627 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 54 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -1112,6 +1112,9 @@ cd app && flutter test test_e2e   # 54 เคส — แอปจริงคุ
   ระบบจะให้รอจนครบเวลาก่อนลองใหม่ หน้าเข้าสู่ระบบแสดงจำนวนนาทีที่ต้องรอตามภาษาที่เลือก เข้าสู่ระบบสำเร็จล้างตัวนับทันที
   และใช้กับการใส่รหัสผ่านปัจจุบันผิดตอนเปลี่ยนรหัสผ่านด้วย ปรับค่าได้ที่ `AUTH_MAX_FAILED_ATTEMPTS` / `AUTH_FAILED_ATTEMPT_WINDOW_MINUTES`
   · เมื่อเซิร์ฟเวอร์อยู่หลัง reverse proxy (nginx, tunnel) ให้ตั้ง `TRUST_PROXY` เพื่อให้เซิร์ฟเวอร์เห็นเครื่องของผู้ใช้จริง (ดู `backend/.env.example`)
+- **เปิดเว็บครั้งแรกเร็วขึ้นราว 3 เท่าบนมือถือ** — Docker (`app/nginx.conf`) บีบอัด `canvaskit.wasm` และฟอนต์ด้วย ไม่ใช่แค่ JavaScript และฟอนต์เกาหลี
+  (1.5MB) โหลดหลังเฟรมแรกสำหรับผู้ใช้ภาษาอื่น ข้อมูลที่โหลดก่อนเห็นหน้าแรกลดจาก 10.6MB เหลือ 3.9MB (4G เร็ว ~11 วิ → ~5 วิ) ลูกค้าที่สแกน QR
+  ได้ประโยชน์มากที่สุด อัปเดตแอปแล้วเครื่องที่เคยเปิดได้รุ่นใหม่ในการเปิดครั้งถัดไป ไม่ค้างรุ่นเก่า 7 วันเหมือนเดิม (ดู `docs/DECISIONS.md` #100)
 
 ---
 
@@ -1422,12 +1425,12 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 
 ```bash
 cd backend && npm test      # 593 เคส
-cd app && flutter test      # 623 เคส
+cd app && flutter test      # 627 เคส
 cd app && flutter test test_e2e   # 54 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
-badge นับเฉพาะเทสต์ของ backend และแอป (593 + 623 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (593 + 627 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (54 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1755,7 +1758,8 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 รหัสผ่านถูกพักแบบเดียวกัน, `TRUST_PROXY` ถูกส่งต่อให้ Express (ค่าเริ่มต้นไม่อ่าน `X-Forwarded-For`) และตัวนับในหน่วยความจำ
 (รวม `core/rateLimit.js` ของหน้าสั่งอาหารเอง) ลบคีย์ที่หมดอายุทิ้งเอง ทดสอบด้วยนาฬิกาจำลอง
 
-**Flutter (623 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (627 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (621 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|
@@ -1809,6 +1813,7 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 | Core | `api_client_test.dart` | (เพิ่มเติม) ทุก request แนบ `Accept-Language` ตามภาษาที่แสดงอยู่ขณะนั้น — เมื่อสลับภาษาระหว่างกะ request ถัดไปจะเปลี่ยนตาม (ดู `docs/DECISIONS.md` #64) |
 | Core | `korean_font_coverage_test.dart` | (เพิ่มเติม) นับข้อความ Material ภาษาเกาหลี (ปฏิทิน/นาฬิกา/ปุ่ม) และข้อความ error ภาษาเกาหลีจาก `backend/src/i18n/errorMessages.js` ด้วย — ตรวจพบตัวอักษรที่ขาด 18 ตัวก่อนแสดงผลเป็นกล่องสี่เหลี่ยม (ดู `docs/DECISIONS.md` #64) |
 | Core | `korean_font_coverage_test.dart` | (เพิ่มเติม, `docs/DECISIONS.md` #74) ฟอนต์เกาหลีทุกน้ำหนักต้องมีพยางค์ ≥ 2,350 ตัว (KS X 1001) + จาโมที่ปรากฏระหว่างพิมพ์ครบ — เทสต์ล้มเมื่อใช้ฟอนต์ชุดเดิม (มีเพียง 474 ตัว) และนับชื่อ/ที่อยู่ลูกค้าเครดิตภาษาเกาหลีด้วย |
+| Core | `korean_font_service_test.dart` | ฟอนต์เกาหลีลงทะเบียนครบ 4 น้ำหนักครั้งเดียวแม้เรียกซ้ำพร้อมกัน, โหลดไม่สำเร็จไม่ทำให้แอปล้มและเรียกครั้งต่อไปลองใหม่, ไฟล์ทั้ง 4 อยู่ใน asset bundle จริง และ NotoSansKR ต้องไม่กลับไปอยู่ใน `fonts:` ของ pubspec (ไม่งั้นเว็บรอฟอนต์เกาหลีก่อนเฟรมแรกอีก — `docs/DECISIONS.md` #100) |
 | Domain | `demo_store_test.dart` | (เพิ่มเติม, `docs/DECISIONS.md` #74) หลังทุกเคส ตรวจ audit log **ทุกรายการ**ที่เคสนั้นสร้าง (28 action): ประกอบเป็นภาษาไทยจาก `summaryArgs` แล้วต้องตรงกับประโยคที่บันทึกทุกตัวอักษร และประกอบเป็นภาษาอังกฤษ/เกาหลีได้โดยไม่มีอักษรไทยเหลืออยู่นอกจากค่าที่ผู้ใช้กรอก — ตรวจพบกรณีที่ Demo Mode แสดง "500.0 บาท" ต่างจาก backend |
 | Presentation | `audit_summary_text_test.dart` | ประโยค audit ของ action ที่มีแต่ backend (รับชำระ เปิด/ปิดกะ ย้ายโต๊ะ รวมบิล ใช้/ถอดโค้ดส่วนลด สร้างสาขาจาก ERP) ครบทุกภาษา, อีเมลปลายทางที่มี `@` ไม่ถูกแทนซ้ำ, log เก่า/action ที่ไม่รู้จักถอยไปใช้ประโยคเดิม และภาษาไทยแสดงประโยคที่บันทึกไว้เสมอ และ void รายการที่ถูกเลิกทำบอกขั้นที่ครัวเคยทำถึงเป็นภาษาของผู้ดู (T05) และการซ่อมยอดแต้มตอนอัปเดตฐานข้อมูล: ภาษาไทยตรงกับประโยคที่ migration บันทึก (T15) |
 | Core | `locale_service_test.dart` | (เพิ่มเติม) การเปิดแอปครั้งแรกใช้ภาษาของเครื่อง (เกาหลี/อังกฤษ) ภาษาที่ไม่รองรับใช้ภาษาไทยแทน (ดู `docs/DECISIONS.md` #62) |

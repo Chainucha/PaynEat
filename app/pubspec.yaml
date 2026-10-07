@@ -74,15 +74,12 @@ flutter:
           weight: 700
         - asset: assets/fonts/NotoSansThai-800.ttf
           weight: 800
-    # ฟอนต์สำรองสำหรับอักษรเกาหลี — subset เฉพาะตัวอักษรที่คำแปลเกาหลีใช้จริง
-    # (~63 KB ต่อน้ำหนัก แทนที่จะเป็นหลายเมกะถ้าฝังทั้งชุด)
-    - family: NotoSansKR
-      fonts:
-        - asset: assets/fonts/NotoSansKR-400.ttf
-          weight: 400
-        - asset: assets/fonts/NotoSansKR-500.ttf
-          weight: 500
-        - asset: assets/fonts/NotoSansKR-700.ttf
-          weight: 700
-        - asset: assets/fonts/NotoSansKR-800.ttf
-          weight: 800
+
+  # ฟอนต์สำรองสำหรับอักษรเกาหลี (NotoSansKR, KS X 1001 ครบ ~800KB ต่อน้ำหนัก ดู DECISIONS #74)
+  # เป็น asset ธรรมดา ไม่อยู่ใน `fonts:` ข้างบน เพราะทุกไฟล์ใน `fonts:` ถูกโหลดก่อนเฟรมแรกบนเว็บ
+  # KoreanFontService ลงทะเบียนเองตอนรัน (DECISIONS #100)
+  assets:
+    - assets/fonts/NotoSansKR-400.ttf
+    - assets/fonts/NotoSansKR-500.ttf
+    - assets/fonts/NotoSansKR-700.ttf
+    - assets/fonts/NotoSansKR-800.ttf

@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1270%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -340,6 +340,8 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
 - 큰 주문은 직원을 통해 받습니다 — QR 주문은 메뉴당 최대 10개, 테이블 계산서 합계 최대 60개(직원이 입력한 항목 포함)까지이며,
   + 버튼은 매장이 설정한 한도에서 멈추고 한도를 넘으면 직원을 부르라는 안내가 표시됩니다. 직원은 한도와 관계없이 주문할 수 있고,
   매장은 `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY`로 한도를 바꿀 수 있습니다 (`docs/DECISIONS.md` #99)
+- QR 페이지 첫 로딩이 휴대폰에서 약 3배 빨라졌습니다 — 첫 화면 전에 받는 데이터가 10.6MB에서 3.9MB로 줄었습니다 (빠른 4G 기준 약 11초 → 약 5초).
+  한국어 글꼴은 한국어 사용자에게는 첫 화면 전에, 다른 언어 사용자에게는 첫 화면 직후에 받습니다 (`docs/DECISIONS.md` #100)
 
 ### 주방
 - 대기 / 조리 중 / 조리 완료의 3열 구성
@@ -522,13 +524,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1270건**의 자동화 테스트를 통과합니다.
+공개 전 **1274건**의 자동화 테스트를 통과합니다.
 
 ```bash
 cd backend && npm test      # 593건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 623건 — domain / controller / widget
+cd app && flutter test      # 627건 — domain / controller / widget
 cd app && flutter test test_e2e   # 54건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1270건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1274건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 54건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

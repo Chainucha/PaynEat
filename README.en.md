@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1321%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1329%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1321 automated tests.
+control and 1329 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -699,7 +699,7 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   screen as `waiter1`: drink dishes are greyed out with a **"Bar closed"** badge and cannot be tapped (calling the API directly
   gets a 409 for the whole submit) → open a table's QR menu: no drinks at all → reopen the bar → the menu is back at once, and
   dishes that were already sold out (by hand or by stock) stay sold out, because closing a station never touches a dish's
-  availability · sign in as `manager` and switch branch → the other branch can still order from the bar · `waiter1` sees the
+  availability · sign in as `admin` and switch to the Thonglor branch → that branch can still order from the bar · `waiter1` sees the
   banner but has no button to open the sheet (the order-screen button is for `manager`/`admin` only) · a bill saved before the
   bar closed and then **sent to the kitchen** → refused with 409 and nothing is sent
   (see `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
@@ -877,8 +877,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 611 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 656 cases — domain / controller / widget
+cd backend && npm test      # 612 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 663 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1606,15 +1606,15 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 611 cases
-cd app && flutter test      # 656 cases
+cd backend && npm test      # 612 cases
+cd app && flutter test      # 663 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
 On a Windows development machine 3 tests fail for environment reasons only (path, file lock, timezone); they pass on CI.
 
-The badge counts the backend and app tests (611 + 656 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (612 + 663 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1674,13 +1674,14 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (611 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (612 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 `station-closures.test.js` covers closing and reopening kitchen stations per branch (ticket 36): permissions for every role,
 branch isolation, repeated close/open, the audit log, cascade, `pendingCount`, a 409 on all three ways to order plus sending a
-saved bill to the kitchen, no fallback to the default station, and `is_available` staying untouched (the 0008 block is in
+saved bill to the kitchen, no fallback to the default station, legacy bills without a station counting as the default station, and `is_available` / `auto_disabled_by_stock` staying untouched (the 0008 block is in
 `migrations.test.js`). On the app side `station_status_controller_test.dart`, `station_status_sheet_test.dart`,
-`menu_item_card_closed_test.dart` and `kitchen_header_360_test.dart` cover the sheet controller, the sheet, the greyed-out
-menu card and the kitchen header at 360px.
+`menu_item_card_closed_test.dart`, `kitchen_header_360_test.dart` and `kitchen_station_gating_test.dart` cover the sheet
+controller (reload on socket reconnect / user change), the sheet, the greyed-out menu card, the kitchen header at 360px and
+role-based hiding of the station button.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -2013,7 +2014,7 @@ a successful sign-in clearing the count, the message following the request langu
 password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
 counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
 
-**Flutter (656 cases)** — organized into 3 levels:
+**Flutter (663 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|

@@ -274,6 +274,17 @@ components:
           description: >-
             สถานีครัวของจานนี้ (ดู ticket 34) — null = ตามหมวดหมู่ ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้า
             หมวดหมู่ก็ไม่ได้กำหนดไว้ สถานีถูกตัดสินและประทับลงรายการตอนบันทึก ไม่ใช่ตอนอ่านคิวครัว
+        closedStation:
+          type: object
+          nullable: true
+          description: >-
+            สถานีของจานนี้ที่ปิดอยู่ในสาขาของจาน (ดู ticket 36) — null = เปิดอยู่ ส่งเฉพาะเมนูพนักงาน
+            เมนู QR ของลูกค้าไม่มีจานของสถานีที่ปิดเลย `isAvailable` ไม่ถูกแตะ
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            nameEn: { type: string, nullable: true }
+            nameKo: { type: string, nullable: true }
     PublicCategory:
       type: object
       description: หมวดหมู่ในเมนูฝั่งลูกค้า (ticket 17) — เฉพาะที่แถบหมวดหมู่หน้า QR ใช้ เรียงตาม sortOrder มาแล้ว
@@ -1069,6 +1080,8 @@ paths:
       responses:
         '200': { description: สถานะหลังปิด }
         '400': { description: โหมดทุกสาขา }
+        '401': { description: ยังไม่ได้ล็อกอิน }
+        '403': { description: บทบาทไม่มีสิทธิ์ (waiter/cashier) }
         '404': { description: ไม่พบสถานี หรือสถานีถูกปิดใช้งาน }
 
   /kitchen-stations/{id}/open:
@@ -1080,6 +1093,8 @@ paths:
       responses:
         '200': { description: สถานะหลังเปิด }
         '400': { description: โหมดทุกสาขา }
+        '401': { description: ยังไม่ได้ล็อกอิน }
+        '403': { description: บทบาทไม่มีสิทธิ์ (waiter/cashier) }
         '404': { description: ไม่พบสถานี หรือสถานีถูกปิดใช้งาน }
 
   /kitchen-stations/{id}:
@@ -1432,7 +1447,9 @@ paths:
                   success: { type: boolean }
                   data: { $ref: '#/components/schemas/Order' }
         '409':
-          description: โต๊ะนี้มีออเดอร์เปิดอยู่แล้ว
+          description: >-
+            โต๊ะนี้มีออเดอร์เปิดอยู่แล้ว หรือสถานีของจานปิดอยู่ (ticket 36 — ข้อความบอกชื่อสถานีและจาน
+            ไม่มีอะไรถูกบันทึก)
   /orders/kitchen/queue:
     get:
       tags: [Orders]
@@ -1491,6 +1508,7 @@ paths:
       summary: เพิ่มรายการอาหาร (สั่งเพิ่มรอบสอง)
       responses:
         '201': { description: เพิ่มสำเร็จ }
+        '409': { description: 'สถานีของจานปิดอยู่ (ticket 36) — ไม่มีรายการใดถูกเพิ่ม ข้อความบอกชื่อสถานีและจาน' }
   /orders/{id}/items/{itemId}:
     parameters:
       - { in: path, name: id, required: true, schema: { type: integer } }
@@ -1532,6 +1550,7 @@ paths:
       summary: ส่งออเดอร์เข้าครัว (ยิง event `kitchen:ticket`)
       responses:
         '200': { description: สำเร็จ }
+        '409': { description: 'บิลที่บันทึกไว้ (open) มีจานของสถานีที่ปิดอยู่ (ticket 36) — ยังส่งไม่ได้ บิลคงเป็น open; รายการเก่าที่ไม่มีสถานีถือเป็นสถานีค่าเริ่มต้น' }
   /orders/{id}/discount:
     parameters:
       - in: path

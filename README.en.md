@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1290%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -36,7 +36,7 @@ control and 1274 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,139 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,290 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -704,6 +704,11 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   `waiter123`, says to wait 15 minutes, while other accounts on other devices still sign in normally — the count lives in the
   server's memory, so restarting the server starts it over
 
+- (Options A/B/D) Log in as `admin` → **Menu** → edit an item, add a photo and save → open order taking or a table's QR page and
+  watch the browser's Network tab: the menu list is small (no photos inside) and each photo loads on its own from
+  `/api/v1/public/menu-images/…`; reopening serves photos from the cache · change the item's price without touching the photo →
+  the photo stays · change the photo → every device sees the new one at once, never the old one (`docs/DECISIONS.md` #101)
+
 - Log in as `admin` → **Staff** → the signed-in user's own row has no ⋮ menu, only a **"You"** badge (users cannot
   demote, deactivate, or delete their own account; a direct API call returns 400). Other rows allow role changes and
   deactivation, but only after a confirmation dialog that describes the effect. Deleting `cashier` (which has already
@@ -866,8 +871,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 593 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 627 cases — domain / controller / widget
+cd backend && npm test      # 607 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 629 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1256,13 +1261,21 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   `payneat_backup_failures_total` (see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
 - **Sign-in pauses for a while after repeated wrong passwords** — 10 wrong passwords within 15 minutes (counted per username
   and per device) means waiting until that time is up before trying again; the login screen shows how many minutes are left in
-  the chosen language, a successful sign-in clears the count right away, and the same applies to entering the wrong current
+  the chosen language (simultaneous tries cannot exceed the limit), a successful sign-in clears the count right away, and the same applies to entering the wrong current
   password when changing it. Tune it with `AUTH_MAX_FAILED_ATTEMPTS` / `AUTH_FAILED_ATTEMPT_WINDOW_MINUTES` · when the server sits
   behind a reverse proxy (nginx, a tunnel), set `TRUST_PROXY` so the server sees the user's real device (see `backend/.env.example`)
 - **First web load about 3× faster on phones** — the Docker image (`app/nginx.conf`) now compresses `canvaskit.wasm` and fonts, not only
   JavaScript, and the Korean font (1.5 MB) loads after the first frame for users of other languages. What loads before the first screen
   drops from 10.6 MB to 3.9 MB (fast 4G: ~11 s → ~5 s); QR customers gain the most. After an app update, a browser that opened it before
   gets the new version on its next load instead of keeping the old one for up to 7 days (see `docs/DECISIONS.md` #100)
+- **Menu photos no longer weigh down the menu** — the menu list carries each photo's address, not the photo (30 photos used to mean
+  6 MB every time order taking opened and 5 MB per QR scan). Photos load on their own from `/api/v1/public/menu-images/:id` without
+  signing in and are cached for a year, since the URL changes whenever the item is edited. Newly picked photos are scaled to 640 px
+  (about 40–80 KB), and only JPEG/PNG/WebP/GIF are served (see `docs/DECISIONS.md` #101)
+- **The server keeps its speed as data builds up (in part)** — the server runs `ANALYZE` at startup and every 6 hours once the order
+  count has changed 2×, so SQLite picks the right index (floor plan with a year of data: 37 ms → 3 ms), and checks passwords on a
+  worker thread without stopping other requests (62 ms each before) — reports, the dashboard and backup checks still slow down as data
+  grows (see 🔭 Roadmap and `docs/DECISIONS.md` #101)
 
 ---
 
@@ -1583,13 +1596,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 593 cases
-cd app && flutter test      # 627 cases
+cd backend && npm test      # 607 cases
+cd app && flutter test      # 629 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (593 + 627 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (607 + 629 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1975,15 +1988,28 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-`login-attempts.test.js` (7 cases), `trust-proxy.test.js` (2 cases) and `failed-attempts.test.js` (5 cases) cover pausing
+`login-attempts.test.js` (9 cases), `trust-proxy.test.js` (2 cases) and `failed-attempts.test.js` (6 cases) cover pausing
 sign-in after repeated wrong passwords: reaching the limit returns 429 with `Retry-After` even if the next try is correct,
 counting per username across devices (ignoring case and surrounding spaces) and per IP without affecting other accounts,
 a successful sign-in clearing the count, the message following the request language, the same pause for a wrong current
 password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
-counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
+counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock;
+with passwords checked on a worker thread, 8 simultaneous wrong tries against a limit of 3 get three 401s and five 429s (simultaneous
+tries cannot exceed the limit, `docs/DECISIONS.md` #101)
 
-**Flutter (627 cases)** — organized into 3 levels:
-**Flutter (621 cases)** — organized into 3 levels:
+`menu-images.test.js` (6 cases) covers menu photos: the menu list and the QR menu send a `/api/v1/public/menu-images/:id?v=...` path
+instead of a data URL; that path loads without signing in, with the right bytes and type and a one-year cache; an old version gets
+`no-cache`; a new photo gets a new URL; sending the same path back when editing an item keeps the photo, and `""` removes it;
+external image URLs pass through unchanged; and HTML/SVG data URLs are never served
+
+`planner-stats.test.js` (3 cases) covers query-planner statistics: no statistics yet runs `ANALYZE`, an order count that changed by
+less than 2× does not, a 2× change does, and an empty database does not break (`docs/DECISIONS.md` #101)
+
+`password-hash.test.js` (2 cases) covers checking passwords on a worker thread: results match bcryptjs for right and wrong
+passwords, a created hash can be checked, and during 5 simultaneous checks the main thread never stalls for 40 ms or more
+(the old way stalled about 370 ms, `docs/DECISIONS.md` #101)
+
+**Flutter (629 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -2028,6 +2054,7 @@ counters (including `core/rateLimit.js` used by QR self-ordering) dropping expir
 | Controller | `audit_log_controller_test.dart` | Sending filters (action/date range) correctly with `load`/`loadMore`, `setDateRange` converting to ISO dates and clearing filters, `hasMore`/pagination (ticket 14) |
 | Controller | `ai_assistant_controller_test.dart` | `ask` trims the question/clears the input/stores the answer+chart, guards against an empty/too-long question and sending while already waiting on one, and separates a `ServerFailure`'s `errorCode` (e.g. `AI_ASSISTANT_DISABLED`) from a generic error (ticket 15) |
 | Widget | `widgets_test.dart` | Button taps and widget state, including `KitchenTicketCard` rendering the correct icon/label for all 3 order types (table/takeaway/delivery) (ticket 10) |
+| Widget | `menu_item_thumbnail_test.dart` | A menu photo path from the API is prefixed with the server address; external image URLs are used as they are (`docs/DECISIONS.md` #101) |
 | Widget | `hourly_chart_range_test.dart` | The chart's time range must come from real data, not a hardcoded value |
 | Widget | `weight_entry_dialog_test.dart` | Turning the typed weight (kg, a comma works as the decimal point) into whole grams, rounding, and rejecting anything outside 1–99,999 g (ticket 18) |
 | Core | `destructive_labels_test.dart` | The accounts-receivable "void document" button must never share a label with the ordinary Cancel/Close buttons, in every language (the Korean edition previously used "취소" for both, next to "닫기") (see `docs/DECISIONS.md` #60) |
@@ -2268,6 +2295,14 @@ Completed work, planned work, and known limitations, with the reasoning for each
   Ticket 33 is done. Round 2: T07 a bill never dropping below what was paid (`docs/DECISIONS.md` #95) is done. Next: the rest of
   round 2 (including net sales that subtract a refund twice, #143) are what must be done before the first real
   shop, closed by a test in which a shop owner runs a whole shift (`docs/DECISIONS.md` #93)
+- [x] **Menu photos load separately + query-planner statistics + non-blocking password checks** — a speed check on a year of
+  simulated data before going live through the tunnel: the menu list carries no photos any more (6 MB → 19 KB), photos load on
+  their own with caching, `ANALYZE` runs automatically (floor plan 37 ms → 3 ms) and sign-in no longer stops other requests
+  (see `docs/DECISIONS.md` #101)
+- [ ] **Reports and backups that keep their speed as data builds up** — the dashboard reads every past order (223 ms with a year of
+  data; needs indexes through a migration and date conditions written as time ranges), the `integrity_check` after a backup stops the
+  server for 1.9 s (move it to a worker thread), and realtime events make the floor plan and order list reload twice
+  (see `docs/DECISIONS.md` #101)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **Automatic backups the owner can restore without a developer (ticket 33, #145)** — a backup at every shift close, every six

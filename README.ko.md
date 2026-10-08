@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1290%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -119,7 +119,7 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
 
 ## 🍽 문제 해결 메뉴
 
-대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,139개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
+대형 식당이 매일 실제로 겪는 문제들이고, 각각 버튼 하나가 아니라 **함께 움직이는 여러 기능**으로 해결합니다 — 모두 자동 테스트 1,290개를 통과한 뒤 배포됩니다. 모든 이미지는 골든 테스트로 실제 앱에서 캡처했습니다 ([`story_test.dart`](app/tool/screenshots/story_test.dart)). **[웹 데모](https://suruchboss.github.io/PaynEat/app/)**에서 직접 눌러 보시거나 **[랜딩 페이지](https://suruchboss.github.io/PaynEat/index.ko.html)**에서 웹 페이지로 보실 수 있습니다.
 
 | # | 가게의 문제 | 해결하는 세트 | 얻는 것 |
 |---|---|---|---|
@@ -342,6 +342,8 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
   매장은 `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY`로 한도를 바꿀 수 있습니다 (`docs/DECISIONS.md` #99)
 - QR 페이지 첫 로딩이 휴대폰에서 약 3배 빨라졌습니다 — 첫 화면 전에 받는 데이터가 10.6MB에서 3.9MB로 줄었습니다 (빠른 4G 기준 약 11초 → 약 5초).
   한국어 글꼴은 한국어 사용자에게는 첫 화면 전에, 다른 언어 사용자에게는 첫 화면 직후에 받습니다 (`docs/DECISIONS.md` #100)
+- 메뉴 사진이 메뉴 목록을 무겁게 하지 않습니다 — 목록에는 사진 주소만 담기고(사진 30장 기준 스캔마다 5MB였음) 사진은 따로 받아
+  1년간 캐시됩니다. 새로 고른 사진은 640px로 줄여 저장합니다 (`docs/DECISIONS.md` #101)
 
 ### 주방
 - 대기 / 조리 중 / 조리 완료의 3열 구성
@@ -527,8 +529,8 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 공개 전 **1274건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 593건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 627건 — domain / controller / widget
+cd backend && npm test      # 607건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 629건 — domain / controller / widget
 cd app && flutter test test_e2e   # 54건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
 node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1274건에 미포함)
 ```

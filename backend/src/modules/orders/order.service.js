@@ -588,10 +588,14 @@ export const orderService = {
     // ออเดอร์ที่บันทึกไว้แต่ยังไม่ส่งครัว — สถานีอาจปิดไปตอนที่บิลรออยู่ (ticket 36) ตรวจซ้ำก่อนส่ง
     // ออเดอร์ที่อยู่ในครัวแล้วไม่ต้องตรวจ รายการที่สั่งเพิ่มถูกตรวจตอน addItems ไปแล้ว
     if (order.status === 'open') {
+      // บิลเก่าก่อน ticket 34 ไม่มี station_id → ถือเป็นสถานีค่าเริ่มต้น เหมือนที่จอครัวนับตั๋วพวกนี้
+      const fallback = items.some((item) => item.station_id == null)
+        ? kitchenStationService.defaultStation()
+        : null;
       for (const item of items) {
-        if (kitchenStationService.isClosed(order.branch_id, item.station_id)) {
+        if (kitchenStationService.isClosed(order.branch_id, item.station_id ?? fallback.id)) {
           throw ApiError.conflict(
-            `สถานี "${item.station_name_snapshot}" ปิดอยู่ สั่ง "${item.name_snapshot}" ไม่ได้`,
+            `สถานี "${item.station_name_snapshot ?? fallback.name}" ปิดอยู่ สั่ง "${item.name_snapshot}" ไม่ได้`,
           );
         }
       }

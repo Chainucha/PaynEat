@@ -5,6 +5,7 @@ import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { api, login, authHeader, cleanup } from './helpers/testApp.js';
+import { getDb } from '../src/db/index.js';
 import { initSocket, getIo, closeSocket, EVENTS } from '../src/realtime/socket.js';
 
 // ปิด/เปิดสถานีครัวรายสาขา (ticket 36) — สถานีปิด ≠ สถานีที่ปิดใช้งาน (CONTEXT.md)
@@ -305,6 +306,32 @@ test('ออเดอร์ที่บันทึกไว้ยังไม�
   assert.equal((await get(`/api/v1/orders/${saved.id}`, token)).body.data.status, 'open');
 });
 
+test('บิลเก่าที่ station_id เป็น NULL ถูกนับเป็นสถานีค่าเริ่มต้น → ปิดสถานีค่าเริ่มต้นแล้วส่งครัวไม่ได้ (409)', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { dish } = await stationWithDish(token);
+  const table = await createTable(token);
+  const saved = (await openOrder(token, table.id, dish.id)).body.data;
+  assert.equal(saved.status, 'open');
+  // จำลองบิลที่บันทึกไว้ก่อนมีสถานี (ticket 34) — รายการไม่มี station_id
+  getDb()
+    .prepare(
+      'UPDATE order_items SET station_id = NULL, station_name_snapshot = NULL WHERE order_id = ?',
+    )
+    .run(saved.id);
+
+  const defaultId = getDb()
+    .prepare('SELECT id FROM kitchen_stations WHERE is_default = 1')
+    .get().id;
+  try {
+    await post(`/api/v1/kitchen-stations/${defaultId}/close`, token);
+    const sent = await post(`/api/v1/orders/${saved.id}/send-to-kitchen`, token);
+    assert.equal(sent.status, 409, JSON.stringify(sent.body));
+    assert.equal((await get(`/api/v1/orders/${saved.id}`, token)).body.data.status, 'open');
+  } finally {
+    await post(`/api/v1/kitchen-stations/${defaultId}/open`, token);
+  }
+});
+
 test('รายการที่อยู่ในคิวก่อนปิด ยังอยู่บนจอครัวและเดินสถานะได้ตามปกติ', async () => {
   const { token } = await login('admin', 'admin123');
   const { station, dish } = await stationWithDish(token);
@@ -363,6 +390,8 @@ test('เมนูพนักงานบอก closedStation ส่วนเ�
   const { token } = await login('admin', 'admin123');
   const { station, dish } = await stationWithDish(token);
   const table = await createTable(token);
+  // ตั้งธงตัดอัตโนมัติจากสต๊อกไว้ก่อน เพื่อให้การเทียบก่อน/หลังมีความหมาย
+  getDb().prepare('UPDATE menu_items SET auto_disabled_by_stock = 1 WHERE id = ?').run(dish.id);
   const findDish = async () =>
     (
       await get(`/api/v1/menu-items?search=${encodeURIComponent(dish.name)}&limit=200`, token)
@@ -380,12 +409,24 @@ test('เมนูพนักงานบอก closedStation ส่วนเ�
     nameKo: null,
   });
   assert.equal(closedRow.isAvailable, true, 'ปิดสถานีไม่แตะ is_available');
+  assert.equal(
+    getDb().prepare('SELECT auto_disabled_by_stock AS v FROM menu_items WHERE id = ?').get(dish.id)
+      .v,
+    1,
+    'ปิดสถานีไม่แตะ auto_disabled_by_stock',
+  );
 
   const publicMenu = (await api().get(`/api/v1/public/tables/${table.qrToken}/menu`)).body.data;
   assert.ok(!publicMenu.items.some((row) => row.id === dish.id), 'QR ไม่เห็นจานของสถานีที่ปิด');
 
   await post(`/api/v1/kitchen-stations/${station.id}/open`, token);
   assert.equal((await findDish()).closedStation, null);
+  assert.equal(
+    getDb().prepare('SELECT auto_disabled_by_stock AS v FROM menu_items WHERE id = ?').get(dish.id)
+      .v,
+    1,
+    'เปิดสถานีคืนก็ไม่แตะ auto_disabled_by_stock',
+  );
 });
 
 test('เมนูที่ปิดขายไว้ก่อน → ปิดแล้วเปิดสถานีคืน เมนูนั้นยังปิดขายอยู่', async () => {

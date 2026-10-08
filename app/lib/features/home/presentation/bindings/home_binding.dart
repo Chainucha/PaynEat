@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/printing/receipt_printer_service.dart';
+import '../../../../core/services/chime_player.dart';
 import '../../../../core/services/printer_settings_service.dart';
 import '../../../../core/services/session_service.dart';
 import '../../../../core/services/storage_service.dart';
@@ -114,6 +115,7 @@ class HomeBinding extends Bindings {
         session: Get.find<SessionService>(),
         getStations: Get.find<GetKitchenStationsUseCase>(),
         storage: Get.find<StorageService>(),
+        chime: AssetChimePlayer(),
       ),
       fenix: true,
     );

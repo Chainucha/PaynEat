@@ -123,6 +123,7 @@ void main() {
 
       expect(find.byIcon(Icons.storefront_outlined), findsOneWidget);
       expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.volume_up_rounded), findsOneWidget);
       expect(tester.takeException(), isNull);
       // หยุด Timer.periodic ที่ onInit เปิดไว้ ก่อนจบเทสต์
       kitchen.onClose();

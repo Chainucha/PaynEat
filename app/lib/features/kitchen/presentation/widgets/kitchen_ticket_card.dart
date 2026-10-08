@@ -17,6 +17,8 @@ class KitchenTicketCard extends StatelessWidget {
     required this.isLate,
     required this.onAdvance,
     this.stationLabel,
+    this.isNew = false,
+    this.onTap,
   });
 
   final OrderItem item;
@@ -26,6 +28,12 @@ class KitchenTicketCard extends StatelessWidget {
   /// ชื่อสถานีครัวที่ประทับไว้บนตั๋ว (ticket 34) — ส่งมาเฉพาะตอนจอดู "ทุกสถานี"
   /// วางไว้แถวเดียวกับจำนวน ไม่ใช่หัวตั๋วที่แน่นอยู่แล้ว (docs/DECISIONS.md #62)
   final String? stationLabel;
+
+  /// ตั๋วเข้าใหม่ที่ยังไม่มีใครแตะ (ticket 37) — ขึ้นป้าย "ใหม่" และขอบหนาสีหลัก
+  final bool isNew;
+
+  /// แตะการ์ด = รับทราบตั๋วใหม่แล้ว
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +45,14 @@ class KitchenTicketCard extends StatelessWidget {
         ? AppColors.dangerInk
         : AppColors.itemStatusInk(item.status);
 
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: accent.withValues(alpha: 0.4),
-          width: isLate ? 2 : 1,
+          color: isNew ? AppColors.primary : accent.withValues(alpha: 0.4),
+          width: isNew || isLate ? 2 : 1,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -66,19 +74,46 @@ class KitchenTicketCard extends StatelessWidget {
                   color: accentInk,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  item.tableName != null
-                      ? 'kitchen_table_label'.trParams({
-                          'table': item.tableName!,
-                        })
-                      : OrderType.label(item.orderType ?? OrderType.takeaway),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13.5,
-                    color: accentInk,
+                // fit tight = ดันป้ายใหม่และเวลารอชิดขวา; ชื่อโต๊ะยาวตัดด้วย … ไม่ล้น
+                Flexible(
+                  fit: FlexFit.tight,
+                  child: Text(
+                    item.tableName != null
+                        ? 'kitchen_table_label'.trParams({
+                            'table': item.tableName!,
+                          })
+                        : OrderType.label(item.orderType ?? OrderType.takeaway),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.5,
+                      color: accentInk,
+                    ),
                   ),
                 ),
-                const Spacer(),
+                if (isNew) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'kitchen_new_badge'.tr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 8),
                 Icon(
                   isLate
                       ? Icons.local_fire_department_rounded
@@ -241,6 +276,11 @@ class KitchenTicketCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: card,
     );
   }
 }

@@ -245,3 +245,116 @@ test('ส่ง station:status เมื่อสถานะเปลี่ย�
     closeSocket();
   }
 });
+
+const createTable = async (token) => {
+  const res = await post('/api/v1/tables', token, { name: unique('T').slice(0, 20) });
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  return res.body.data;
+};
+
+const openOrder = (token, tableId, menuItemId) =>
+  post('/api/v1/orders', token, {
+    type: 'dine_in',
+    tableId,
+    guestCount: 1,
+    items: [{ menuItemId, quantity: 1 }],
+  });
+
+test('สั่งจานของสถานีที่ปิด → 409 ทั้งเปิดบิล สั่งเพิ่ม และ QR โดยไม่มีอะไรถูกบันทึก', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+  const other = (await get('/api/v1/menu-items?availableOnly=true&limit=1', token)).body.data[0];
+
+  // สั่งเพิ่มเข้าออเดอร์ที่ส่งครัวแล้ว — เปิดออเดอร์ก่อนปิดสถานี
+  const tableA = await createTable(token);
+  const running = (await openOrder(token, tableA.id, other.id)).body.data;
+  await post(`/api/v1/orders/${running.id}/send-to-kitchen`, token);
+
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+
+  const tableB = await createTable(token);
+  const created = await openOrder(token, tableB.id, dish.id);
+  assert.equal(created.status, 409);
+  assert.match(created.body.error.message, new RegExp(`${station.name}.*${dish.name}`));
+
+  const added = await post(`/api/v1/orders/${running.id}/items`, token, {
+    items: [{ menuItemId: dish.id, quantity: 1 }],
+  });
+  assert.equal(added.status, 409);
+  const after = (await get(`/api/v1/orders/${running.id}`, token)).body.data;
+  assert.equal(after.items.length, 1, 'ไม่มีรายการใหม่ถูกเพิ่ม');
+
+  const tableC = await createTable(token);
+  const qr = await api()
+    .post(`/api/v1/public/tables/${tableC.qrToken}/items`)
+    .send({ items: [{ menuItemId: dish.id, quantity: 1 }] });
+  assert.equal(qr.status, 409);
+});
+
+test('ออเดอร์ที่บันทึกไว้ยังไม่ส่งครัว แล้วสถานีปิด → ส่งครัวไม่ได้ (409)', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+  const table = await createTable(token);
+  const saved = (await openOrder(token, table.id, dish.id)).body.data;
+  assert.equal(saved.status, 'open');
+
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+
+  const sent = await post(`/api/v1/orders/${saved.id}/send-to-kitchen`, token);
+  assert.equal(sent.status, 409);
+  assert.equal((await get(`/api/v1/orders/${saved.id}`, token)).body.data.status, 'open');
+});
+
+test('รายการที่อยู่ในคิวก่อนปิด ยังอยู่บนจอครัวและเดินสถานะได้ตามปกติ', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+  const table = await createTable(token);
+  const order = (await openOrder(token, table.id, dish.id)).body.data;
+  await post(`/api/v1/orders/${order.id}/send-to-kitchen`, token);
+
+  const closed = await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+  assert.equal(closed.body.data.pendingCount, 1);
+
+  const queue = (await get(`/api/v1/orders/kitchen/queue?station=${station.code}`, token)).body
+    .data;
+  const ticket = queue.find((item) => item.orderId === order.id);
+  assert.ok(ticket, 'ตั๋วยังอยู่บนจอ');
+  const cooking = await patch(`/api/v1/orders/${order.id}/items/${ticket.id}/status`, token, {
+    status: 'cooking',
+  });
+  assert.equal(cooking.status, 200, JSON.stringify(cooking.body));
+});
+
+test('ไม่ถอยไปสถานีอื่น: ปิดสถานีค่าเริ่มต้น → จานที่ไม่ได้กำหนดสถานีสั่งไม่ได้', async () => {
+  const { token } = await login('admin', 'admin123');
+  const stations = (await get('/api/v1/kitchen-stations', token)).body.data;
+  const fallback = stations.find((row) => row.isDefault);
+  const category = (await post('/api/v1/categories', token, { name: unique('หมวด-') })).body.data;
+  const dish = (
+    await post('/api/v1/menu-items', token, {
+      categoryId: category.id,
+      name: unique('จาน-'),
+      price: 50,
+      branchId: 1,
+    })
+  ).body.data;
+
+  await post(`/api/v1/kitchen-stations/${fallback.id}/close`, token);
+  try {
+    const table = await createTable(token);
+    assert.equal((await openOrder(token, table.id, dish.id)).status, 409);
+  } finally {
+    // สถานีค่าเริ่มต้นใช้ร่วมกับเทสต์อื่นในไฟล์ — เปิดคืนเสมอ
+    await post(`/api/v1/kitchen-stations/${fallback.id}/open`, token);
+  }
+});
+
+test('สถานีที่ปิดอยู่แล้วถูกปิดใช้งานภายหลัง → แถวปิดค้างไม่มีผล จานสั่งได้', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+  await patch(`/api/v1/kitchen-stations/${station.id}`, token, { isActive: false });
+
+  const table = await createTable(token);
+  assert.equal((await openOrder(token, table.id, dish.id)).status, 201);
+});

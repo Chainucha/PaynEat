@@ -323,6 +323,11 @@ export const ERROR_MESSAGES = [
     ko: '"{menu}"은(는) 지금 판매하지 않습니다',
   },
   {
+    th: 'สถานี "{station}" ปิดอยู่ สั่ง "{menu}" ไม่ได้',
+    en: '"{station}" is closed — "{menu}" can\'t be ordered right now',
+    ko: '"{station}"이(가) 닫혀 있어 "{menu}"을(를) 지금 주문할 수 없습니다',
+  },
+  {
     th: 'ตัวเลือก id={id} ไม่ใช่ตัวเลือกของเมนู "{menu}"',
     en: 'Option id={id} does not belong to "{menu}"',
     ko: '옵션 id={id}은(는) "{menu}"의 옵션이 아닙니다',

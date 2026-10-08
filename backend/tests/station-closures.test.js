@@ -364,7 +364,9 @@ test('เมนูพนักงานบอก closedStation ส่วนเ�
   const { station, dish } = await stationWithDish(token);
   const table = await createTable(token);
   const findDish = async () =>
-    (await get('/api/v1/menu-items?limit=500', token)).body.data.find((row) => row.id === dish.id);
+    (
+      await get(`/api/v1/menu-items?search=${encodeURIComponent(dish.name)}&limit=200`, token)
+    ).body.data.find((row) => row.id === dish.id);
 
   assert.equal((await findDish()).closedStation, null);
 
@@ -404,6 +406,11 @@ test('admin โหมดทุกสาขาเห็น closedStation ตา�
   await post(`/api/v1/kitchen-stations/${station.id}/close`, admin.token);
 
   const all = await post('/api/v1/auth/select-branch', admin.token, { branchId: null });
-  const rows = (await get('/api/v1/menu-items?limit=1000', all.body.data.token)).body.data;
+  const rows = (
+    await get(
+      `/api/v1/menu-items?search=${encodeURIComponent(dish.name)}&limit=200`,
+      all.body.data.token,
+    )
+  ).body.data;
   assert.equal(rows.find((row) => row.id === dish.id).closedStation?.id, station.id);
 });

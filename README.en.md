@@ -1612,6 +1612,8 @@ cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
+On a Windows development machine 3 tests fail for environment reasons only (path, file lock, timezone); they pass on CI.
+
 The badge counts the backend and app tests (611 + 656 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)

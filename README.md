@@ -1449,6 +1449,8 @@ cd app && flutter test test_e2e   # 54 เคส (ต้อง npm ci ใน bac
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
+บนเครื่องพัฒนา Windows จะมีเทสต์ 3 เคสที่ล้มเพราะสภาพแวดล้อมเท่านั้น (path, ไฟล์ถูกล็อก, เขตเวลา) และผ่านบน CI
+
 badge นับเฉพาะเทสต์ของ backend และแอป (611 + 656 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 

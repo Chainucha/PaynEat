@@ -48,7 +48,9 @@ class AssetChimePlayer implements ChimePlayer {
       await _player.stop();
       await _player.play(AssetSource(_asset), volume: 1);
       return true;
-    } catch (_) {
+    } catch (error) {
+      // คืน false เหมือนกันทั้งกรณีเบราว์เซอร์บล็อกและกรณีพังจริง (asset หาย/ปลั๊กอินพัง) จึง log ไว้แยกสาเหตุ
+      debugPrint('ChimePlayer.play ล้มเหลว: $error');
       return false;
     }
   }
@@ -57,10 +59,17 @@ class AssetChimePlayer implements ChimePlayer {
   Future<bool> unlock() async {
     try {
       await _player.play(AssetSource(_asset), volume: 0);
-      await _player.stop();
       return true;
-    } catch (_) {
+    } catch (error) {
+      debugPrint('ChimePlayer.unlock ล้มเหลว: $error');
       return false;
+    } finally {
+      // หยุดเสมอ แม้ play ล้ม — และให้ stop ล้มได้โดยไม่ทับผลลัพธ์ข้างบน
+      try {
+        await _player.stop();
+      } catch (error) {
+        debugPrint('ChimePlayer.unlock หยุดเสียงไม่สำเร็จ: $error');
+      }
     }
   }
 }

@@ -45,7 +45,11 @@ dependencies:
   # สแกนบาร์โค้ด/ฉลากตาชั่งด้วยกล้องมือถือ (docs/tickets/22-live-scale-camera-scan.md) — Android/iOS/
   # เว็บในแพ็กเกจเดียว (เว็บใช้ getUserMedia ต้องเปิดผ่าน HTTPS หรือ localhost)
   mobile_scanner: ^7.4.2
+  # เสียงเตือนตั๋วเข้าจอครัว (ticket 37) — ซ่อนหลัง ChimePlayer
   audioplayers: ^6.7.1
+  # transitive ของ audioplayers จำกัดเพดานไว้ที่ <3.4.0 เพราะ 3.4.0+ ต้องการ Dart ^3.11.0 แต่ Flutter 3.35.1
+  # ที่ CI ล็อกไว้ (.github/workflows/ci.yml) มาพร้อม Dart 3.9.0 — ยกเพดานได้เมื่ออัปเดต Flutter/CI
+  synchronized: ">=3.1.0 <3.4.0"
 
 dev_dependencies:
   flutter_test:

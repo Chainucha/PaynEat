@@ -253,6 +253,7 @@ class StorageKeys {
   static const String locale = 'app_locale';
   static const String contrast = 'app_contrast';
   static const String kitchenStation = 'kitchen_station';
+  static const String kitchenChimeMuted = 'kitchen_chime_muted';
 }
 
 /// ชิปกรองสถานีบนจอครัว (ticket 34) — เก็บเป็น "รหัสสถานี" ต่อเครื่อง

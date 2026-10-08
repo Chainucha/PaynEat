@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
+import { isServedImagePath } from './menu.images.js';
 
 const optionSchema = z.object({
   name: z.string().min(1).max(60),
@@ -36,7 +37,13 @@ export const createMenuItemSchema = z.object({
   nameEn: z.string().max(120).optional(),
   description: z.string().max(500).optional(),
   price: z.number().min(0, 'ราคาต้องไม่ติดลบ'),
-  imageUrl: z.string().url('รูปแบบ URL ไม่ถูกต้อง').optional().or(z.literal('')),
+  // รับ path รูปที่ API ส่งออกไปเองด้วย (ไม่มี origin จึงไม่ผ่าน .url()) — service ถือว่าไม่ได้เปลี่ยนรูป ดู menu.images.js
+  imageUrl: z
+    .string()
+    .url('รูปแบบ URL ไม่ถูกต้อง')
+    .optional()
+    .or(z.literal(''))
+    .or(z.string().refine(isServedImagePath, 'รูปแบบ URL ไม่ถูกต้อง')),
   isAvailable: z.boolean().optional(),
   isRecommended: z.boolean().optional(),
   prepMinutes: z.number().int().min(0).max(240).optional(),

@@ -22,6 +22,18 @@ export const menuController = {
     ok(res, menuService.update(req.validated.params.id, req.body, req.user)),
   ),
 
+  // URL ที่มี v ตรงรูปปัจจุบันไม่มีวันชี้ไปรูปอื่น จึง cache ได้ยาว — v เก่า/ไม่มี v ให้ถามใหม่ทุกครั้ง (DECISIONS #101)
+  image: asyncHandler(async (req, res) => {
+    const image = menuService.image(req.validated.params.id, req.query.v);
+    res.set({
+      'Content-Type': image.mimeType,
+      'Cache-Control': image.isCurrent ? 'public, max-age=31536000, immutable' : 'no-cache',
+      // แอปเว็บตอนพัฒนาอยู่คนละ origin กับ API — helmet ตั้ง same-origin ไว้ ซึ่งบล็อกรูปข้าม origin
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+    });
+    return res.send(image.bytes);
+  }),
+
   setAvailability: asyncHandler(async (req, res) =>
     ok(res, menuService.setAvailability(req.validated.params.id, req.body.isAvailable)),
   ),

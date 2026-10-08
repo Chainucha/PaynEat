@@ -61,6 +61,10 @@ class _MenuFormPageState extends State<MenuFormPage> {
   /// `MenuItemPayload.toJson` จะไม่ส่ง key นี้เลยถ้าเป็น null — ดู menu_item_payload.dart)
   String? _imageUrl;
 
+  /// รูปตอนเปิดฟอร์ม — เซิร์ฟเวอร์ส่งรูปที่อัปโหลดไว้มาเป็น path สำหรับโหลดรูป ไม่ใช่ตัวรูป จึงส่งกลับไป
+  /// เฉพาะตอนเลือกรูปใหม่หรือลบรูปเท่านั้น (DECISIONS #101)
+  String? _initialImageUrl;
+
   bool get _hasImage => _imageUrl != null && _imageUrl!.isNotEmpty;
 
   static const _maxImageBytes = 1600 * 1024;
@@ -87,6 +91,7 @@ class _MenuFormPageState extends State<MenuFormPage> {
       _pluController.text = item.scalePlu ?? '';
       _optionGroups.addAll(item.optionGroups);
       _imageUrl = (item.imageUrl?.isNotEmpty ?? false) ? item.imageUrl : null;
+      _initialImageUrl = _imageUrl;
       _ingredientLinks.addAll(item.ingredients);
     } else if (_controller.categories.isNotEmpty) {
       _categoryId = _controller.categories.first.id;
@@ -178,7 +183,7 @@ class _MenuFormPageState extends State<MenuFormPage> {
         categoryId: _categoryId!,
         price: double.parse(_priceController.text.trim()),
         prepMinutes: int.tryParse(_prepController.text.trim()) ?? 10,
-        imageUrl: _imageUrl,
+        imageUrl: _imageUrl == _initialImageUrl ? null : _imageUrl,
         isAvailable: _isAvailable,
         isRecommended: _isRecommended,
         optionGroups: _optionGroups,

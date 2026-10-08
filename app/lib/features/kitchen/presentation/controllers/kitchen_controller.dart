@@ -292,6 +292,8 @@ class KitchenController extends GetxController {
   /// ตั๋วเข้า = รายการ pending ที่ไม่เคยเห็นใน session นี้และตรงกับชิปที่เลือก (CONTEXT.md "Ticket arrival")
   /// เทียบในเครื่องทุกครั้งที่โหลดคิว จึงดังได้ทั้งตอนมี event และตอน polling สำรองระหว่าง socket หลุด
   /// รายการที่ถูกเลิกทำถอยกลับมา pending ไม่นับ เพราะ id เคยเห็นแล้ว
+  /// ขอบที่ยอมรับ: ตั๋วเก่าที่ไม่มี stationCode เข้ามาก่อน [stations] โหลดเสร็จ ขณะกู้ชิปเฉพาะสถานีไว้
+  /// จะไม่ดัง (ถูกนับว่าเห็นแล้ว) เพราะ [defaultStationCode] ยังไม่รู้
   void _detectArrivals(List<OrderItem> rows) {
     final seen = _seenIds;
     _seenIds = {...?seen, for (final row in rows) row.id};
@@ -324,9 +326,16 @@ class KitchenController extends GetxController {
     final last = _lastChimeAt;
     if (last != null && now.difference(last) < chimeCooldown) return;
     _lastChimeAt = now;
-    _chime.play().then((ok) {
-      if (!ok) soundLocked.value = true;
-    });
+    _play();
+  }
+
+  /// เครื่องเล่นโยน error ถือเหมือนเล่นไม่ได้ — ขึ้นแถบ "แตะเพื่อเปิดเสียง" แทนที่จะเป็น error หลุดโซน
+  Future<void> _play() async {
+    try {
+      if (!await _chime.play()) soundLocked.value = true;
+    } catch (_) {
+      soundLocked.value = true;
+    }
   }
 
   bool isNew(OrderItem item) {
@@ -344,7 +353,12 @@ class KitchenController extends GetxController {
 
   /// เรียกจากปุ่มบนแถบ "แตะเพื่อเปิดเสียง" เท่านั้น — ต้องอยู่ใน gesture ของผู้ใช้
   Future<void> unlockSound() async {
-    soundLocked.value = !await _chime.unlock();
+    try {
+      soundLocked.value = !await _chime.unlock();
+    } catch (_) {
+      // ปลดล็อกไม่สำเร็จ → แถบยังอยู่ให้ลองแตะใหม่
+      soundLocked.value = true;
+    }
   }
 
   void _listenToRealtimeUpdates() {

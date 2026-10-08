@@ -1,6 +1,7 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -67,16 +68,20 @@ class _FakeChime implements ChimePlayer {
   int plays = 0;
   int unlocks = 0;
   bool playResult = true;
+  bool playThrows = false;
+  bool unlockThrows = false;
 
   @override
   Future<bool> play() async {
     plays++;
+    if (playThrows) throw StateError('play boom');
     return playResult;
   }
 
   @override
   Future<bool> unlock() async {
     unlocks++;
+    if (unlockThrows) throw StateError('unlock boom');
     return true;
   }
 }
@@ -639,6 +644,60 @@ void main() {
       expect(chime.unlocks, 1);
       expect(kds.soundLocked.value, isFalse);
     });
+
+    test('play() โยน error → soundLocked ไม่มี error หลุด', () async {
+      chime.playThrows = true;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      expect(chime.plays, 1);
+      expect(kds.soundLocked.value, isTrue);
+    });
+
+    test('unlock() โยน error → soundLocked ยังเป็น true', () async {
+      chime.playResult = false;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      chime.unlockThrows = true;
+      await kds.unlockSound();
+      expect(chime.unlocks, 1);
+      expect(kds.soundLocked.value, isTrue);
+    });
+
+    test('advance() ตั๋วที่เพิ่งเข้า → ป้าย "ใหม่" หายทันที', () async {
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      expect(kds.isNew(_item(2)), isTrue);
+      await kds.advance(_item(2));
+      expect(kds.isNew(_item(2)), isFalse);
+    });
+
+    test(
+      'timer จริง: socket หลุด → polling ทุก 30 วิ ดังเมื่อมีตั๋วใหม่ และล้างป้ายที่ครบ 2 นาที',
+      () {
+        fakeAsync((async) {
+          repository.nextQueueResult = Result.success([_item(1)]);
+          kds.onInit();
+          async.flushMicrotasks();
+          kds.isOffline.value = true;
+          expect(chime.plays, 0);
+
+          repository.nextQueueResult = Result.success([_item(1), _item(2)]);
+          async.elapse(const Duration(seconds: 30));
+          async.flushMicrotasks();
+          expect(chime.plays, 1);
+          expect(kds.newItems.keys, contains(2));
+
+          // เลย highlightWindow แล้ว timer ต้องล้างป้ายออกจาก newItems เอง
+          AppClock.freeze(t0.add(KitchenController.highlightWindow));
+          async.elapse(const Duration(seconds: 30));
+          async.flushMicrotasks();
+          expect(kds.newItems, isEmpty);
+          kds.onClose();
+        });
+      },
+    );
 
     test('ChimePlayer ที่เริ่มแบบล็อก (เว็บ) → soundLocked ตั้งแต่สร้าง', () {
       chime = _FakeChime(startsLocked: true);

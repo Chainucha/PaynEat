@@ -221,6 +221,11 @@ export const ERROR_MESSAGES = [
     ko: '기본 스테이션은 비활성화할 수 없습니다 — 먼저 다른 스테이션을 기본값으로 지정해 주세요',
   },
   {
+    th: 'เลือกสาขาก่อนดูหรือเปลี่ยนสถานะสถานีครัว',
+    en: 'Choose a branch before viewing or changing kitchen station status',
+    ko: '주방 스테이션 상태를 보거나 바꾸려면 먼저 지점을 선택해 주세요',
+  },
+  {
     th: 'ลบสถานีค่าเริ่มต้นไม่ได้ กรุณาตั้งสถานีอื่นเป็นค่าเริ่มต้นก่อน',
     en: "The default station can't be deleted — make another station the default first",
     ko: '기본 스테이션은 삭제할 수 없습니다 — 먼저 다른 스테이션을 기본값으로 지정해 주세요',

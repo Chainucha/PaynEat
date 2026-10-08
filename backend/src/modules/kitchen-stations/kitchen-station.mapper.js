@@ -17,4 +17,18 @@ export const toKitchenStationDto = (row) => {
   };
 };
 
+/** สถานะเปิด/ปิดของสถานีในสาขาหนึ่ง (ticket 36) */
+export const toStationStatusDto = (row) => ({
+  stationId: row.id,
+  code: row.code,
+  name: row.name,
+  nameEn: row.name_en,
+  nameKo: row.name_ko,
+  icon: row.icon,
+  isClosed: row.closed_at != null,
+  closedAt: row.closed_at ?? null,
+  closedByName: row.closed_by_name ?? null,
+  pendingCount: row.pending_count ?? 0,
+});
+
 export default toKitchenStationDto;

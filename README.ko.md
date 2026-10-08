@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1321%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -357,6 +357,14 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
   화면이 계정의 스테이션으로 열립니다. 비어 있는 태블릿을 아무거나 집어 쓰는 매장도 교대마다 다시
   고르지 않아도 됩니다. 잠금이 아니라 **기본값**이므로 칩은 계속 쓸 수 있고, 기기에서 고른 값이 계정
   설정을 덮어씁니다 (`docs/DECISIONS.md` #98)
+- **지점별 스테이션 닫기/열기** — 주방 화면 상단 버튼(주방/매니저/관리자)에서 이 지점의 스테이션을 한 번에 닫습니다.
+  바가 저녁 9시에 닫혀도 메뉴를 하나씩 품절 처리할 필요가 없습니다. 대기 중인 항목이 있으면 "N건 대기 중"을 먼저
+  알려 주지만 막지는 않으며(주방이 끝까지 조리), 주방 화면과 직원 주문 화면에 "닫힌 시각·담당자" 배너가 떠서 다시
+  여는 것을 잊지 않게 합니다(자동 재개 없음). 닫힌 스테이션의 메뉴는 직원 주문·추가 주문·QR 주문·저장된 계산서의
+  주방 전송 모두에서 409로 거절되고(장바구니는 유지), 다른 스테이션으로 대체되지 않으며 메뉴의 품절 상태
+  (`is_available`)는 건드리지 않으므로 다시 열면 이전 상태 그대로 돌아옵니다. 직원 화면에서는 해당 메뉴가 회색 +
+  "바 닫힘" 표시이고 QR 손님에게는 보이지 않습니다. 직원 주문 화면의 버튼은 매니저/관리자 전용입니다
+  (`docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
 - **잘못 변경한 상태 되돌리기** — 상태를 변경하면 화면 하단에 **"되돌리기"** 막대가 8초 동안 표시되어 한 단계
   되돌릴 수 있습니다 (조리 중 → 대기, 조리 완료 → 조리 중). 서빙 완료 상태는 되돌릴 수 없습니다. 시스템은 주방이 어디까지
   진행했는지 항상 기억하므로, 되돌리기를 해도 이미 조리한 음식이 직원이 직접 삭제·취소할 수 있는 항목으로 바뀌지 않습니다
@@ -524,13 +532,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1274건**의 자동화 테스트를 통과합니다.
+공개 전 **1321건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 593건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 627건 — domain / controller / widget
+cd backend && npm test      # 611건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 656건 — domain / controller / widget
 cd app && flutter test test_e2e   # 54건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1274건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1321건에 미포함)
 ```
 
 `app/test_e2e/`의 E2E 테스트 54건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의

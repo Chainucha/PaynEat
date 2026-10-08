@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1321%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1274 automated tests.
+control and 1321 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -693,6 +693,17 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 
 **Business rules you can try**
 
+- **Close / reopen a kitchen station per branch** (ticket 36) → sign in as `kitchen` → on the kitchen header tap **"Station
+  status"** → switch **Bar closed** (a station with items still queued asks for confirmation and says how many, but never
+  blocks) → the kitchen screen and the staff order screen show a banner **"Bar closed since … by …"** → open the order
+  screen as `waiter1`: drink dishes are greyed out with a **"Bar closed"** badge and cannot be tapped (calling the API directly
+  gets a 409 for the whole submit) → open a table's QR menu: no drinks at all → reopen the bar → the menu is back at once, and
+  dishes that were already sold out (by hand or by stock) stay sold out, because closing a station never touches a dish's
+  availability · sign in as `manager` and switch branch → the other branch can still order from the bar · `waiter1` sees the
+  banner but has no button to open the sheet (the order-screen button is for `manager`/`admin` only) · a bill saved before the
+  bar closed and then **sent to the kitchen** → refused with 409 and nothing is sent
+  (see `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
+
 - **Backups** (Options A/B/D) → run `npm run db:restore` while the server is still up → the command refuses and says how to stop
   the server (restoring over data in use is not possible) · log in as `cashier` or `waiter` → no Backups card and no warning
   (the API answers 403) · `manager` sees the home-screen warning when no backup has succeeded for 26 hours, but has no backup button ·
@@ -866,8 +877,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 593 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 627 cases — domain / controller / widget
+cd backend && npm test      # 611 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 656 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -989,6 +1000,11 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   to re-pick every shift. It is a **default, not a lock**: the chips still work and a choice made on the device
   overrides the account, so a mis-assigned account can never make tickets quietly disappear
   (see `docs/tickets/35-staff-kitchen-stations.md`, `docs/DECISIONS.md` #98)
+- **Close or reopen this branch's kitchen stations** from the button on the kitchen header (kitchen / manager / admin) —
+  when the bar closes at 9pm it is one switch, not an hour of marking dishes sold out one by one. Closing a station that
+  still has queued items warns "N items still pending" first (it never blocks; the kitchen finishes them). The kitchen screen
+  and the staff order screen show a "Closed since … by …" banner so nobody forgets to reopen (there is no automatic reopening)
+  (see `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
 
 ### 💰 Cashier
 
@@ -1087,6 +1103,9 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   with an **Export CSV** button for each report type (sales summary/top items/sales by day) for the
   selected date range (web only — see `docs/tickets/12-report-export.md`). Files include a
   UTF-8 BOM, so Thai text opens correctly in Excel, both in Demo Mode and with the real backend (#45)
+- **Open or close a kitchen station from the order screen** (manager / admin) — the **"Station status"** button in the app
+  bar opens the same sheet as the kitchen screen. An admin in "All branches" mode has to pick a branch first (no button),
+  and Menu management is chain-level setup, so it deliberately has no such button (see `docs/DECISIONS.md` #102)
 - **Menu management** — add/edit/delete items and define custom modifier groups; mark an item as
   **sold by weight** (price per kg) and assign a **barcode/scale PLU** (a code already used by another
   item in the same branch is rejected)
@@ -1180,6 +1199,10 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
 ### 🔐 System
 
 - JWT authentication with 5 role-based permission levels, enforced both in the API and in the app's menu visibility
+- **Dishes of a closed station cannot be ordered through any channel** — staff opening a bill, adding items, QR customers
+  and sending a saved bill to the kitchen all get a 409 for the whole submit (the cart is kept); there is no fallback to
+  another station, and a dish's `is_available` is never touched, so reopening restores exactly the previous state. Items
+  already in the queue carry on, and every close/reopen lands in the audit log (see `docs/DECISIONS.md` #102)
 - Responsive UI: mobile (bottom nav) / tablet (nav rail) / web (expanded rail)
 - A realtime connection indicator that alerts staff immediately when the connection drops
 - **Pending-sync badge** — if the connection drops while items are being added to an order, an AppBar badge shows
@@ -1583,13 +1606,13 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 593 cases
-cd app && flutter test      # 627 cases
+cd backend && npm test      # 611 cases
+cd app && flutter test      # 656 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (593 + 627 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (611 + 656 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1649,7 +1672,13 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (593 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (611 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+`station-closures.test.js` covers closing and reopening kitchen stations per branch (ticket 36): permissions for every role,
+branch isolation, repeated close/open, the audit log, cascade, `pendingCount`, a 409 on all three ways to order plus sending a
+saved bill to the kitchen, no fallback to the default station, and `is_available` staying untouched (the 0008 block is in
+`migrations.test.js`). On the app side `station_status_controller_test.dart`, `station_status_sheet_test.dart`,
+`menu_item_card_closed_test.dart` and `kitchen_header_360_test.dart` cover the sheet controller, the sheet, the greyed-out
+menu card and the kitchen header at 360px.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1982,8 +2011,7 @@ a successful sign-in clearing the count, the message following the request langu
 password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
 counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
 
-**Flutter (627 cases)** — organized into 3 levels:
-**Flutter (621 cases)** — organized into 3 levels:
+**Flutter (656 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -2077,6 +2105,12 @@ translation, consistent with the adjacent code.
 
 Completed work, planned work, and known limitations, with the reasoning for each.
 
+- [x] **Close / reopen a kitchen station per branch (ticket 36)** — a `station_closures` table (a row means closed), separate
+  from a chain-wide "inactive" station. Dishes of a closed station cannot be ordered through any channel (a 409 for the whole
+  submit, including sending a saved bill to the kitchen), with no fallback to another station and `is_available` untouched.
+  Staff see the dish greyed out, QR customers do not see it; there is a status sheet, a banner and a `station:status` event —
+  not done: scheduled opening hours / automatic reopening, falling back to another station, per-branch `is_active`
+  (see `docs/DECISIONS.md` #102)
 - [x] **Move table / merge bills / split bill per person** — `PATCH /orders/:id/move-table`,
   `POST /orders/:id/merge`, and splitting the bill by item (`POST /payments` with `itemIds` +
   `POST /payments/order/:id/split-preview`), with full UI for all 3 features (see the ✨ Features section)

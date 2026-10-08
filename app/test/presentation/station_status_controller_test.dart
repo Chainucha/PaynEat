@@ -1,12 +1,15 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
 import 'package:payneat_pos/core/network/socket_client.dart';
 import 'package:payneat_pos/core/services/session_service.dart';
 import 'package:payneat_pos/core/services/storage_service.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
+import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/kitchen/presentation/controllers/station_status_controller.dart';
 import 'package:payneat_pos/features/menu/domain/entities/station_status.dart';
 import 'package:payneat_pos/features/menu/domain/repositories/menu_repository.dart';
@@ -16,11 +19,18 @@ class _FakeMenuRepository implements MenuRepository {
   List<StationStatus> statuses = [];
   Failure? nextFailure;
   int loads = 0;
+  Completer<Result<List<StationStatus>>>? pendingLoad;
+  Completer<void>? gate;
   final calls = <String>[];
 
   @override
   Future<Result<List<StationStatus>>> getStationStatuses() async {
     loads++;
+    final pending = pendingLoad;
+    if (pending != null) {
+      pendingLoad = null;
+      return pending.future;
+    }
     return Result.success(List.of(statuses));
   }
 
@@ -30,6 +40,7 @@ class _FakeMenuRepository implements MenuRepository {
     required bool closed,
   }) async {
     calls.add('$stationId:$closed');
+    await gate?.future;
     if (nextFailure != null) return Result.failure(nextFailure!);
     statuses = [
       for (final s in statuses)
@@ -116,5 +127,56 @@ void main() {
     final ok = await controller.setClosed(controller.statuses.last, true);
     expect(ok, isFalse);
     expect(controller.closed, isEmpty);
+    expect(controller.errorMessage.value, 'สิทธิ์ไม่เพียงพอ');
+  });
+
+  test(
+    'admin โหมดทุกสาขา (ไม่มี branchId) → canUse เป็น false และ load ไม่เรียก API',
+    () async {
+      final session =
+          SessionService(storage: StorageService.memory(), socket: socket)
+            ..updateUser(
+              const User(
+                id: 1,
+                name: 'admin',
+                username: 'admin',
+                role: 'admin',
+                isActive: true,
+              ),
+            );
+      final adminController = StationStatusController(
+        getStatuses: GetStationStatusesUseCase(repository),
+        setClosed: SetStationClosedUseCase(repository),
+        session: session,
+      );
+      expect(adminController.canUse, isFalse);
+      await adminController.load();
+      expect(repository.loads, 0);
+      expect(adminController.statuses, isEmpty);
+    },
+  );
+
+  test('load เก่าที่ตอบช้ากว่า setClosed ไม่เขียนทับผลใหม่', () async {
+    await controller.load();
+    final slow = Completer<Result<List<StationStatus>>>();
+    repository.pendingLoad = slow;
+    final stale = controller.load();
+    await controller.setClosed(controller.statuses.last, true);
+    slow.complete(Result.success([_status(1, 'hot'), _status(3, 'bar')]));
+    await stale;
+    expect(controller.closed.single.code, 'bar');
+  });
+
+  test('กำลังสลับสถานีเดิมอยู่ → คำขอซ้ำถูกปฏิเสธ', () async {
+    await controller.load();
+    final gate = Completer<void>();
+    repository.gate = gate;
+    final first = controller.setClosed(controller.statuses.last, true);
+    expect(controller.busyIds, {3});
+    expect(await controller.setClosed(controller.statuses.last, true), isFalse);
+    gate.complete();
+    expect(await first, isTrue);
+    expect(controller.busyIds, isEmpty);
+    expect(repository.calls, ['3:true']);
   });
 }

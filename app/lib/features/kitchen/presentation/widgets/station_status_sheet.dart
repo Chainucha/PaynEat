@@ -50,25 +50,61 @@ class StationStatusSheet extends GetView<StationStatusController> {
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 8),
-              for (final station in controller.statuses)
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(station.labelWithIcon),
-                  subtitle: Text(
-                    station.isClosed
-                        ? 'station_status_closed_by'.trParams({
-                            'time': Formatters.dateTime(station.closedAt),
-                            'name': station.closedByName ?? '-',
-                          })
-                        : 'station_status_open'.tr,
-                  ),
-                  // สวิตช์ "เปิด" = สถานีเปิดรับออเดอร์
-                  value: !station.isClosed,
-                  onChanged: (open) => _toggle(station, open),
-                ),
+              Flexible(child: _body()),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _body() {
+    if (controller.statuses.isEmpty) {
+      if (controller.isLoading.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      final error = controller.errorMessage.value;
+      if (error != null) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Text(error, textAlign: TextAlign.center),
+              TextButton(
+                onPressed: controller.load,
+                child: Text('common_retry'.tr),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+    // เลื่อนได้ กันล้นเมื่อสถานีเยอะหรือจอเตี้ย (DECISIONS #62)
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          for (final station in controller.statuses)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(station.labelWithIcon),
+              subtitle: Text(
+                station.isClosed
+                    ? 'station_status_closed_by'.trParams({
+                        'time': Formatters.dateTime(station.closedAt),
+                        'name': station.closedByName ?? '-',
+                      })
+                    : 'station_status_open'.tr,
+              ),
+              // สวิตช์ "เปิด" = สถานีเปิดรับออเดอร์ — ปิดสวิตช์ระหว่างรอผล กันกดซ้ำ
+              value: !station.isClosed,
+              onChanged: controller.busyIds.contains(station.stationId)
+                  ? null
+                  : (open) => _toggle(station, open),
+            ),
+        ],
       ),
     );
   }

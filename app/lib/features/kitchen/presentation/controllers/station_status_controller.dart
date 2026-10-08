@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/network/socket_client.dart';
 import '../../../../core/services/session_service.dart';
+import '../../../../core/usecases/result.dart';
 import '../../../menu/domain/entities/station_status.dart';
 import '../../../menu/domain/usecases/menu_usecases.dart';
 
@@ -33,7 +34,12 @@ class StationStatusController extends GetxController {
   /// ขยับเมื่อชุดสถานีที่ปิดเปลี่ยน (ไม่นับโหลดแรก) — หน้าสั่งอาหารฟังค่านี้เพื่อโหลดเมนูใหม่
   final RxInt closedVersion = 0.obs;
 
+  /// id สถานีที่กำลังรอผลสลับสถานะ — ชีตปิดสวิตช์แถวนั้นไว้กันกดซ้ำ
+  final RxSet<int> busyIds = <int>{}.obs;
+
   Set<int>? _lastClosedIds;
+  // เลขลำดับคำขอ: ผลของคำขอที่เก่ากว่าคำขอล่าสุดถูกทิ้ง (กัน load ที่ออกก่อนสลับสถานะมาทับค่าใหม่)
+  int _requestSeq = 0;
   VoidCallback? _unsubscribe;
 
   /// admin โหมด "ทุกสาขา" ไม่มีสาขาปัจจุบัน backend จึงตอบ 400 — ซ่อนปุ่มและแบนเนอร์ไปเลย
@@ -61,8 +67,10 @@ class StationStatusController extends GetxController {
 
   Future<void> load() async {
     if (!canUse) return;
+    final seq = ++_requestSeq;
     isLoading.value = true;
     final result = await _getStatuses();
+    if (seq != _requestSeq) return;
     isLoading.value = false;
     result.fold(
       onSuccess: _apply,
@@ -72,11 +80,20 @@ class StationStatusController extends GetxController {
 
   /// คืน true เมื่อสำเร็จ — ข้อความ error อยู่ใน [errorMessage] ให้ชีตแสดงเอง
   Future<bool> setClosed(StationStatus station, bool closed) async {
-    final result = await _setClosed(
-      SetStationClosedParams(stationId: station.stationId, closed: closed),
-    );
+    if (!busyIds.add(station.stationId)) return false;
+    final Result<StationStatus> result;
+    try {
+      result = await _setClosed(
+        SetStationClosedParams(stationId: station.stationId, closed: closed),
+      );
+    } finally {
+      busyIds.remove(station.stationId);
+    }
     return result.fold(
       onSuccess: (updated) {
+        // load ที่ค้างอยู่ออกก่อนผลนี้ จึงเก่ากว่า — ทิ้งผลของมัน
+        _requestSeq++;
+        isLoading.value = false;
         _apply([
           for (final row in statuses)
             row.stationId == updated.stationId ? updated : row,

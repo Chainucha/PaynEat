@@ -22,13 +22,15 @@ class _FakeMenuRepository implements MenuRepository {
   final calls = <String>[];
   Failure? nextFailure;
   Failure? loadFailure;
+  // ตัวที่ getStationStatuses คืน — หลังสลับสถานะสำเร็จ controller โหลดซ้ำ จึงต้องสะท้อนค่าที่สลับแล้ว
+  List<StationStatus> rows = const [];
 
   // onInit ของ controller โหลดสถานะทันที — ตอบว่างไว้ ให้ test ตั้งค่า statuses เอง
   @override
   Future<Result<List<StationStatus>>> getStationStatuses() async =>
       loadFailure != null
       ? Result.failure(loadFailure!)
-      : Result.success(const <StationStatus>[]);
+      : Result.success(List.of(rows));
 
   @override
   Future<Result<StationStatus>> setStationClosed(
@@ -37,14 +39,14 @@ class _FakeMenuRepository implements MenuRepository {
   }) async {
     calls.add('$stationId:$closed');
     if (nextFailure != null) return Result.failure(nextFailure!);
-    return Result.success(
-      StationStatus(
-        stationId: stationId,
-        code: 'hot',
-        name: 'ครัวร้อน',
-        isClosed: closed,
-      ),
+    final updated = StationStatus(
+      stationId: stationId,
+      code: 'hot',
+      name: 'ครัวร้อน',
+      isClosed: closed,
     );
+    rows = [for (final row in rows) row.stationId == stationId ? updated : row];
+    return Result.success(updated);
   }
 
   @override
@@ -114,9 +116,9 @@ void main() {
   testWidgets('ชีต: สวิตช์ปิดสถานีที่ไม่มีรายการค้าง → ปิดทันทีโดยไม่ถาม', (
     tester,
   ) async {
-    controller.statuses.assignAll(const [
-      StationStatus(stationId: 1, code: 'hot', name: 'ครัวร้อน'),
-    ]);
+    const hot = [StationStatus(stationId: 1, code: 'hot', name: 'ครัวร้อน')];
+    repository.rows = hot;
+    controller.statuses.assignAll(hot);
     await pump(tester, const StationStatusSheet());
 
     await tester.tap(find.byType(Switch));
@@ -134,6 +136,7 @@ void main() {
   testWidgets('ชีต: ปิดสถานีที่มีรายการค้าง → ถามก่อน แล้วยืนยัน → ปิด', (
     tester,
   ) async {
+    repository.rows = pendingStation;
     controller.statuses.assignAll(pendingStation);
     await pump(tester, const StationStatusSheet());
 

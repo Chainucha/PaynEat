@@ -72,16 +72,18 @@ StationStatus _status(
 void main() {
   late _FakeMenuRepository repository;
   late SocketClient socket;
+  late SessionService session;
   late StationStatusController controller;
 
   setUp(() {
     repository = _FakeMenuRepository()
       ..statuses = [_status(1, 'hot'), _status(3, 'bar', pending: 2)];
     socket = SocketClient();
+    session = SessionService(storage: StorageService.memory(), socket: socket);
     controller = StationStatusController(
       getStatuses: GetStationStatusesUseCase(repository),
       setClosed: SetStationClosedUseCase(repository),
-      session: SessionService(storage: StorageService.memory(), socket: socket),
+      session: session,
     );
   });
 
@@ -179,4 +181,97 @@ void main() {
     expect(controller.busyIds, isEmpty);
     expect(repository.calls, ['3:true']);
   });
+
+  test('socket ต่อใหม่ (false→true) → โหลดสถานะใหม่หนึ่งครั้ง', () async {
+    controller.onInit();
+    await Future<void>.delayed(Duration.zero);
+    final before = repository.loads;
+
+    socket.connected.value = true;
+    await Future<void>.delayed(Duration.zero);
+    expect(repository.loads, before + 1);
+
+    // true→true ไม่ใช่การต่อใหม่ และ false ไม่โหลด
+    socket.connected.value = false;
+    await Future<void>.delayed(Duration.zero);
+    expect(repository.loads, before + 1);
+  });
+
+  test('canUse เปลี่ยนเป็น false หลังมีข้อมูล → ล้าง statuses', () async {
+    repository.statuses = [_status(1, 'hot'), _status(3, 'bar', closed: true)];
+    await controller.load();
+    expect(controller.statuses, isNotEmpty);
+
+    session.updateUser(
+      const User(
+        id: 1,
+        name: 'admin',
+        username: 'admin',
+        role: 'admin',
+        isActive: true,
+      ),
+    );
+    await controller.load();
+    expect(controller.canUse, isFalse);
+    expect(controller.statuses, isEmpty);
+    expect(controller.closed, isEmpty);
+  });
+
+  test(
+    'หลังล้างเพราะ canUse false แล้วกลับมาใช้ได้ ไม่นับเป็นการเปลี่ยนชุดสถานีปิด',
+    () async {
+      repository.statuses = [
+        _status(1, 'hot'),
+        _status(3, 'bar', closed: true),
+      ];
+      await controller.load();
+      session.updateUser(
+        const User(
+          id: 1,
+          name: 'admin',
+          username: 'admin',
+          role: 'admin',
+          isActive: true,
+        ),
+      );
+      await controller.load();
+      session.updateUser(
+        const User(
+          id: 2,
+          name: 'admin2',
+          username: 'admin2',
+          role: 'admin',
+          isActive: true,
+          branchId: 2,
+        ),
+      );
+      await controller.load();
+      expect(controller.closed.single.code, 'bar');
+      expect(controller.closedVersion.value, 0);
+    },
+  );
+
+  test(
+    'setClosed สำเร็จระหว่างมี load ค้างอยู่ → ยังโหลดใหม่ตามหลัง ไม่ทิ้งการเปลี่ยนจากเครื่องอื่น',
+    () async {
+      await controller.load();
+      final slow = Completer<Result<List<StationStatus>>>();
+      repository.pendingLoad = slow;
+      final inFlight = controller.load();
+      // เครื่องอื่นปิด hot ไปแล้ว ขณะที่เครื่องนี้ปิด bar
+      repository.statuses = [
+        _status(1, 'hot', closed: true),
+        _status(3, 'bar'),
+      ];
+      await controller.setClosed(controller.statuses.last, true);
+      slow.complete(Result.success([_status(1, 'hot'), _status(3, 'bar')]));
+      await inFlight;
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        controller.closed.map((s) => s.code),
+        unorderedEquals(['hot', 'bar']),
+      );
+    },
+  );
 }

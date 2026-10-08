@@ -12,6 +12,7 @@ import 'package:payneat_pos/core/services/session_service.dart';
 import 'package:payneat_pos/core/services/storage_service.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
 import 'package:payneat_pos/core/utils/app_clock.dart';
+import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/kitchen/presentation/controllers/kitchen_controller.dart';
 import 'package:payneat_pos/features/kitchen/presentation/controllers/station_status_controller.dart';
 import 'package:payneat_pos/features/kitchen/presentation/pages/kitchen_page.dart';
@@ -60,10 +61,21 @@ void main() {
       AppClock.freeze(now);
       final orders = _FakeOrderRepository();
       final menu = _FakeMenuRepository();
-      final session = SessionService(
-        storage: StorageService.memory(),
-        socket: SocketClient(),
-      );
+      final session =
+          SessionService(
+            storage: StorageService.memory(),
+            socket: SocketClient(),
+          )..updateUser(
+            const User(
+              id: 1,
+              name: 'ครัว',
+              username: 'kitchen',
+              role: 'kitchen',
+              isActive: true,
+              branchId: 1,
+            ),
+          );
+      Get.put<SessionService>(session);
       final kitchen = KitchenController(
         getQueue: GetKitchenQueueUseCase(orders),
         updateItemStatus: UpdateOrderItemStatusUseCase(orders),

@@ -1,6 +1,8 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -41,6 +43,8 @@ class StationStatusController extends GetxController {
   // เลขลำดับคำขอ: ผลของคำขอที่เก่ากว่าคำขอล่าสุดถูกทิ้ง (กัน load ที่ออกก่อนสลับสถานะมาทับค่าใหม่)
   int _requestSeq = 0;
   VoidCallback? _unsubscribe;
+  Worker? _userWorker;
+  bool _wasConnected = false;
 
   /// admin โหมด "ทุกสาขา" ไม่มีสาขาปัจจุบัน backend จึงตอบ 400 — ซ่อนปุ่มและแบนเนอร์ไปเลย
   bool get canUse =>
@@ -57,16 +61,37 @@ class StationStatusController extends GetxController {
       SocketEvents.stationStatus,
       (_) => load(),
     );
+    // socket ต่อใหม่ (ทั้งเน็ตหลุดแล้วกลับมา และ start() ตอนสลับสาขา) อาจพลาด event ไประหว่างนั้น → โหลดใหม่
+    _wasConnected = _session.socket.connected.value;
+    _session.socket.connected.addListener(_onConnectionChanged);
+    // ผู้ใช้/สาขาเปลี่ยน (สลับสาขา, ออกจากระบบ) → canUse อาจเปลี่ยน โหลดใหม่หรือล้างแถวเดิม
+    _userWorker = ever(_session.currentUserRx, (_) => load());
+  }
+
+  void _onConnectionChanged() {
+    final connected = _session.socket.connected.value;
+    final reconnected = connected && !_wasConnected;
+    _wasConnected = connected;
+    if (reconnected) load();
   }
 
   @override
   void onClose() {
     _unsubscribe?.call();
+    _session.socket.connected.removeListener(_onConnectionChanged);
+    _userWorker?.dispose();
     super.onClose();
   }
 
   Future<void> load() async {
-    if (!canUse) return;
+    if (!canUse) {
+      // ไม่มีสาขาปัจจุบัน (หรือสลับมาเป็นโหมดทุกสาขา) → ทิ้งแถวของสาขาเก่า กันแบนเนอร์ค้าง
+      _requestSeq++;
+      isLoading.value = false;
+      statuses.clear();
+      _lastClosedIds = null;
+      return;
+    }
     final seq = ++_requestSeq;
     isLoading.value = true;
     final result = await _getStatuses();
@@ -91,13 +116,15 @@ class StationStatusController extends GetxController {
     }
     return result.fold(
       onSuccess: (updated) {
-        // load ที่ค้างอยู่ออกก่อนผลนี้ จึงเก่ากว่า — ทิ้งผลของมัน
+        // load ที่ค้างอยู่ออกก่อนผลนี้ จึงเก่ากว่า — ทิ้งผลของมัน แล้วโหลดใหม่ตามหลัง
+        // เพื่อไม่ให้การเปลี่ยนจากเครื่องอื่นที่ load นั้นอาจเห็นหายไป
         _requestSeq++;
         isLoading.value = false;
         _apply([
           for (final row in statuses)
             row.stationId == updated.stationId ? updated : row,
         ]);
+        unawaited(load());
         return true;
       },
       onFailure: (failure) {

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/session_service.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../order/domain/entities/order_item.dart';
@@ -15,6 +16,11 @@ import '../widgets/kitchen_ticket_card.dart';
 import '../widgets/station_closed_banner.dart';
 import '../widgets/station_filter_bar.dart';
 import '../widgets/station_status_sheet.dart';
+
+/// เปิด/ปิดสถานีได้เฉพาะบทบาทที่ backend อนุญาต (พนักงานเสิร์ฟมีแท็บครัวแต่จะได้ 403 เสมอ)
+bool get _canToggleStations => UserRole.canToggleStations(
+  Get.find<SessionService>().currentUser?.role ?? '',
+);
 
 /// จอครัว — แบ่งเป็น 3 คอลัมน์ตามสถานะ เห็นภาพรวมงานทั้งครัวในจอเดียว
 class KitchenPage extends GetView<KitchenController> {
@@ -28,7 +34,10 @@ class KitchenPage extends GetView<KitchenController> {
       children: [
         const _KitchenHeader(),
         const StationFilterBar(),
-        StationClosedBanner(onTap: StationStatusSheet.show),
+        // แบนเนอร์เห็นได้ทุกบทบาท (พนักงานควรรู้ว่าสถานีไหนปิด) แต่แตะเปิดชีตได้เฉพาะคนที่สลับได้
+        StationClosedBanner(
+          onTap: _canToggleStations ? StationStatusSheet.show : null,
+        ),
         const _OfflineBanner(),
         Expanded(
           child: Obx(() {
@@ -267,8 +276,9 @@ class _KitchenHeader extends GetView<KitchenController> {
                 ],
               ),
             ),
-            // admin โหมด "ทุกสาขา" ใช้ไม่ได้ (canUse false) → ซ่อนปุ่ม
-            if (Get.find<StationStatusController>().canUse)
+            // admin โหมด "ทุกสาขา" ใช้ไม่ได้ (canUse false) และบทบาทที่สลับไม่ได้ → ซ่อนปุ่ม
+            if (_canToggleStations &&
+                Get.find<StationStatusController>().canUse)
               IconButton(
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,

@@ -111,6 +111,14 @@ void bindUseCases() {
     fenix: true,
   );
   Get.lazyPut(
+    () => GetStationStatusesUseCase(Get.find<MenuRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
+    () => SetStationClosedUseCase(Get.find<MenuRepository>()),
+    fenix: true,
+  );
+  Get.lazyPut(
     () => SaveKitchenStationUseCase(Get.find<MenuRepository>()),
     fenix: true,
   );

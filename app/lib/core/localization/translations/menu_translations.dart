@@ -3,6 +3,7 @@
 
 /// คำแปลของฟีเจอร์ menu
 const Map<String, String> menuTranslationsTh = {
+  'menu_station_not_found_error': 'ไม่พบสถานีครัวนี้',
   'menu_station_button': 'สถานีครัว',
   'menu_form_station_label': 'สถานีครัว',
   'menu_form_station_inherit': 'ตามหมวดหมู่ (@station)',
@@ -149,6 +150,7 @@ const Map<String, String> menuTranslationsTh = {
 };
 
 const Map<String, String> menuTranslationsEn = {
+  'menu_station_not_found_error': 'Kitchen station not found',
   'menu_station_button': 'Stations',
   'menu_form_station_label': 'Kitchen station',
   'menu_form_station_inherit': 'Follow the category (@station)',
@@ -297,6 +299,7 @@ const Map<String, String> menuTranslationsEn = {
 };
 
 const Map<String, String> menuTranslationsKo = {
+  'menu_station_not_found_error': '주방 스테이션을 찾을 수 없습니다',
   'menu_station_button': '스테이션',
   'menu_form_station_label': '주방 스테이션',
   'menu_form_station_inherit': '카테고리 따름 (@station)',

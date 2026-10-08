@@ -3546,4 +3546,57 @@ void main() {
       },
     );
   });
+
+  group('ticket 36 — ปิด/เปิดสถานีในโหมดสาธิต', () {
+    Map<String, dynamic> barDish() => store.menuItems.firstWhere(
+      (item) => store.resolveStationFor(item)['code'] == 'bar',
+    );
+    int barId() =>
+        store.kitchenStations.firstWhere((s) => s['code'] == 'bar')['id']
+            as int;
+
+    test('ปิดบาร์ → จานบาร์มี closedStation, ปิดซ้ำได้, เปิดคืนแล้วหาย', () {
+      final dish = barDish();
+      store.setStationClosed(barId(), true, actorId: 5);
+      store.setStationClosed(barId(), true, actorId: 5);
+      final listed = store.menuList().firstWhere(
+        (row) => row['id'] == dish['id'],
+      );
+      expect(store.closedStationFor(listed)?['id'], barId());
+      expect(
+        store.stationStatusList().firstWhere(
+          (s) => s['stationId'] == barId(),
+        )['isClosed'],
+        isTrue,
+      );
+      store.setStationClosed(barId(), false, actorId: 5);
+      expect(store.closedStationFor(listed), isNull);
+    });
+
+    test('สั่งจานบาร์ตอนบาร์ปิด → 409 และ is_available ไม่ถูกแตะ', () {
+      final dish = barDish();
+      store.setStationClosed(barId(), true, actorId: 5);
+      final order = store.createOrder(
+        type: 'takeaway',
+        guestCount: 1,
+        items: const [],
+      );
+      expect(
+        () => store.addItems(order['id'] as int, [
+          {'menuItemId': dish['id'], 'quantity': 1},
+        ]),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 409)),
+      );
+      expect(dish['isAvailable'], isTrue);
+    });
+
+    test('waiter ปิดสถานีไม่ได้ (403)', () {
+      final waiterId =
+          store.users.firstWhere((u) => u['role'] == 'waiter')['id'] as int;
+      expect(
+        () => store.setStationClosed(barId(), true, actorId: waiterId),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 403)),
+      );
+    });
+  });
 }

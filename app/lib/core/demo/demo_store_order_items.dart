@@ -132,6 +132,16 @@ extension DemoStoreOrderItems on DemoStore {
       }
 
       final station = resolveStationFor(menu);
+      // mirror ของ buildItemRow (ticket 36) — สถานีปิด = สั่งไม่ได้ ไม่ถอยไปสถานีอื่น
+      if (closedStationFor(menu) != null) {
+        throw ApiException(
+          message: 'order_error_station_closed'.trParams({
+            'station': DemoNames.of(station),
+            'name': DemoNames.of(menu),
+          }),
+          statusCode: 409,
+        );
+      }
       final item = {
         'id': _nextId(),
         'orderId': order['id'],

@@ -63,6 +63,9 @@ class DemoStore {
   late List<Map<String, dynamic>> users;
   late List<Map<String, dynamic>> categories;
   late List<Map<String, dynamic>> kitchenStations;
+
+  /// สถานีที่ปิดอยู่ (ticket 36) — โหมดสาธิตมีสาขาเดียว จึงเก็บตามสถานีอย่างเดียว
+  final Map<int, Map<String, dynamic>> stationClosures = {};
   late List<Map<String, dynamic>> menuItems;
   late List<Map<String, dynamic>> ingredients;
   late List<Map<String, dynamic>> tables;
@@ -106,6 +109,7 @@ class DemoStore {
     ingredients = DemoSeed.ingredients();
     tables = DemoSeed.tables();
     settings = DemoSeed.settings();
+    stationClosures.clear();
     orders.clear();
     payments.clear();
     refunds.clear();

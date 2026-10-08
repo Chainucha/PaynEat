@@ -3,6 +3,7 @@
 
 import '../../../../core/localization/localized_name.dart';
 import '../../../ingredient/domain/entities/ingredient.dart';
+import 'closed_station.dart';
 import 'menu_option.dart';
 
 /// เมนูอาหาร 1 รายการ
@@ -27,6 +28,7 @@ class MenuItem {
     this.barcode,
     this.scalePlu,
     this.stationId,
+    this.closedStation,
   });
 
   final int id;
@@ -61,6 +63,12 @@ class MenuItem {
   /// สถานีครัวของจานนี้ (ticket 34) — null = ตามหมวดหมู่ ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้าหมวดหมู่
   /// ก็ไม่ได้กำหนดไว้ สถานีถูกตัดสินและประทับลงตั๋วตอนบันทึกรายการ ไม่ใช่ตอนอ่านคิวครัว
   final int? stationId;
+
+  /// สถานีครัวที่ปิดอยู่ของจานนี้ (ticket 36) — null = สถานีเปิดอยู่
+  final ClosedStation? closedStation;
+
+  /// สั่งได้ตอนนี้ = เปิดขายอยู่ และสถานีของจานเปิดอยู่ (CONTEXT.md "Orderable dish")
+  bool get isOrderable => isAvailable && closedStation == null;
 
   /// ชื่อที่จะแสดงตามภาษาปัจจุบัน
   ///

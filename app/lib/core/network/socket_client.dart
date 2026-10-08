@@ -17,6 +17,7 @@ class SocketEvents {
   static const String kitchenTicket = 'kitchen:ticket';
   static const String tableUpdated = 'table:updated';
   static const String scaleReading = 'scale:reading';
+  static const String stationStatus = 'station:status';
 }
 
 /// ห่อ socket.io ให้ใช้ง่ายและ mock ได้
@@ -56,6 +57,14 @@ class SocketClient {
         _socket!.on(event, handler);
       }
     });
+  }
+
+  /// ยิง event เข้า handler ที่ลงทะเบียนไว้โดยไม่ผ่าน socket จริง — ใช้ในเทสต์เท่านั้น
+  @visibleForTesting
+  void dispatchLocal(String event, dynamic data) {
+    for (final handler in List.of(_handlers[event] ?? const [])) {
+      handler(data);
+    }
   }
 
   /// ลงทะเบียนรับ event — คืนฟังก์ชันสำหรับยกเลิกการรับ

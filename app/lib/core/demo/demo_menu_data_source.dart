@@ -59,6 +59,24 @@ class DemoMenuDataSource implements MenuRemoteDataSource {
       _delayed(() => _store.deleteKitchenStation(id));
 
   @override
+  Future<List<StationStatusModel>> getStationStatuses() => _delayed(
+    () => _store
+        .stationStatusList()
+        .map(StationStatusModel.fromJson)
+        .toList(growable: false),
+  );
+
+  @override
+  Future<StationStatusModel> setStationClosed(
+    int stationId, {
+    required bool closed,
+  }) => _delayed(
+    () => StationStatusModel.fromJson(
+      _store.setStationClosed(stationId, closed, actorId: _auth.currentUserId),
+    ),
+  );
+
+  @override
   Future<List<MenuItemModel>> getMenuItems({
     int? categoryId,
     String? search,
@@ -72,7 +90,12 @@ class DemoMenuDataSource implements MenuRemoteDataSource {
           search: search,
           availableOnly: availableOnly,
         )
-        .map(_store.presentMenuItem)
+        .map(
+          (row) => {
+            ..._store.presentMenuItem(row),
+            'closedStation': _store.closedStationFor(row),
+          },
+        )
         .map(MenuItemModel.fromJson)
         .toList(growable: false),
   );

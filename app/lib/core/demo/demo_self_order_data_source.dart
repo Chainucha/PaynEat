@@ -26,7 +26,10 @@ class DemoSelfOrderDataSource implements SelfOrderRemoteDataSource {
   @override
   Future<SelfOrderMenuModel> getMenu(String qrToken) => _delayed(() {
     _store.resolveTableByQrToken(qrToken);
-    final available = _store.menuList(availableOnly: true);
+    final available = _store
+        .menuList(availableOnly: true)
+        .where((item) => _store.closedStationFor(item) == null)
+        .toList(growable: false);
     return (
       categories: _store
           .categoryList()

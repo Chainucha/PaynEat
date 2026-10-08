@@ -7,6 +7,7 @@ import '../entities/menu_item_payload.dart';
 import '../entities/category.dart';
 import '../entities/kitchen_station.dart';
 import '../entities/menu_item.dart';
+import '../entities/station_status.dart';
 import '../repositories/menu_repository.dart';
 
 /// พารามิเตอร์สำหรับกรองเมนู
@@ -222,4 +223,34 @@ class DeleteKitchenStationUseCase implements UseCase<void, int> {
   @override
   Future<Result<void>> call(int params) =>
       _repository.deleteKitchenStation(params);
+}
+
+/// สถานะเปิด/ปิดของสถานีครัวรายสาขา (ticket 36)
+class GetStationStatusesUseCase
+    implements NoParamsUseCase<List<StationStatus>> {
+  const GetStationStatusesUseCase(this._repository);
+
+  final MenuRepository _repository;
+
+  @override
+  Future<Result<List<StationStatus>>> call() =>
+      _repository.getStationStatuses();
+}
+
+class SetStationClosedParams {
+  const SetStationClosedParams({required this.stationId, required this.closed});
+
+  final int stationId;
+  final bool closed;
+}
+
+class SetStationClosedUseCase
+    implements UseCase<StationStatus, SetStationClosedParams> {
+  const SetStationClosedUseCase(this._repository);
+
+  final MenuRepository _repository;
+
+  @override
+  Future<Result<StationStatus>> call(SetStationClosedParams params) =>
+      _repository.setStationClosed(params.stationId, closed: params.closed);
 }

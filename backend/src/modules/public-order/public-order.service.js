@@ -158,7 +158,10 @@ export const publicOrderService = {
   getMenu(qrToken) {
     const { table } = resolveTable(qrToken);
     const categories = categoryService.list({ activeOnly: true }).map(toPublicCategory);
-    const { items } = menuService.list({ availableOnly: true }, table.branch_id);
+    const { items: listed } = menuService.list({ availableOnly: true }, table.branch_id);
+    // จานของสถานีที่ปิดอยู่ (ticket 36) ซ่อนจากลูกค้าเหมือนจานปิดขาย และไม่นับเป็น "สั่งกับพนักงาน"
+    // เพราะพนักงานก็สั่งให้ไม่ได้เหมือนกัน
+    const items = listed.filter((item) => !item.closedStation);
     // สินค้าขายตามน้ำหนักต้องให้พนักงานชั่งจริงก่อนถึงรู้ราคา ลูกค้าสั่งเองจากโต๊ะไม่ได้ จึงไม่แสดง
     // ในเมนูฝั่งลูกค้าเลย (ดู docs/tickets/18-sell-by-weight.md)
     const orderable = items.filter((item) => !item.soldByWeight).map(toPublicMenuItem);

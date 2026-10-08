@@ -358,3 +358,52 @@ test('สถานีที่ปิดอยู่แล้วถูกปิ�
   const table = await createTable(token);
   assert.equal((await openOrder(token, table.id, dish.id)).status, 201);
 });
+
+test('เมนูพนักงานบอก closedStation ส่วนเมนู QR ไม่มีจานนั้นเลย — is_available ไม่ถูกแตะ', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+  const table = await createTable(token);
+  const findDish = async () =>
+    (await get('/api/v1/menu-items?limit=500', token)).body.data.find((row) => row.id === dish.id);
+
+  assert.equal((await findDish()).closedStation, null);
+
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+
+  const closedRow = await findDish();
+  assert.deepEqual(closedRow.closedStation, {
+    id: station.id,
+    name: station.name,
+    nameEn: null,
+    nameKo: null,
+  });
+  assert.equal(closedRow.isAvailable, true, 'ปิดสถานีไม่แตะ is_available');
+
+  const publicMenu = (await api().get(`/api/v1/public/tables/${table.qrToken}/menu`)).body.data;
+  assert.ok(!publicMenu.items.some((row) => row.id === dish.id), 'QR ไม่เห็นจานของสถานีที่ปิด');
+
+  await post(`/api/v1/kitchen-stations/${station.id}/open`, token);
+  assert.equal((await findDish()).closedStation, null);
+});
+
+test('เมนูที่ปิดขายไว้ก่อน → ปิดแล้วเปิดสถานีคืน เมนูนั้นยังปิดขายอยู่', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+  await patch(`/api/v1/menu-items/${dish.id}/availability`, token, { isAvailable: false });
+
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+  await post(`/api/v1/kitchen-stations/${station.id}/open`, token);
+
+  const row = (await get(`/api/v1/menu-items/${dish.id}`, token)).body.data;
+  assert.equal(row.isAvailable, false);
+});
+
+test('admin โหมดทุกสาขาเห็น closedStation ตามสาขาของจานเอง', async () => {
+  const admin = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(admin.token);
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, admin.token);
+
+  const all = await post('/api/v1/auth/select-branch', admin.token, { branchId: null });
+  const rows = (await get('/api/v1/menu-items?limit=1000', all.body.data.token)).body.data;
+  assert.equal(rows.find((row) => row.id === dish.id).closedStation?.id, station.id);
+});

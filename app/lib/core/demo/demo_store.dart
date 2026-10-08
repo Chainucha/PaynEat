@@ -63,13 +63,13 @@ class DemoStore {
   late List<Map<String, dynamic>> users;
   late List<Map<String, dynamic>> categories;
   late List<Map<String, dynamic>> kitchenStations;
-
-  /// สถานีที่ปิดอยู่ (ticket 36) — โหมดสาธิตมีสาขาเดียว จึงเก็บตามสถานีอย่างเดียว
-  final Map<int, Map<String, dynamic>> stationClosures = {};
   late List<Map<String, dynamic>> menuItems;
   late List<Map<String, dynamic>> ingredients;
   late List<Map<String, dynamic>> tables;
   late Map<String, dynamic> settings;
+
+  /// สถานีที่ปิดอยู่ (ticket 36) — โหมดสาธิตมีสาขาเดียว จึงเก็บตามสถานีอย่างเดียว
+  final Map<int, Map<String, dynamic>> stationClosures = {};
 
   final List<Map<String, dynamic>> orders = [];
   final List<Map<String, dynamic>> payments = [];

@@ -156,7 +156,7 @@ extension DemoStoreOrders on DemoStore {
     // mirror ของ order.service.js#sendToKitchen (ticket 36) — บิลที่รออยู่แล้วสถานีปิดไปก่อนส่ง
     if (order['status'] == OrderStatus.open) {
       for (final item in active) {
-        if (stationClosures.containsKey(item['stationId'])) {
+        if (isStationClosed(item['stationId'])) {
           throw ApiException(
             message: 'order_error_station_closed'.trParams({
               'station': item['stationName'] as String? ?? '',
@@ -166,9 +166,6 @@ extension DemoStoreOrders on DemoStore {
           );
         }
       }
-    }
-
-    if (order['status'] == OrderStatus.open) {
       order['status'] = OrderStatus.inKitchen;
     }
 

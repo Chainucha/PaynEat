@@ -101,9 +101,13 @@ class DemoMenuDataSource implements MenuRemoteDataSource {
   );
 
   @override
-  Future<MenuItemModel> getMenuItem(int id) => _delayed(
-    () => MenuItemModel.fromJson(_store.presentMenuItem(_store.menuItem(id))),
-  );
+  Future<MenuItemModel> getMenuItem(int id) => _delayed(() {
+    final row = _store.menuItem(id);
+    return MenuItemModel.fromJson({
+      ..._store.presentMenuItem(row),
+      'closedStation': _store.closedStationFor(row),
+    });
+  });
 
   @override
   Future<MenuItemModel> createMenuItem(MenuItemPayload payload) => _delayed(

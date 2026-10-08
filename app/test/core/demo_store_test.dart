@@ -3590,6 +3590,105 @@ void main() {
       expect(dish['isAvailable'], isTrue);
     });
 
+    test('409 ระบุชื่อสถานีและชื่อจานในข้อความ', () {
+      final dish = barDish();
+      store.setStationClosed(barId(), true, actorId: 5);
+      final order = store.createOrder(
+        type: 'takeaway',
+        guestCount: 1,
+        items: const [],
+      );
+      expect(
+        () => store.addItems(order['id'] as int, [
+          {'menuItemId': dish['id'], 'quantity': 1},
+        ]),
+        throwsA(
+          isA<ApiException>()
+              .having(
+                (e) => e.message,
+                'station',
+                contains(DemoNames.of(store.resolveStationFor(dish))),
+              )
+              .having((e) => e.message, 'dish', contains(DemoNames.of(dish))),
+        ),
+      );
+    });
+
+    test(
+      'บิลที่ยังไม่ส่งครัว แล้วบาร์ปิดก่อนส่ง → ส่งครัว 409 และบิลยัง open',
+      () {
+        final dish = barDish();
+        final order = store.createOrder(
+          type: 'takeaway',
+          guestCount: 1,
+          items: const [],
+        );
+        store.addItems(order['id'] as int, [
+          {'menuItemId': dish['id'], 'quantity': 1},
+        ]);
+        store.setStationClosed(barId(), true, actorId: 5);
+        expect(
+          () => store.sendToKitchen(order['id'] as int),
+          throwsA(
+            isA<ApiException>().having((e) => e.statusCode, 'status', 409),
+          ),
+        );
+        expect(store.findOrder(order['id'] as int)['status'], OrderStatus.open);
+      },
+    );
+
+    test('สถานีปิดแล้วถูกปิดใช้งาน → แถวปิดค้างไม่มีผล สั่งและส่งครัวได้', () {
+      final dish = barDish();
+      store.setStationClosed(barId(), true, actorId: 5);
+      store.kitchenStations.firstWhere((s) => s['id'] == barId())['isActive'] =
+          false;
+      final order = store.createOrder(
+        type: 'takeaway',
+        guestCount: 1,
+        items: const [],
+      );
+      store.addItems(order['id'] as int, [
+        {'menuItemId': dish['id'], 'quantity': 1},
+      ]);
+      store.sendToKitchen(order['id'] as int);
+      expect(
+        store.findOrder(order['id'] as int)['status'],
+        OrderStatus.inKitchen,
+      );
+    });
+
+    test('เมนู QR ซ่อนจานของสถานีที่ปิด', () async {
+      final dish = barDish();
+      final token = store.tables.first['qrToken'] as String;
+      final source = DemoSelfOrderDataSource(store);
+      Future<Iterable<int>> ids() async =>
+          (await source.getMenu(token)).items.map((item) => item.id);
+      expect(await ids(), contains(dish['id']));
+      store.setStationClosed(barId(), true, actorId: 5);
+      expect(await ids(), isNot(contains(dish['id'])));
+    });
+
+    test('audit: ปิดสองรอบเปิดสองรอบ → บันทึกอย่างละหนึ่งแถว', () {
+      store.setStationClosed(barId(), true, actorId: 5);
+      store.setStationClosed(barId(), true, actorId: 5);
+      store.setStationClosed(barId(), false, actorId: 5);
+      store.setStationClosed(barId(), false, actorId: 5);
+      int count(String action) => store.auditLogs
+          .where((row) => row['action'] == action && row['entityId'] == barId())
+          .length;
+      expect(count('kitchen_station.close'), 1);
+      expect(count('kitchen_station.open'), 1);
+    });
+
+    test('บทบาทครัวปิดสถานีได้', () {
+      final kitchenId =
+          store.users.firstWhere((u) => u['role'] == 'kitchen')['id'] as int;
+      expect(
+        () => store.setStationClosed(barId(), true, actorId: kitchenId),
+        returnsNormally,
+      );
+    });
+
     test('waiter ปิดสถานีไม่ได้ (403)', () {
       final waiterId =
           store.users.firstWhere((u) => u['role'] == 'waiter')['id'] as int;

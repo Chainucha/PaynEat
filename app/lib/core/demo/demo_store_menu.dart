@@ -348,12 +348,18 @@ extension DemoStoreMenu on DemoStore {
     );
   }
 
+  /// สถานีนี้ปิดอยู่จริงไหม — มีแถวปิด และสถานียังเปิดใช้งาน (ปิดใช้งานแล้วแถวปิดค้างไม่มีผล)
+  bool isStationClosed(Object? stationId) {
+    if (!stationClosures.containsKey(stationId)) return false;
+    final station = kitchenStations.where((row) => row['id'] == stationId);
+    return station.isEmpty || station.first['isActive'] != false;
+  }
+
   /// สถานีที่ปิดอยู่ของจานนี้ (ticket 36) — mirror ของ kitchenStationService.closedStationLookup
   /// สถานีที่ถูกปิดใช้งานไม่นับ แม้ยังมีแถวปิดค้าง
   Map<String, dynamic>? closedStationFor(Map<String, dynamic> menu) {
     final station = resolveStationFor(menu);
-    if (station['isActive'] == false) return null;
-    if (!stationClosures.containsKey(station['id'])) return null;
+    if (!isStationClosed(station['id'])) return null;
     return {
       'id': station['id'],
       'name': station['name'],

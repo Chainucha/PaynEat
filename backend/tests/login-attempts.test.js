@@ -103,3 +103,12 @@ test('POST /auth/change-password — ใส่รหัสผ่านปัจ�
   // ยังเข้าสู่ระบบด้วยรหัสเดิมได้ — ตัวนับของเปลี่ยนรหัสผ่านแยกจาก login และรหัสไม่ได้ถูกเปลี่ยน
   assert.equal((await attempt('10.0.5.1', 'admin', 'admin123')).status, 200);
 });
+
+test('POST /auth/login — ยิงรหัสผิดพร้อมกันก็ลองได้ไม่เกินเพดาน (ตรวจรหัสผ่านแบบ async, DECISIONS #101)', async () => {
+  const results = await Promise.all(
+    Array.from({ length: 8 }, () => attempt('10.0.6.1', 'kitchen', 'wrong')),
+  );
+  const statuses = results.map((res) => res.status);
+  assert.equal(statuses.filter((status) => status === 401).length, 3, statuses.join(','));
+  assert.equal(statuses.filter((status) => status === 429).length, 5, statuses.join(','));
+});

@@ -8,10 +8,7 @@ import { guardLogin, guardPasswordChange } from './auth.attempts.js';
 
 export const authController = {
   login: asyncHandler(async (req, res) =>
-    ok(
-      res,
-      guardLogin(req, res, () => authService.login(req.body)),
-    ),
+    ok(res, await guardLogin(req, res, () => authService.login(req.body))),
   ),
 
   selectBranch: asyncHandler(async (req, res) =>
@@ -21,7 +18,7 @@ export const authController = {
   me: asyncHandler(async (req, res) => ok(res, authService.me(req.user.id, req.branchId))),
 
   changePassword: asyncHandler(async (req, res) => {
-    guardPasswordChange(req, res, () => authService.changePassword(req.user.id, req.body));
+    await guardPasswordChange(req, res, () => authService.changePassword(req.user.id, req.body));
     return ok(res, { message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว' });
   }),
 };

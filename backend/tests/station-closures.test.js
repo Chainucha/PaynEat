@@ -3,7 +3,9 @@
 
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
+import http from 'node:http';
 import { api, login, authHeader, cleanup } from './helpers/testApp.js';
+import { initSocket, getIo, closeSocket, EVENTS } from '../src/realtime/socket.js';
 
 // ปิด/เปิดสถานีครัวรายสาขา (ticket 36) — สถานีปิด ≠ สถานีที่ปิดใช้งาน (CONTEXT.md)
 // ทุกเทสต์สร้างสถานี/หมวด/เมนูของตัวเอง ไม่แตะสามสถานีตั้งต้น ปิดแล้วจึงไม่รั่วไปเทสต์อื่น
@@ -159,4 +161,87 @@ test('ลบสถานีที่ปิดอยู่ได้ แถวป�
     .delete(`/api/v1/kitchen-stations/${station.id}`)
     .set(authHeader(token));
   assert.equal(removed.status, 204, JSON.stringify(removed.body));
+});
+
+/** เปิดออเดอร์ที่โต๊ะใหม่ด้วยจานเดียว แล้วส่งครัวถ้า send=true */
+const orderDish = async (token, menuItemId, send) => {
+  const table = await post('/api/v1/tables', token, { name: unique('T') });
+  assert.equal(table.status, 201, JSON.stringify(table.body));
+  const order = await post('/api/v1/orders', token, {
+    type: 'dine_in',
+    tableId: table.body.data.id,
+    guestCount: 1,
+    items: [{ menuItemId, quantity: 1 }],
+  });
+  assert.equal(order.status, 201, JSON.stringify(order.body));
+  if (send) {
+    const sent = await post(`/api/v1/orders/${order.body.data.id}/send-to-kitchen`, token);
+    assert.equal(sent.status, 200, JSON.stringify(sent.body));
+  }
+  return order.body.data;
+};
+
+test('pendingCount นับเฉพาะรายการที่ส่งครัวแล้ว และตั๋วไม่มีสถานีนับเป็นสถานีค่าเริ่มต้น', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station, dish } = await stationWithDish(token);
+
+  await orderDish(token, dish.id, true);
+  await orderDish(token, dish.id, false); // ยัง open ต้องไม่ถูกนับ
+  assert.equal((await statusOf(token, station.id)).pendingCount, 1);
+
+  // จานที่ไม่ผูกสถานี (เมนู/หมวดหมู่ไม่ระบุ) ไปตกที่สถานีค่าเริ่มต้น
+  const stations = (await get('/api/v1/kitchen-stations/status', token)).body.data;
+  const defaults = (await get('/api/v1/kitchen-stations', token)).body.data;
+  const defaultId = defaults.find((row) => row.isDefault).id;
+  const before = stations.find((row) => row.stationId === defaultId).pendingCount;
+  const category = await post('/api/v1/categories', token, { name: unique('หมวด-') });
+  assert.equal(category.status, 201, JSON.stringify(category.body));
+  const plain = await post('/api/v1/menu-items', token, {
+    categoryId: category.body.data.id,
+    name: unique('จาน-'),
+    price: 40,
+    branchId: 1,
+  });
+  assert.equal(plain.status, 201, JSON.stringify(plain.body));
+  await orderDish(token, plain.body.data.id, true);
+  assert.equal((await statusOf(token, defaultId)).pendingCount, before + 1);
+
+  // ปิดสถานีแล้ว audit เก็บจำนวนที่ค้างจริง
+  await post(`/api/v1/kitchen-stations/${station.id}/close`, token);
+  const [log] = await auditFor(token, 'kitchen_station.close', station.id);
+  assert.deepEqual(log.metadata.summaryArgs, { station: station.name, pending: 1 });
+});
+
+test('ส่ง station:status เมื่อสถานะเปลี่ยนจริงเท่านั้น ไม่ส่งตอนปิดซ้ำ/เปิดซ้ำ', async () => {
+  const { token } = await login('admin', 'admin123');
+  const { station } = await stationWithDish(token);
+  initSocket(http.createServer());
+  try {
+    const captured = [];
+    getIo().to = (rooms) => ({
+      emit: (event, payload) => captured.push({ rooms, event, payload }),
+    });
+    const url = (action) => `/api/v1/kitchen-stations/${station.id}/${action}`;
+
+    await post(url('close'), token);
+    assert.equal(captured.length, 1);
+    const [first] = captured;
+    assert.equal(first.event, EVENTS.STATION_STATUS);
+    assert.equal(first.payload.branchId, 1);
+    assert.equal(first.payload.stationId, station.id);
+    assert.equal(first.payload.isClosed, true);
+    for (const room of ['room:kitchen', 'room:service', 'room:management']) {
+      assert.ok(first.rooms.includes(room), `ต้องส่งเข้า ${room}`);
+    }
+
+    await post(url('close'), token);
+    assert.equal(captured.length, 1);
+    await post(url('open'), token);
+    assert.equal(captured.length, 2);
+    assert.equal(captured[1].payload.isClosed, false);
+    await post(url('open'), token);
+    assert.equal(captured.length, 2);
+  } finally {
+    closeSocket();
+  }
 });

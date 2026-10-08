@@ -11,6 +11,7 @@ import { seed } from './db/seed.js';
 import { initSocket } from './realtime/socket.js';
 import { closeDb } from './db/index.js';
 import { startServerHeartbeat, stopServerHeartbeat } from './db/serverLock.js';
+import { startPlannerStatsSchedule, stopPlannerStatsSchedule } from './db/plannerStats.js';
 import { backupService } from './modules/backups/backup.service.js';
 import { scaleService } from './modules/scale/scale.service.js';
 import {
@@ -31,6 +32,8 @@ try {
   process.exit(1);
 }
 if (process.env.AUTO_SEED !== 'false') seed();
+// สถิติของ query planner หลัง migration สร้าง index และ seed ใส่ข้อมูลครบแล้ว (DECISIONS #101)
+startPlannerStatsSchedule();
 // นับการเปลี่ยนแปลงข้อมูลสำหรับรอบทุก 6 ชั่วโมงหลัง migration และ seed เขียนไปแล้ว
 backupService.markBaseline();
 backupService.startSchedule();
@@ -75,6 +78,7 @@ const shutdown = (signal) => {
   stopErpPullSchedule();
   backupService.stopSchedule();
   stopServerHeartbeat();
+  stopPlannerStatsSchedule();
   metricsServer?.close();
   server.close(() => {
     closeDb();

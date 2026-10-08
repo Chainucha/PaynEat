@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/session_service.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../kitchen/presentation/widgets/station_closed_banner.dart';
+import '../../../kitchen/presentation/widgets/station_status_sheet.dart';
 import '../../../menu/domain/entities/menu_item.dart';
 import '../../../menu/presentation/controllers/menu_controller.dart';
 import '../../../menu/presentation/widgets/category_filter_bar.dart';
@@ -27,6 +31,11 @@ class OrderTakingPage extends GetView<MenuBrowseController> {
   const OrderTakingPage({super.key});
 
   CartController get cart => Get.find<CartController>();
+
+  /// เปิด/ปิดสถานีได้จากหน้านี้เฉพาะผู้จัดการ/แอดมิน (ครัวไม่ได้ใช้หน้านี้) — ticket 36
+  bool get canToggleStations => UserRole.canToggleStations(
+    Get.find<SessionService>().currentUser?.role ?? '',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +78,12 @@ class OrderTakingPage extends GetView<MenuBrowseController> {
               : 'order_taking_title_takeaway'.tr,
         ),
         actions: [
+          if (canToggleStations)
+            IconButton(
+              tooltip: 'station_status_button'.tr,
+              onPressed: StationStatusSheet.show,
+              icon: const Icon(Icons.storefront_outlined),
+            ),
           if (!isWide)
             Obx(
               () => cart.isEmpty
@@ -84,21 +99,33 @@ class OrderTakingPage extends GetView<MenuBrowseController> {
             ),
         ],
       ),
-      body: isWide
-          ? Row(
-              children: [
-                const Expanded(child: _MenuSection()),
-                Container(
-                  width: 380,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border(left: BorderSide(color: AppColors.border)),
-                  ),
-                  child: const CartPanel(),
-                ),
-              ],
-            )
-          : const _MenuSection(),
+      body: Column(
+        children: [
+          // แบนเนอร์เฉพาะพนักงาน (ticket 36) — ลูกค้า QR ไม่เห็น; ผู้จัดการแตะเพื่อเปิดชีต
+          StationClosedBanner(
+            onTap: canToggleStations ? StationStatusSheet.show : null,
+          ),
+          Expanded(
+            child: isWide
+                ? Row(
+                    children: [
+                      const Expanded(child: _MenuSection()),
+                      Container(
+                        width: 380,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          border: Border(
+                            left: BorderSide(color: AppColors.border),
+                          ),
+                        ),
+                        child: const CartPanel(),
+                      ),
+                    ],
+                  )
+                : const _MenuSection(),
+          ),
+        ],
+      ),
       bottomNavigationBar: isWide
           ? null
           : _MobileCartBar(onTap: () => _openCartSheet(context)),

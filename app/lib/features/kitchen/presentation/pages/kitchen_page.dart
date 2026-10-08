@@ -10,8 +10,11 @@ import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../order/domain/entities/order_item.dart';
 import '../controllers/kitchen_controller.dart';
+import '../controllers/station_status_controller.dart';
 import '../widgets/kitchen_ticket_card.dart';
+import '../widgets/station_closed_banner.dart';
 import '../widgets/station_filter_bar.dart';
+import '../widgets/station_status_sheet.dart';
 
 /// จอครัว — แบ่งเป็น 3 คอลัมน์ตามสถานะ เห็นภาพรวมงานทั้งครัวในจอเดียว
 class KitchenPage extends GetView<KitchenController> {
@@ -19,10 +22,13 @@ class KitchenPage extends GetView<KitchenController> {
 
   @override
   Widget build(BuildContext context) {
+    // ให้ StationStatusController ถูกสร้าง (onInit โหลดสถานะและฟัง event) ตั้งแต่เปิดจอครัว
+    Get.find<StationStatusController>();
     return Column(
       children: [
         const _KitchenHeader(),
         const StationFilterBar(),
+        StationClosedBanner(onTap: StationStatusSheet.show),
         const _OfflineBanner(),
         Expanded(
           child: Obx(() {
@@ -257,6 +263,11 @@ class _KitchenHeader extends GetView<KitchenController> {
                     ),
                 ],
               ),
+            ),
+            IconButton(
+              tooltip: 'station_status_button'.tr,
+              onPressed: StationStatusSheet.show,
+              icon: const Icon(Icons.storefront_outlined),
             ),
             IconButton(
               onPressed: controller.load,

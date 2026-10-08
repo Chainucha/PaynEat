@@ -26,6 +26,7 @@ import '../../../ingredient/domain/usecases/ingredient_usecases.dart';
 import '../../../ingredient/presentation/controllers/ingredients_controller.dart';
 import '../../../ingredient/presentation/pages/ingredients_page.dart';
 import '../../../kitchen/presentation/controllers/kitchen_controller.dart';
+import '../../../kitchen/presentation/controllers/station_status_controller.dart';
 import '../../../kitchen/presentation/pages/kitchen_page.dart';
 import '../../../menu/domain/usecases/menu_usecases.dart';
 import '../../../menu/presentation/controllers/menu_management_controller.dart';
@@ -113,6 +114,14 @@ class HomeBinding extends Bindings {
         session: Get.find<SessionService>(),
         getStations: Get.find<GetKitchenStationsUseCase>(),
         storage: Get.find<StorageService>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut(
+      () => StationStatusController(
+        getStatuses: Get.find<GetStationStatusesUseCase>(),
+        setClosed: Get.find<SetStationClosedUseCase>(),
+        session: Get.find<SessionService>(),
       ),
       fenix: true,
     );

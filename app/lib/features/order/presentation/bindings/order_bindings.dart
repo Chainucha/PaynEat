@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../../core/services/offline_order_queue_service.dart';
 import '../../../../core/services/session_service.dart';
+import '../../../kitchen/presentation/controllers/station_status_controller.dart';
 import '../../../menu/domain/usecases/menu_usecases.dart';
 import '../../../menu/presentation/controllers/menu_controller.dart';
 import '../../../settings/domain/usecases/settings_usecases.dart';
@@ -16,10 +17,19 @@ import '../controllers/order_detail_controller.dart';
 class OrderTakingBinding extends Bindings {
   @override
   void dependencies() {
+    // ทุกบทบาทอ่านสถานะสถานีได้ (GET /status เปิดให้ทุกคนที่ล็อกอิน) — ticket 36
+    final stationStatus = Get.put(
+      StationStatusController(
+        getStatuses: Get.find<GetStationStatusesUseCase>(),
+        setClosed: Get.find<SetStationClosedUseCase>(),
+        session: Get.find<SessionService>(),
+      ),
+    );
     Get.put(
       MenuBrowseController(
         getMenuItems: Get.find<GetMenuItemsUseCase>(),
         getCategories: Get.find<GetCategoriesUseCase>(),
+        stationStatus: stationStatus,
       ),
     );
     Get.put(

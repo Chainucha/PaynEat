@@ -2,6 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:payneat_pos/core/network/socket_client.dart';
+import 'package:payneat_pos/core/services/session_service.dart';
+import 'package:payneat_pos/core/services/storage_service.dart';
+import 'package:payneat_pos/features/kitchen/presentation/controllers/station_status_controller.dart';
+import 'package:payneat_pos/features/menu/domain/entities/station_status.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
 import 'package:payneat_pos/features/menu/domain/entities/category.dart';
@@ -13,6 +18,11 @@ import 'package:payneat_pos/features/menu/presentation/controllers/menu_controll
 class _FakeMenuRepository implements MenuRepository {
   Result<List<Category>> nextCategoriesResult = const Result.success([]);
   Result<List<MenuItem>> nextMenuItemsResult = const Result.success([]);
+  int menuLoads = 0;
+
+  @override
+  Future<Result<List<StationStatus>>> getStationStatuses() async =>
+      const Result.success([]);
 
   @override
   Future<Result<List<Category>>> getCategories({
@@ -24,7 +34,10 @@ class _FakeMenuRepository implements MenuRepository {
     int? categoryId,
     String? search,
     bool? availableOnly,
-  }) async => nextMenuItemsResult;
+  }) async {
+    menuLoads++;
+    return nextMenuItemsResult;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -170,4 +183,32 @@ void main() {
       expect(controller.items.map((i) => i.id), [2]);
     });
   });
+
+  test(
+    'ชุดสถานีที่ปิดเปลี่ยน → โหลดเมนูใหม่แบบไม่ขึ้น loader (ticket 36)',
+    () async {
+      final status = StationStatusController(
+        getStatuses: GetStationStatusesUseCase(repository),
+        setClosed: SetStationClosedUseCase(repository),
+        session: SessionService(
+          storage: StorageService.memory(),
+          socket: SocketClient(),
+        ),
+      );
+      final browse = MenuBrowseController(
+        getMenuItems: GetMenuItemsUseCase(repository),
+        getCategories: GetCategoriesUseCase(repository),
+        stationStatus: status,
+      )..onInit();
+      await Future<void>.delayed(Duration.zero);
+      final loadsBefore = repository.menuLoads;
+
+      status.closedVersion.value++;
+      await Future<void>.delayed(Duration.zero);
+
+      expect(repository.menuLoads, loadsBefore + 1);
+      expect(browse.isLoading.value, isFalse);
+      browse.onClose();
+    },
+  );
 }

@@ -27,6 +27,10 @@ class UserRole {
 
   static bool isManagement(String role) => role == admin || role == manager;
 
+  /// เปิด/ปิดสถานีครัวรายสาขาได้ (ticket 36) — mirror ของ authorize('admin', 'manager', 'kitchen')
+  static bool canToggleStations(String role) =>
+      role == admin || role == manager || role == kitchen;
+
   /// บัญชีที่ผู้จัดการจัดการได้ — ผู้จัดการและแอดมินเป็นของแอดมินเท่านั้น
   /// (mirror ของ user.service.js STAFF_ROLES, T22 #86)
   static const List<String> staffRoles = [waiter, cashier, kitchen];

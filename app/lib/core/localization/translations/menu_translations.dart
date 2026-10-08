@@ -112,6 +112,7 @@ const Map<String, String> menuTranslationsTh = {
   // Item card badges
   'menu_recommended_badge': 'แนะนำ',
   'menu_sold_out_badge': 'ของหมด',
+  'menu_station_closed_badge': '@stationปิด',
 
   // Controller feedback messages
   'menu_mark_available_success': 'เปิดขาย "@name" แล้ว',
@@ -262,6 +263,7 @@ const Map<String, String> menuTranslationsEn = {
   // Item card badges
   'menu_recommended_badge': 'Recommended',
   'menu_sold_out_badge': 'Sold out',
+  'menu_station_closed_badge': '@station closed',
 
   // Controller feedback messages
   'menu_mark_available_success': 'Marked "@name" as available',
@@ -398,6 +400,7 @@ const Map<String, String> menuTranslationsKo = {
   'menu_option_price_delta_label': '+THB',
   'menu_recommended_badge': '추천',
   'menu_sold_out_badge': '품절',
+  'menu_station_closed_badge': '@station 닫힘',
   'menu_mark_available_success': '"@name"을(를) 판매 중으로 변경했습니다',
   'menu_mark_unavailable_success': '"@name"을(를) 판매 중지로 변경했습니다',
   'menu_item_created_success': '메뉴를 추가했습니다',

@@ -11,6 +11,7 @@ import orderItemPaidByPayment from './0004_order_item_paid_by_payment.js';
 import repairCustomerPoints from './0005_repair_customer_points.js';
 import kitchenStations from './0006_kitchen_stations.js';
 import userStations from './0007_user_stations.js';
+import stationClosures from './0008_station_closures.js';
 
 /**
  * Migrations ทั้งหมดตามลำดับ (T01 #80, docs/DECISIONS.md #79) — ตัวรันอยู่ที่ ../migrate.js
@@ -32,6 +33,7 @@ const DEFINITIONS = [
   repairCustomerPoints,
   kitchenStations,
   userStations,
+  stationClosures,
 ];
 
 /** sha256 ของไฟล์ของ migration — ปรับบรรทัดเป็น \n ก่อน เพื่อให้ checkout บน Windows (CRLF) ได้ค่าเดียวกัน */

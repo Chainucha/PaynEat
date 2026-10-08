@@ -11,6 +11,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/app_dialogs.dart';
 import '../../../../core/widgets/state_views.dart';
+import '../../../kitchen/presentation/controllers/station_status_controller.dart';
 import '../../../kitchen/presentation/widgets/station_closed_banner.dart';
 import '../../../kitchen/presentation/widgets/station_status_sheet.dart';
 import '../../../menu/domain/entities/menu_item.dart';
@@ -36,6 +37,10 @@ class OrderTakingPage extends GetView<MenuBrowseController> {
   bool get canToggleStations => UserRole.canToggleStations(
     Get.find<SessionService>().currentUser?.role ?? '',
   );
+
+  /// admin โหมด "ทุกสาขา" ไม่มีสาขาปัจจุบัน → ซ่อนปุ่มสถานี (backend ตอบ 400)
+  bool get showStationButton =>
+      canToggleStations && Get.find<StationStatusController>().canUse;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +83,7 @@ class OrderTakingPage extends GetView<MenuBrowseController> {
               : 'order_taking_title_takeaway'.tr,
         ),
         actions: [
-          if (canToggleStations)
+          if (showStationButton)
             IconButton(
               tooltip: 'station_status_button'.tr,
               onPressed: StationStatusSheet.show,

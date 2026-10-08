@@ -18,13 +18,16 @@ class OrderTakingBinding extends Bindings {
   @override
   void dependencies() {
     // ทุกบทบาทอ่านสถานะสถานีได้ (GET /status เปิดให้ทุกคนที่ล็อกอิน) — ticket 36
-    final stationStatus = Get.put(
-      StationStatusController(
-        getStatuses: Get.find<GetStationStatusesUseCase>(),
-        setClosed: Get.find<SetStationClosedUseCase>(),
-        session: Get.find<SessionService>(),
-      ),
-    );
+    // ใช้ instance เดียวกับที่ HomeBinding ลงทะเบียนไว้ (fenix) เพื่อไม่ให้หน้านี้เป็นเจ้าของแล้วลบทิ้งตอน pop
+    final stationStatus = Get.isRegistered<StationStatusController>()
+        ? Get.find<StationStatusController>()
+        : Get.put(
+            StationStatusController(
+              getStatuses: Get.find<GetStationStatusesUseCase>(),
+              setClosed: Get.find<SetStationClosedUseCase>(),
+              session: Get.find<SessionService>(),
+            ),
+          );
     Get.put(
       MenuBrowseController(
         getMenuItems: Get.find<GetMenuItemsUseCase>(),

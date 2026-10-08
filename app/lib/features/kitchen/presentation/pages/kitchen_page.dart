@@ -195,13 +195,16 @@ class _KitchenHeader extends GetView<KitchenController> {
       child: Obx(
         () => Row(
           children: [
-            Icon(Icons.soup_kitchen_rounded, color: AppColors.brandInk),
-            const SizedBox(width: 8),
+            // มือถือตัดไอคอนนำหน้าออกเพื่อให้ปุ่มสถานี+รีเฟรชพอดีที่ 360px (ticket 36)
+            if (!Responsive.isMobile(context)) ...[
+              Icon(Icons.soup_kitchen_rounded, color: AppColors.brandInk),
+              const SizedBox(width: 8),
+            ],
             Text(
               'kitchen_header_title'.tr,
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             // ตัวนับคิว + ป้ายเกินเวลาอยู่ใน Wrap — บนมือถือ 360px ฉบับอังกฤษ ("Queue 5" + "3 late")
             // ยาวเกินจนหัวจอครัวล้นขวา 30px ปุ่มรีเฟรชหลุดจอ — docs/DECISIONS.md #62
             Expanded(
@@ -264,12 +267,23 @@ class _KitchenHeader extends GetView<KitchenController> {
                 ],
               ),
             ),
+            // admin โหมด "ทุกสาขา" ใช้ไม่ได้ (canUse false) → ซ่อนปุ่ม
+            if (Get.find<StationStatusController>().canUse)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 36,
+                  height: 40,
+                ),
+                tooltip: 'station_status_button'.tr,
+                onPressed: StationStatusSheet.show,
+                icon: const Icon(Icons.storefront_outlined),
+              ),
             IconButton(
-              tooltip: 'station_status_button'.tr,
-              onPressed: StationStatusSheet.show,
-              icon: const Icon(Icons.storefront_outlined),
-            ),
-            IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 40),
               onPressed: controller.load,
               icon: const Icon(Icons.refresh_rounded),
               tooltip: 'kitchen_refresh_tooltip'.tr,

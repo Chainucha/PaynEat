@@ -43,4 +43,41 @@ void main() {
     await tester.tap(find.byType(MenuItemCard));
     expect(taps, 0);
   });
+
+  testWidgets('English locale: Bar closed badge and not tappable (ticket 36)', (
+    tester,
+  ) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      GetMaterialApp(
+        translations: AppTranslations(),
+        locale: LocaleService.english,
+        home: Scaffold(
+          body: SizedBox(
+            width: 165,
+            height: 190,
+            child: MenuItemCard(
+              item: const MenuItem(
+                id: 1,
+                categoryId: 1,
+                name: 'ชาไทยเย็น',
+                price: 45,
+                closedStation: ClosedStation(
+                  id: 3,
+                  name: 'บาร์',
+                  nameEn: 'Bar',
+                ),
+              ),
+              showAvailabilityBadge: true,
+              onTap: () => taps++,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Bar closed'), findsOneWidget);
+    await tester.tap(find.byType(MenuItemCard));
+    expect(taps, 0);
+  });
 }

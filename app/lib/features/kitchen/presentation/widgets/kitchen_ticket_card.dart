@@ -55,6 +55,8 @@ class KitchenTicketCard extends StatelessWidget {
           width: isNew || isLate ? 2 : 1,
         ),
       ),
+      // ขอบบาง 1px เติม padding 1px ให้ขนาดการ์ดเท่าขอบหนา 2px (ใหม่/ช้า) — ป้ายใหม่ไม่ทำให้การ์ดสูงขึ้น
+      padding: EdgeInsets.all(isNew || isLate ? 0 : 1),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

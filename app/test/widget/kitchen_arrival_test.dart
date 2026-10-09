@@ -70,6 +70,18 @@ const _ticket = OrderItem(
   tableName: 'VIP2',
 );
 
+/// ชื่อโต๊ะยาว — ให้ Flexible/ellipsis ในหัวการ์ดทำงานจริงที่ 360px
+const _longTicket = OrderItem(
+  id: 8,
+  orderId: 2,
+  name: 'ผัดกะเพรา',
+  unitPrice: 75,
+  quantity: 1,
+  lineTotal: 75,
+  status: OrderItemStatus.pending,
+  tableName: 'ห้องจัดเลี้ยงชั้นสองฝั่งริมแม่น้ำ VIP',
+);
+
 void main() {
   late _LockedChime chime;
   late StorageService storage;
@@ -115,7 +127,7 @@ void main() {
       await pump(
         tester,
         KitchenTicketCard(
-          item: _ticket,
+          item: _longTicket,
           isLate: false,
           isNew: true,
           onAdvance: () {},
@@ -141,10 +153,63 @@ void main() {
       expect(chime.unlocks, 1);
       expect(find.text('แตะเพื่อเปิดเสียงแจ้งเตือนตั๋วใหม่'), findsNothing);
 
+      // ล็อกอยู่และไม่ได้ปิดเสียง → แถบต้องขึ้น (กันเทสต์ผ่านเพราะแถบไม่เคยขึ้น)
       controller.soundLocked.value = true;
+      await tester.pump();
+      expect(find.text('แตะเพื่อเปิดเสียงแจ้งเตือนตั๋วใหม่'), findsOneWidget);
+
       await controller.toggleMute();
       await tester.pump();
+      expect(controller.muted.value, isTrue);
       expect(find.text('แตะเพื่อเปิดเสียงแจ้งเตือนตั๋วใหม่'), findsNothing);
+    },
+  );
+
+  testWidgets('ป้าย "ใหม่" ไม่ทำให้การ์ดสูงขึ้น (ชื่อโต๊ะยาว 360px)', (
+    tester,
+  ) async {
+    Future<double> heightOf(bool isNew) async {
+      await pump(
+        tester,
+        SingleChildScrollView(
+          child: KitchenTicketCard(
+            item: _longTicket,
+            isLate: false,
+            isNew: isNew,
+            onAdvance: () {},
+          ),
+        ),
+      );
+      return tester.getSize(find.byType(KitchenTicketCard)).height;
+    }
+
+    final plain = await heightOf(false);
+    final badged = await heightOf(true);
+    expect(badged, plain);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'กดปุ่มเดินสถานะ เรียก onAdvance อย่างเดียว ไม่เรียก onTap ของการ์ด',
+    (tester) async {
+      var advances = 0;
+      var taps = 0;
+      await pump(
+        tester,
+        SingleChildScrollView(
+          child: KitchenTicketCard(
+            item: _ticket,
+            isLate: false,
+            isNew: true,
+            onAdvance: () => advances++,
+            onTap: () => taps++,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(FilledButton));
+      expect(advances, 1);
+      expect(taps, 0);
     },
   );
 

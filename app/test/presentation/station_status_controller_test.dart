@@ -252,6 +252,30 @@ void main() {
   );
 
   test(
+    'สลับสาขาด้วยบัญชีเดิม (id เท่ากัน) → ผู้ฟัง currentUser โหลดสถานะของสาขาใหม่',
+    () async {
+      User user(int branchId) => User(
+        id: 5,
+        name: 'ครัว',
+        username: 'kitchen',
+        role: 'kitchen',
+        isActive: true,
+        branchId: branchId,
+      );
+      session.start(user: user(1), token: 't1');
+      controller.onInit();
+      await Future<void>.delayed(Duration.zero);
+      final before = repository.loads;
+
+      session.start(user: user(2), token: 't2');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(repository.loads, greaterThan(before));
+      socket.disconnect();
+    },
+  );
+
+  test(
     'setClosed สำเร็จระหว่างมี load ค้างอยู่ → ยังโหลดใหม่ตามหลัง ไม่ทิ้งการเปลี่ยนจากเครื่องอื่น',
     () async {
       await controller.load();

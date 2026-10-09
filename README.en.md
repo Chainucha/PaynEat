@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1349%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1357%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1349 automated tests.
+control and 1357 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -711,7 +711,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   once and every card is highlighted · pick the **Bar** chip and order a hot-kitchen dish → no sound, no highlight · advance,
   cancel or undo a ticket → no sound · switch chips or open the screen with tickets already queued → no sound · tap the speaker
   button on the header to mute → the next order is silent but still highlighted (remembered per device, survives logout) ·
-  cut the kitchen device's internet for a moment and order from another device → once it reconnects, the backup polling still rings
+  cut the kitchen device's internet for a moment and order from another device → while it is down the 30-second backup polling rings, and once the socket reconnects the screen reloads the queue at once (the backlog rings once, every card highlighted) ·
+  switch branch and the kitchen starts counting afresh, so the other branch's whole queue doesn't ring · in Demo Mode: sign in as admin, order in the order tab, go back to the kitchen tab and press refresh and it can ring
   (see `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
 
 - **Backups** (Options A/B/D) → run `npm run db:restore` while the server is still up → the command refuses and says how to stop
@@ -888,7 +889,7 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 
 ```bash
 cd backend && npm test      # 612 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 683 cases — domain / controller / widget
+cd app && flutter test      # 691 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1625,14 +1626,14 @@ All endpoints share the same response format:
 
 ```bash
 cd backend && npm test      # 612 cases
-cd app && flutter test      # 683 cases
+cd app && flutter test      # 691 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
 On a Windows development machine 3 tests fail for environment reasons only (path, file lock, timezone); they pass on CI.
 
-The badge counts the backend and app tests (612 + 683 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (612 + 691 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1702,7 +1703,7 @@ controller (reload on socket reconnect / user change), the sheet, the greyed-out
 role-based hiding of the station button.
 The arrival chime (ticket 37) has no backend change: `kitchen_controller_test.dart` gains a "ticket arrival (ticket 37)" group covering the queue
 diff (baseline on first load and chip switch, other stations, status changes / undo staying silent, the 3-second cooldown, mute, the 2-minute highlight expiry,
-and polling while the socket is down using fakeAsync), `storage_service_test.dart` checks that the mute flag survives `clear()`, the new `kitchen_arrival_test.dart`
+polling while the socket is down using fakeAsync, reloading on socket reconnect, a fresh baseline on branch switch, discarding a late load response and disposing the player on close), the new `session_service_test.dart` checks that switching branch with the same account notifies `currentUser` listeners, `storage_service_test.dart` checks that the mute flag survives `clear()`, the new `kitchen_arrival_test.dart`
 covers the NEW badge at 360px with a long table name, equal card height with or without the badge, the sound-unlock bar, the mute button, and the advance button versus a card tap,
 and `kitchen_header_360_test.dart` is extended to cover the mute button.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
@@ -2037,7 +2038,7 @@ a successful sign-in clearing the count, the message following the request langu
 password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
 counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
 
-**Flutter (683 cases)** — organized into 3 levels:
+**Flutter (691 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|

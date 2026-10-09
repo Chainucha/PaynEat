@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1349%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1357%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1349 automated tests.
+control and 1357 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -662,7 +662,8 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
   และการ์ดใหม่มีป้าย **"ใหม่"** กับขอบหนาจนกว่าจะแตะการ์ด เปลี่ยนสถานะ หรือครบ 2 นาที · สั่งหลายจานติดกันภายใน 3 วินาทีดังครั้งเดียว
   ทุกใบยังไฮไลต์ · เลือกชิป **บาร์** แล้วสั่งจานครัวร้อน → ไม่ดัง ไม่ไฮไลต์ · เปลี่ยนสถานะ ยกเลิก หรือเลิกทำ → ไม่ดัง ·
   สลับชิปหรือเปิดจอครั้งแรกที่มีคิวค้าง → ไม่ดัง · กดปุ่มลำโพงบนหัวจอเพื่อปิดเสียง → สั่งอีกครั้งไม่ดังแต่ยังไฮไลต์ (จำไว้ต่อเครื่อง
-  รอดการ logout) · ตัดอินเทอร์เน็ตของเครื่องครัวสักครู่แล้วสั่งจากเครื่องอื่น → พอต่อกลับ polling สำรองยังทำให้ดัง
+  รอดการ logout) · ตัดอินเทอร์เน็ตของเครื่องครัวสักครู่แล้วสั่งจากเครื่องอื่น → ระหว่างหลุด polling สำรองทุก 30 วินาทีทำให้ดัง และพอ socket ต่อกลับจอครัวโหลดคิวทันที (ตั๋วที่ค้างมาดังครั้งเดียว ทุกใบไฮไลต์) ·
+  สลับสาขาแล้วจอครัวเริ่มนับใหม่ ไม่ดังย้อนทั้งคิวของสาขาปลายทาง · ในโหมดสาธิต: ล็อกอินแอดมิน สั่งอาหารในแท็บออเดอร์ แล้วกลับแท็บครัวกดรีเฟรชก็ดังได้
   (ดู `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
 
 - **สำรองข้อมูล** (ทางเลือก A/B/D) → รัน `npm run db:restore` ระหว่างเซิร์ฟเวอร์ยังเปิดอยู่ → คำสั่งปฏิเสธพร้อมบอกวิธีหยุดเซิร์ฟเวอร์
@@ -803,7 +804,7 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 
 ```bash
 cd backend && npm test      # 612 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 683 เคส — domain / controller / widget
+cd app && flutter test      # 691 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 54 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -1457,14 +1458,14 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 
 ```bash
 cd backend && npm test      # 612 เคส
-cd app && flutter test      # 683 เคส
+cd app && flutter test      # 691 เคส
 cd app && flutter test test_e2e   # 54 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
 บนเครื่องพัฒนา Windows จะมีเทสต์ 3 เคสที่ล้มเพราะสภาพแวดล้อมเท่านั้น (path, ไฟล์ถูกล็อก, เขตเวลา) และผ่านบน CI
 
-badge นับเฉพาะเทสต์ของ backend และแอป (612 + 683 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (612 + 691 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (54 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1520,7 +1521,8 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 `station_status_controller_test.dart`, `station_status_sheet_test.dart`, `menu_item_card_closed_test.dart` และ
 `kitchen_header_360_test.dart` และ `kitchen_station_gating_test.dart` คุมตัวควบคุมชีต (โหลดใหม่เมื่อ socket ต่อใหม่/เปลี่ยนผู้ใช้) ชีตสถานะ การ์ดเมนูสีเทา หัวจอครัวที่ 360px และการซ่อนปุ่มตามบทบาท
 ฟีเจอร์เสียงเตือนตั๋วเข้า (ticket 37) ไม่แตะ backend: `kitchen_controller_test.dart` มีกลุ่ม "ตั๋วเข้า (ticket 37)" คุมการเทียบคิว
-(baseline ตอนโหลดแรกและสลับชิป, สถานีอื่น, เปลี่ยนสถานะ/เลิกทำไม่ดัง, cooldown 3 วินาที, ปิดเสียง, ไฮไลต์หมดอายุ 2 นาที และ polling ตอน socket หลุดด้วย fakeAsync),
+(baseline ตอนโหลดแรกและสลับชิป, สถานีอื่น, เปลี่ยนสถานะ/เลิกทำไม่ดัง, cooldown 3 วินาที, ปิดเสียง, ไฮไลต์หมดอายุ 2 นาที, polling ตอน socket หลุดด้วย fakeAsync, โหลดคิวใหม่ตอน socket ต่อกลับ, ตั้ง baseline ใหม่ตอนสลับสาขา, ทิ้งคำตอบโหลดที่มาช้ากว่ารอบใหม่ และปล่อยเครื่องเล่นตอนปิด),
+`session_service_test.dart` (ไฟล์ใหม่) คุมว่าสลับสาขาด้วยบัญชีเดิมแจ้งผู้ฟัง `currentUser`,
 `storage_service_test.dart` คุมว่าค่าปิดเสียงรอด `clear()`, `kitchen_arrival_test.dart` (ไฟล์ใหม่) คุมป้าย "ใหม่" ที่ 360px กับชื่อโต๊ะยาว ความสูงการ์ดเท่ากันมีป้ายหรือไม่
 แถบปลดล็อกเสียง ปุ่มปิดเสียง และการแตะปุ่มเลื่อนสถานะต่างจากแตะการ์ด และ `kitchen_header_360_test.dart` ขยายให้ครอบคลุมปุ่มปิดเสียง
 เทสต์หลักคือ `tests/order-flow.test.js` ซึ่งครอบคลุมเส้นทางการทำงานของร้านตั้งแต่ต้นจนจบใน 17 ขั้น:
@@ -1800,7 +1802,7 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 รหัสผ่านถูกพักแบบเดียวกัน, `TRUST_PROXY` ถูกส่งต่อให้ Express (ค่าเริ่มต้นไม่อ่าน `X-Forwarded-For`) และตัวนับในหน่วยความจำ
 (รวม `core/rateLimit.js` ของหน้าสั่งอาหารเอง) ลบคีย์ที่หมดอายุทิ้งเอง ทดสอบด้วยนาฬิกาจำลอง
 
-**Flutter (683 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (691 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|

@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1329%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1349%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1329 automated tests.
+control and 1349 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -704,6 +704,16 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
   bar closed and then **sent to the kitchen** → refused with 409 and nothing is sent
   (see `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
 
+- **Kitchen arrival chime** (ticket 37) → keep the kitchen screen open (sign in as `kitchen`; on the web, tap the
+  **"Tap to enable new-ticket sound"** bar once first, because browsers block audio until a tap) and order food from another
+  device or from a table's QR → the kitchen screen plays a two-note chime once and the new card shows a **"NEW"** badge with
+  a thick border until you tap the card, change its status, or 2 minutes pass · several dishes within 3 seconds ring only
+  once and every card is highlighted · pick the **Bar** chip and order a hot-kitchen dish → no sound, no highlight · advance,
+  cancel or undo a ticket → no sound · switch chips or open the screen with tickets already queued → no sound · tap the speaker
+  button on the header to mute → the next order is silent but still highlighted (remembered per device, survives logout) ·
+  cut the kitchen device's internet for a moment and order from another device → once it reconnects, the backup polling still rings
+  (see `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
+
 - **Backups** (Options A/B/D) → run `npm run db:restore` while the server is still up → the command refuses and says how to stop
   the server (restoring over data in use is not possible) · log in as `cashier` or `waiter` → no Backups card and no warning
   (the API answers 403) · `manager` sees the home-screen warning when no backup has succeeded for 26 hours, but has no backup button ·
@@ -878,7 +888,7 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 
 ```bash
 cd backend && npm test      # 612 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 663 cases — domain / controller / widget
+cd app && flutter test      # 683 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -986,6 +996,14 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   turns food already cooked into an item staff can remove or cancel themselves (see `docs/DECISIONS.md` #86)
 - One-tap status changes, designed to be easy to operate in kitchen conditions
 - Mark a menu item as sold out immediately, without manager involvement
+- **Chime when a ticket arrives** — a new ticket (new order, added items or QR) matching the selected station chip makes the
+  kitchen screen play a two-note chime once, and its card shows a "NEW" badge with a thick border until it is tapped, changes
+  status or 2 minutes pass. Arrivals are detected on the device by diffing the queue on every load, so it rings even when
+  the socket is down and data comes from the backup polling; status changes, cancellations, undo, the first load and chip
+  switches never ring, and a burst within 3 seconds rings once. A speaker button on the header mutes it (per device, survives
+  logout) and on the web a "Tap to enable sound" bar stays until the first tap —
+  not done: push while the app is in the background, vibration, selectable sounds, repeating until acknowledged
+  (see `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
 - **Distinct icon/label per order type** on every ticket — table 🍽️ / takeaway 🥡 / delivery 🛵 — identifiable
   at a glance without opening the ticket's details
 - **One screen per kitchen station** (Hot Kitchen / Cold Kitchen / Bar — add your own) — every dish is tied to a
@@ -1607,14 +1625,14 @@ All endpoints share the same response format:
 
 ```bash
 cd backend && npm test      # 612 cases
-cd app && flutter test      # 663 cases
+cd app && flutter test      # 683 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
 On a Windows development machine 3 tests fail for environment reasons only (path, file lock, timezone); they pass on CI.
 
-The badge counts the backend and app tests (612 + 663 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (612 + 683 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1682,6 +1700,11 @@ saved bill to the kitchen, no fallback to the default station, legacy bills with
 `menu_item_card_closed_test.dart`, `kitchen_header_360_test.dart` and `kitchen_station_gating_test.dart` cover the sheet
 controller (reload on socket reconnect / user change), the sheet, the greyed-out menu card, the kitchen header at 360px and
 role-based hiding of the station button.
+The arrival chime (ticket 37) has no backend change: `kitchen_controller_test.dart` gains a "ticket arrival (ticket 37)" group covering the queue
+diff (baseline on first load and chip switch, other stations, status changes / undo staying silent, the 3-second cooldown, mute, the 2-minute highlight expiry,
+and polling while the socket is down using fakeAsync), `storage_service_test.dart` checks that the mute flag survives `clear()`, the new `kitchen_arrival_test.dart`
+covers the NEW badge at 360px with a long table name, equal card height with or without the badge, the sound-unlock bar, the mute button, and the advance button versus a card tap,
+and `kitchen_header_360_test.dart` is extended to cover the mute button.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -2014,7 +2037,7 @@ a successful sign-in clearing the count, the message following the request langu
 password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
 counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
 
-**Flutter (663 cases)** — organized into 3 levels:
+**Flutter (683 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -2108,6 +2131,10 @@ translation, consistent with the adjacent code.
 
 Completed work, planned work, and known limitations, with the reasoning for each.
 
+- [x] **Kitchen arrival chime (ticket 37)** — arrivals are detected on the device by diffing the queue on every load (so it rings even when the
+  socket is down), one chime per burst within 3 seconds, a "NEW" badge on the card until it is tapped or 2 minutes pass, a per-device mute button, a
+  "tap to enable sound" bar on the web, a self-generated sound, and `audioplayers` as the only dependency behind `ChimePlayer` — not done: push while
+  the app is in the background, vibration, selectable sounds, repeating until acknowledged, notifying waiters (see `docs/DECISIONS.md` #103)
 - [x] **Close / reopen a kitchen station per branch (ticket 36)** — a `station_closures` table (a row means closed), separate
   from a chain-wide "inactive" station. Dishes of a closed station cannot be ordered through any channel (a 409 for the whole
   submit, including sending a saved bill to the kitchen), with no fallback to another station and `is_available` untouched.

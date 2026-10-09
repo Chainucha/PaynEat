@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1329%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1349%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1329 automated tests.
+control and 1349 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -657,6 +657,14 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
   (ปุ่มบนหน้าสั่งอาหารมีเฉพาะ `manager`/`admin`) · บิลที่บันทึกไว้ก่อนบาร์ปิดแล้วกด **ส่งครัว** → ถูกปฏิเสธ 409 ตั๋วไม่ถูกส่ง
   (ดู `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
 
+- **เสียงเตือนตั๋วเข้าจอครัว** (ticket 37) → เปิดจอครัวไว้ (ล็อกอินเป็น `kitchen`; บนเว็บให้แตะแถบ **"แตะเพื่อเปิดเสียงแจ้งเตือนตั๋วใหม่"**
+  หนึ่งครั้งก่อน เพราะเบราว์เซอร์บล็อกเสียงจนกว่าจะแตะ) แล้วสั่งอาหารจากอีกเครื่องหรือจาก QR ของโต๊ะ → จอครัวมีเสียงสองโน้ตหนึ่งครั้ง
+  และการ์ดใหม่มีป้าย **"ใหม่"** กับขอบหนาจนกว่าจะแตะการ์ด เปลี่ยนสถานะ หรือครบ 2 นาที · สั่งหลายจานติดกันภายใน 3 วินาทีดังครั้งเดียว
+  ทุกใบยังไฮไลต์ · เลือกชิป **บาร์** แล้วสั่งจานครัวร้อน → ไม่ดัง ไม่ไฮไลต์ · เปลี่ยนสถานะ ยกเลิก หรือเลิกทำ → ไม่ดัง ·
+  สลับชิปหรือเปิดจอครั้งแรกที่มีคิวค้าง → ไม่ดัง · กดปุ่มลำโพงบนหัวจอเพื่อปิดเสียง → สั่งอีกครั้งไม่ดังแต่ยังไฮไลต์ (จำไว้ต่อเครื่อง
+  รอดการ logout) · ตัดอินเทอร์เน็ตของเครื่องครัวสักครู่แล้วสั่งจากเครื่องอื่น → พอต่อกลับ polling สำรองยังทำให้ดัง
+  (ดู `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
+
 - **สำรองข้อมูล** (ทางเลือก A/B/D) → รัน `npm run db:restore` ระหว่างเซิร์ฟเวอร์ยังเปิดอยู่ → คำสั่งปฏิเสธพร้อมบอกวิธีหยุดเซิร์ฟเวอร์
   (กู้คืนทับข้อมูลที่กำลังใช้ไม่ได้) · เข้าสู่ระบบเป็น `cashier` หรือ `waiter` → ไม่เห็นการ์ดสำรองข้อมูลและแถบเตือน (API ได้รับ 403) ·
   `manager` เห็นแถบเตือนบนหน้าหลักเมื่อไม่ได้สำรองสำเร็จเกิน 26 ชั่วโมง แต่ไม่มีปุ่มสำรอง · ตั้ง `BACKUP_DIR=../docs/backups` แล้วเปิดเซิร์ฟเวอร์
@@ -795,7 +803,7 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 
 ```bash
 cd backend && npm test      # 612 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 663 เคส — domain / controller / widget
+cd app && flutter test      # 683 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 54 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -885,6 +893,11 @@ cd app && flutter test test_e2e   # 54 เคส — แอปจริงคุ
   เสมอ การเลิกทำจึงไม่ทำให้รายการที่ทำไปแล้วกลายเป็นรายการที่พนักงานลบหรือยกเลิกเองได้ (ดู `docs/DECISIONS.md` #86)
 - เปลี่ยนสถานะด้วยปุ่มเดียว ออกแบบให้กดได้ง่ายแม้มือเปื้อนขณะทำงานในครัว
 - ปิดการขายเมนูที่วัตถุดิบหมดได้ทันที โดยไม่ต้องรอผู้จัดการ
+- **เสียงเตือนเมื่อตั๋วเข้าจอครัว** — ตั๋วใหม่ (ออเดอร์ใหม่ สั่งเพิ่ม หรือ QR) ที่ตรงกับชิปสถานีที่เลือกทำให้จอครัวดังเสียงสองโน้ต
+  หนึ่งครั้ง และการ์ดมีป้าย "ใหม่" กับขอบหนาจนกว่าจะแตะ/เปลี่ยนสถานะ/ครบ 2 นาที ตรวจจับในเครื่องด้วยการเทียบคิวทุกครั้งที่โหลด จึง
+  ดังได้แม้ socket หลุดและข้อมูลมาจาก polling สำรอง เปลี่ยนสถานะ ยกเลิก เลิกทำ โหลดครั้งแรก และสลับชิปไม่ดัง ตั๋วหลายใบใน 3 วินาทีดังครั้งเดียว
+  มีปุ่มลำโพงบนหัวจอเพื่อปิดเสียง (จำต่อเครื่อง รอด logout) และบนเว็บมีแถบ "แตะเพื่อเปิดเสียง" จนกว่าจะแตะครั้งแรก —
+  ยังไม่ทำ: push ตอนแอปอยู่เบื้องหลัง, การสั่น, เลือกเสียง, ดังซ้ำจนกว่าจะรับ (ดู `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
 - **ป้ายและไอคอนแยกตามประเภทออเดอร์** บนตั๋วแต่ละใบ — โต๊ะ 🍽️ / กลับบ้าน 🥡 / เดลิเวอรี 🛵 — แยกได้
   ทันทีโดยไม่ต้องเปิดดูรายละเอียด
 - **แยกจอตามสถานีครัว** (ครัวร้อน / ครัวเย็น / บาร์ — เพิ่มสถานีของร้านเองได้) แต่ละจานผูกกับสถานี แล้วตั๋ว
@@ -1444,14 +1457,14 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 
 ```bash
 cd backend && npm test      # 612 เคส
-cd app && flutter test      # 663 เคส
+cd app && flutter test      # 683 เคส
 cd app && flutter test test_e2e   # 54 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
 บนเครื่องพัฒนา Windows จะมีเทสต์ 3 เคสที่ล้มเพราะสภาพแวดล้อมเท่านั้น (path, ไฟล์ถูกล็อก, เขตเวลา) และผ่านบน CI
 
-badge นับเฉพาะเทสต์ของ backend และแอป (612 + 663 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (612 + 683 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (54 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1506,6 +1519,10 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 ไม่ถอยไปสถานีค่าเริ่มต้น บิลเก่าที่ไม่มีสถานีนับเป็นสถานีค่าเริ่มต้น และ `is_available` กับ `auto_disabled_by_stock` ไม่ถูกแตะ (บล็อก 0008 อยู่ใน `migrations.test.js`) ฝั่งแอป
 `station_status_controller_test.dart`, `station_status_sheet_test.dart`, `menu_item_card_closed_test.dart` และ
 `kitchen_header_360_test.dart` และ `kitchen_station_gating_test.dart` คุมตัวควบคุมชีต (โหลดใหม่เมื่อ socket ต่อใหม่/เปลี่ยนผู้ใช้) ชีตสถานะ การ์ดเมนูสีเทา หัวจอครัวที่ 360px และการซ่อนปุ่มตามบทบาท
+ฟีเจอร์เสียงเตือนตั๋วเข้า (ticket 37) ไม่แตะ backend: `kitchen_controller_test.dart` มีกลุ่ม "ตั๋วเข้า (ticket 37)" คุมการเทียบคิว
+(baseline ตอนโหลดแรกและสลับชิป, สถานีอื่น, เปลี่ยนสถานะ/เลิกทำไม่ดัง, cooldown 3 วินาที, ปิดเสียง, ไฮไลต์หมดอายุ 2 นาที และ polling ตอน socket หลุดด้วย fakeAsync),
+`storage_service_test.dart` คุมว่าค่าปิดเสียงรอด `clear()`, `kitchen_arrival_test.dart` (ไฟล์ใหม่) คุมป้าย "ใหม่" ที่ 360px กับชื่อโต๊ะยาว ความสูงการ์ดเท่ากันมีป้ายหรือไม่
+แถบปลดล็อกเสียง ปุ่มปิดเสียง และการแตะปุ่มเลื่อนสถานะต่างจากแตะการ์ด และ `kitchen_header_360_test.dart` ขยายให้ครอบคลุมปุ่มปิดเสียง
 เทสต์หลักคือ `tests/order-flow.test.js` ซึ่งครอบคลุมเส้นทางการทำงานของร้านตั้งแต่ต้นจนจบใน 17 ขั้น:
 
 > เลือกโต๊ะ → เปิดออเดอร์พร้อมตัวเลือกเสริม → ตรวจว่ายอดคำนวณถูกต้อง → โต๊ะเปลี่ยนเป็นไม่ว่าง →
@@ -1783,7 +1800,7 @@ PaynEat ERP (severity ตาม status, latency `"0.231s"`, ตัด query stri
 รหัสผ่านถูกพักแบบเดียวกัน, `TRUST_PROXY` ถูกส่งต่อให้ Express (ค่าเริ่มต้นไม่อ่าน `X-Forwarded-For`) และตัวนับในหน่วยความจำ
 (รวม `core/rateLimit.js` ของหน้าสั่งอาหารเอง) ลบคีย์ที่หมดอายุทิ้งเอง ทดสอบด้วยนาฬิกาจำลอง
 
-**Flutter (663 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (683 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|
@@ -2039,6 +2056,10 @@ CI บน GitHub Actions รัน `dart format` → `flutter analyze` → `dart
 - [x] **สำรองข้อมูลอัตโนมัติและกู้คืนได้เอง (ticket 33, #145)** — สำรองทุกครั้งที่ปิดกะ ทุก 6 ชั่วโมงเมื่อมีข้อมูลเปลี่ยน และก่อนอัปเดตฐานข้อมูล
   ตรวจความสมบูรณ์ของทุกไฟล์ เก็บชุดที่สองบนอีกดิสก์ได้ ส่วน "สำรองข้อมูล" ในหน้าตั้งค่า แถบเตือนของ admin/manager เมื่อไม่ได้สำรองเกิน 26 ชั่วโมง
   และกู้คืนด้วย `npm run db:restore` ที่สำรองข้อมูลเดิมก่อนแทนที่เสมอ (ดู `docs/DECISIONS.md` #90, #94)
+- [x] **เสียงเตือนตั๋วเข้าจอครัว (ticket 37)** — ตรวจตั๋วเข้าในเครื่องด้วยการเทียบคิวทุกครั้งที่โหลด (ดังแม้ socket หลุด) ดังครั้งเดียวต่อ
+  ชุดตั๋วภายใน 3 วินาที การ์ดมีป้าย "ใหม่" จนกว่าจะแตะหรือครบ 2 นาที ปุ่มปิดเสียงต่อเครื่อง แถบ "แตะเพื่อเปิดเสียง" บนเว็บ เสียงสร้างเอง
+  และ `audioplayers` เป็น dependency เดียวหลัง `ChimePlayer` — ยังไม่ทำ: push ตอนแอปอยู่เบื้องหลัง, การสั่น, เลือกเสียง, ดังซ้ำจนกว่าจะรับ,
+  แจ้งพนักงานเสิร์ฟ (ดู `docs/DECISIONS.md` #103)
 - [x] **ปิด/เปิดสถานีครัวรายสาขา (ticket 36)** — ตาราง `station_closures` (มีแถว = ปิด) แยกจาก "ปิดใช้งาน"
   ของเครือร้าน จานของสถานีที่ปิดสั่งไม่ได้ทุกช่องทาง (409 ทั้ง submit, รวมการส่งครัวของบิลที่บันทึกไว้) ไม่ถอยไปสถานีอื่น
   ไม่แตะ `is_available` พนักงานเห็นจานสีเทา ลูกค้า QR ไม่เห็น มีชีตสถานะ แบนเนอร์ และ event `station:status` —

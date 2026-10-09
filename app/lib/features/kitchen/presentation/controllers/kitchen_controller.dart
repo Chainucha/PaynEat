@@ -14,6 +14,7 @@ import '../../../../core/services/session_service.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_dialogs.dart';
+import '../../../auth/domain/entities/user.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../menu/domain/entities/kitchen_station.dart';
 import '../../../menu/domain/usecases/menu_usecases.dart';
@@ -92,6 +93,17 @@ class KitchenController extends GetxController {
   Set<int>? _seenIds;
   DateTime? _lastChimeAt;
 
+  /// socket เชื่อมอยู่ก่อนหน้านี้หรือไม่ — ใช้จับขอบ หลุด→ต่อกลับ เพื่อโหลดคิวที่อาจพลาดไประหว่างนั้น
+  bool _wasConnected = false;
+
+  /// ผู้ใช้/สาขาที่จอนี้เห็นล่าสุด — สลับสาขาแล้วต้องเริ่ม baseline ใหม่ ไม่งั้นคิวทั้งสาขาใหม่จะดังรัว
+  int? _lastUserId;
+  int? _lastBranchId;
+  Worker? _userWorker;
+
+  /// ลำดับของคำขอโหลดคิว — ผลที่ไม่ใช่รอบล่าสุดถูกทิ้ง กันคำตอบเก่าที่มาช้าไปลบป้าย "ใหม่"
+  int _loadSeq = 0;
+
   final List<VoidCallback> _unsubscribers = [];
   Timer? _elapsedTimer;
   Timer? _undoTimer;
@@ -110,8 +122,14 @@ class KitchenController extends GetxController {
     _loadStations();
     _listenToRealtimeUpdates();
 
+    _wasConnected = _session.socket.connected.value;
     _syncConnectionState();
-    _session.socket.connected.addListener(_syncConnectionState);
+    _session.socket.connected.addListener(_onConnectionChanged);
+
+    final user = _session.currentUser;
+    _lastUserId = user?.id;
+    _lastBranchId = user?.branchId;
+    _userWorker = ever(_session.currentUserRx, _onUserChanged);
 
     // ตัวจับเวลานี้ทำสองหน้าที่:
     // 1. เดินตัวเลข "รอมาแล้วกี่นาที" บนตั๋ว
@@ -130,7 +148,10 @@ class KitchenController extends GetxController {
   void onClose() {
     _elapsedTimer?.cancel();
     _undoTimer?.cancel();
-    _session.socket.connected.removeListener(_syncConnectionState);
+    _session.socket.connected.removeListener(_onConnectionChanged);
+    _userWorker?.dispose();
+    // ปล่อย AudioPlayer (CODING_STANDARDS §3.4) — ไม่ต้องรอ
+    unawaited(_chime.dispose());
     for (final unsubscribe in _unsubscribers) {
       unsubscribe();
     }
@@ -141,6 +162,28 @@ class KitchenController extends GetxController {
   /// ไม่ใช่ความผิดปกติที่ต้องเตือน — ถ้าไม่กันไว้ แถบแดงจะขึ้นค้างตลอดทั้งที่ทุกอย่างใช้ได้
   void _syncConnectionState() =>
       isOffline.value = !AppConfig.demoMode && !_session.socket.connected.value;
+
+  /// socket ต่อกลับ (เน็ตสะดุด หรือ start() ตอนสลับสาขา) อาจพลาด event ไประหว่างหลุด
+  /// → โหลดคิวใหม่ทันที ไม่รอ polling 30 วิ; ตั๋วที่ค้างมาจะดังและขึ้น "ใหม่" ผ่าน [_detectArrivals]
+  void _onConnectionChanged() {
+    _syncConnectionState();
+    final connected = _session.socket.connected.value;
+    final reconnected = connected && !_wasConnected;
+    _wasConnected = connected;
+    if (reconnected) load(showLoader: false);
+  }
+
+  /// สลับสาขา (หรือเปลี่ยนผู้ใช้) → คิวเดิมไม่ใช่ของสาขานี้แล้ว ล้างป้ายและตั้ง baseline ใหม่จากรอบโหลดนี้
+  /// ทำก่อนที่ socket จะต่อกลับ จึงไม่ดังรัวทั้งคิวของสาขาปลายทาง
+  void _onUserChanged(User? user) {
+    if (user == null) return; // ออกจากระบบ — ไม่ใช่การสลับสาขา
+    if (user.id == _lastUserId && user.branchId == _lastBranchId) return;
+    _lastUserId = user.id;
+    _lastBranchId = user.branchId;
+    _seenIds = null;
+    newItems.clear();
+    load(showLoader: false);
+  }
 
   /// สถานีค่าเริ่มต้นของร้าน — ตั๋วที่ไม่มีสถานีประทับไว้ถือเป็นของสถานีนี้ (ticket 34)
   String? get defaultStationCode =>
@@ -209,11 +252,13 @@ class KitchenController extends GetxController {
     if (showLoader) isLoading.value = true;
     errorMessage.value = null;
 
+    final seq = ++_loadSeq;
     final result = await _getQueue(const [
       OrderItemStatus.pending,
       OrderItemStatus.cooking,
       OrderItemStatus.ready,
     ]);
+    if (seq != _loadSeq) return;
 
     isLoading.value = false;
     result.fold(
@@ -332,7 +377,8 @@ class KitchenController extends GetxController {
   /// เครื่องเล่นโยน error ถือเหมือนเล่นไม่ได้ — ขึ้นแถบ "แตะเพื่อเปิดเสียง" แทนที่จะเป็น error หลุดโซน
   Future<void> _play() async {
     try {
-      if (!await _chime.play()) soundLocked.value = true;
+      // เล่นสำเร็จ = เบราว์เซอร์ยอมแล้ว แถบ "แตะเพื่อเปิดเสียง" ไม่ต้องค้าง
+      soundLocked.value = !await _chime.play();
     } catch (_) {
       soundLocked.value = true;
     }

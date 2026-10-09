@@ -50,6 +50,9 @@ class _LockedChime implements ChimePlayer {
   bool get startsLocked => true;
 
   @override
+  Future<void> dispose() async {}
+
+  @override
   Future<bool> play() async => false;
 
   @override

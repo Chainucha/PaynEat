@@ -1,6 +1,8 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:async';
+
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,11 +29,22 @@ class _FakeOrderRepository implements OrderRepository {
   Result<List<OrderItem>> nextQueueResult = const Result.success([]);
   Result<Order> nextUpdateItemStatusResult = Result.success(_order());
   final statusCalls = <String>[];
+  int queueCalls = 0;
+
+  /// ไม่ว่าง = คำขอคิวรอบถัดไปจะค้างจนกว่าเทสต์จะ complete เอง (จำลองคำตอบที่มาสลับลำดับ)
+  final held = <Completer<Result<List<OrderItem>>>>[];
+  bool holdQueue = false;
 
   @override
-  Future<Result<List<OrderItem>>> getKitchenQueue({
-    List<String>? statuses,
-  }) async => nextQueueResult;
+  Future<Result<List<OrderItem>>> getKitchenQueue({List<String>? statuses}) {
+    queueCalls++;
+    if (holdQueue) {
+      final completer = Completer<Result<List<OrderItem>>>();
+      held.add(completer);
+      return completer.future;
+    }
+    return Future.value(nextQueueResult);
+  }
 
   @override
   Future<Result<Order>> updateItemStatus(
@@ -70,6 +83,10 @@ class _FakeChime implements ChimePlayer {
   bool playResult = true;
   bool playThrows = false;
   bool unlockThrows = false;
+  int disposes = 0;
+
+  @override
+  Future<void> dispose() async => disposes++;
 
   @override
   Future<bool> play() async {
@@ -85,6 +102,15 @@ class _FakeChime implements ChimePlayer {
     return true;
   }
 }
+
+User _user({int branchId = 1}) => User(
+  id: 3,
+  name: 'ครัว',
+  username: 'kitchen',
+  role: 'kitchen',
+  isActive: true,
+  branchId: branchId,
+);
 
 KitchenStation _station(int id, String code, {bool isDefault = false}) =>
     KitchenStation(id: id, code: code, name: code, isDefault: isDefault);
@@ -698,6 +724,102 @@ void main() {
         });
       },
     );
+
+    test(
+      'socket หลุดแล้วต่อกลับ → โหลดคิวใหม่หนึ่งครั้ง ดังหนึ่งครั้ง ตั๋วค้างขึ้น "ใหม่"',
+      () async {
+        repository.nextQueueResult = Result.success([_item(1)]);
+        kds.onInit();
+        await Future<void>.delayed(Duration.zero);
+        session.socket.connected.value = true;
+        await Future<void>.delayed(Duration.zero);
+        session.socket.connected.value = false;
+        await Future<void>.delayed(Duration.zero);
+        expect(kds.isOffline.value, isTrue);
+
+        repository.nextQueueResult = Result.success([_item(1), _item(2)]);
+        final callsBefore = repository.queueCalls;
+        session.socket.connected.value = true;
+        await Future<void>.delayed(Duration.zero);
+
+        expect(repository.queueCalls - callsBefore, 1);
+        expect(chime.plays, 1);
+        expect(kds.isNew(_item(2)), isTrue);
+        expect(kds.isOffline.value, isFalse);
+      },
+    );
+
+    test(
+      'สลับสาขา (ผู้ใช้เดิม สาขาใหม่) → ตั้ง baseline ใหม่ คิว 5 ใบของสาขาปลายทางไม่ดัง; ตั๋วใหม่จริงหลังจากนั้นดัง',
+      () async {
+        session.start(user: _user(branchId: 1), token: 't1');
+        repository.nextQueueResult = Result.success([_item(1)]);
+        kds.onInit();
+        await Future<void>.delayed(Duration.zero);
+
+        repository.nextQueueResult = Result.success([
+          for (var i = 10; i < 15; i++) _item(i),
+        ]);
+        session.start(user: _user(branchId: 2), token: 't2');
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(chime.plays, 0);
+        expect(kds.newItems, isEmpty);
+        expect(kds.queue.length, 5);
+
+        // socket ต่อกลับจากการสลับสาขา → ไม่ดังย้อนทั้งคิว
+        session.socket.connected.value = true;
+        await Future<void>.delayed(Duration.zero);
+        expect(chime.plays, 0);
+
+        AppClock.freeze(t0.add(const Duration(seconds: 10)));
+        repository.nextQueueResult = Result.success([
+          for (var i = 10; i < 16; i++) _item(i),
+        ]);
+        await kds.load();
+        expect(chime.plays, 1);
+        expect(kds.isNew(_item(15)), isTrue);
+        session.socket.disconnect();
+      },
+    );
+
+    test('onClose → ChimePlayer.dispose ถูกเรียกหนึ่งครั้ง', () {
+      final own = build();
+      own.onClose();
+      expect(chime.disposes, 1);
+    });
+
+    test('เล่นสำเร็จหลังเคยล็อก → soundLocked หาย', () async {
+      kds.soundLocked.value = true;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      expect(chime.plays, 1);
+      expect(kds.soundLocked.value, isFalse);
+    });
+
+    test('โหลดซ้อนกัน คำตอบเก่ามาทีหลัง → ถูกทิ้ง ป้าย "ใหม่" ไม่หาย', () async {
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      expect(kds.isNew(_item(2)), isTrue);
+
+      repository.holdQueue = true;
+      final older = kds.load(showLoader: false);
+      final newer = kds.load(showLoader: false);
+      // รอบใหม่ตอบก่อน (ยังมีตั๋ว 2 เป็น pending) แล้วรอบเก่าตอบทีหลังด้วยคิวที่ไม่มีตั๋ว 2
+      repository.held[1].complete(
+        Result.success([_item(1), _item(2), _item(3)]),
+      );
+      await newer;
+      expect(kds.isNew(_item(3)), isTrue);
+      repository.held[0].complete(Result.success([_item(1)]));
+      await older;
+
+      expect(kds.queue.length, 3);
+      expect(kds.isNew(_item(2)), isTrue);
+      expect(kds.isNew(_item(3)), isTrue);
+    });
 
     test('ChimePlayer ที่เริ่มแบบล็อก (เว็บ) → soundLocked ตั้งแต่สร้าง', () {
       chime = _FakeChime(startsLocked: true);

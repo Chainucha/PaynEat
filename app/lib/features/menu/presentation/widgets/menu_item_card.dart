@@ -30,7 +30,13 @@ class MenuItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final disabled = !item.isAvailable;
+    // จานที่สั่งไม่ได้ตอนนี้: ปิดขาย หรือสถานีของจานปิดอยู่ (ticket 36)
+    final disabled = !item.isOrderable;
+    final badge = item.closedStation != null
+        ? 'menu_station_closed_badge'.trParams({
+            'station': item.closedStation!.displayName,
+          })
+        : 'menu_sold_out_badge'.tr;
 
     return Opacity(
       opacity: disabled ? 0.55 : 1,
@@ -96,7 +102,10 @@ class MenuItemCard extends StatelessWidget {
                           color: Colors.black.withValues(alpha: 0.45),
                           alignment: Alignment.center,
                           child: Text(
-                            'menu_sold_out_badge'.tr,
+                            badge,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,

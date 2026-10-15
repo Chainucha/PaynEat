@@ -106,10 +106,17 @@ export const menuService = {
     const ingredientsByItem = menuRepository.findIngredientLinksForItems(
       items.map((item) => item.id),
     );
+    // สถานีของจานปิดอยู่ไหม (ticket 36) — "สั่งได้" ตัดสินตอนอ่าน ไม่แตะ is_available
+    const closedStationOf = kitchenStationService.closedStationLookup();
     return {
-      items: items.map((item) =>
-        toMenuItemDto(item, groupsByItem.get(item.id) ?? [], ingredientsByItem.get(item.id) ?? []),
-      ),
+      items: items.map((item) => ({
+        ...toMenuItemDto(
+          item,
+          groupsByItem.get(item.id) ?? [],
+          ingredientsByItem.get(item.id) ?? [],
+        ),
+        closedStation: closedStationOf(item),
+      })),
       total,
     };
   },
@@ -117,11 +124,16 @@ export const menuService = {
   getById(id) {
     const item = menuRepository.findById(id);
     if (!item) throw ApiError.notFound('ไม่พบเมนูนี้');
-    return toMenuItemDto(
-      item,
-      menuRepository.findOptionGroups(id),
-      menuRepository.findIngredientLinks(id),
-    );
+    // สถานีของจานปิดอยู่ไหม (ticket 36) — "สั่งได้" ตัดสินตอนอ่าน ไม่แตะ is_available
+    const closedStationOf = kitchenStationService.closedStationLookup();
+    return {
+      ...toMenuItemDto(
+        item,
+        menuRepository.findOptionGroups(id),
+        menuRepository.findIngredientLinks(id),
+      ),
+      closedStation: closedStationOf(item),
+    };
   },
 
   create(payload, currentBranchId) {

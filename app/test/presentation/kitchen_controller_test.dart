@@ -1,6 +1,9 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:async';
+
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -8,6 +11,7 @@ import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/core/errors/failures.dart';
 import 'package:payneat_pos/core/utils/app_clock.dart';
 import 'package:payneat_pos/core/network/socket_client.dart';
+import 'package:payneat_pos/core/services/chime_player.dart';
 import 'package:payneat_pos/core/services/session_service.dart';
 import 'package:payneat_pos/core/services/storage_service.dart';
 import 'package:payneat_pos/core/usecases/result.dart';
@@ -25,11 +29,22 @@ class _FakeOrderRepository implements OrderRepository {
   Result<List<OrderItem>> nextQueueResult = const Result.success([]);
   Result<Order> nextUpdateItemStatusResult = Result.success(_order());
   final statusCalls = <String>[];
+  int queueCalls = 0;
+
+  /// ไม่ว่าง = คำขอคิวรอบถัดไปจะค้างจนกว่าเทสต์จะ complete เอง (จำลองคำตอบที่มาสลับลำดับ)
+  final held = <Completer<Result<List<OrderItem>>>>[];
+  bool holdQueue = false;
 
   @override
-  Future<Result<List<OrderItem>>> getKitchenQueue({
-    List<String>? statuses,
-  }) async => nextQueueResult;
+  Future<Result<List<OrderItem>>> getKitchenQueue({List<String>? statuses}) {
+    queueCalls++;
+    if (holdQueue) {
+      final completer = Completer<Result<List<OrderItem>>>();
+      held.add(completer);
+      return completer.future;
+    }
+    return Future.value(nextQueueResult);
+  }
 
   @override
   Future<Result<Order>> updateItemStatus(
@@ -57,6 +72,45 @@ class _FakeMenuRepository implements MenuRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+
+class _FakeChime implements ChimePlayer {
+  _FakeChime({this.startsLocked = false});
+
+  @override
+  final bool startsLocked;
+  int plays = 0;
+  int unlocks = 0;
+  bool playResult = true;
+  bool playThrows = false;
+  bool unlockThrows = false;
+  int disposes = 0;
+
+  @override
+  Future<void> dispose() async => disposes++;
+
+  @override
+  Future<bool> play() async {
+    plays++;
+    if (playThrows) throw StateError('play boom');
+    return playResult;
+  }
+
+  @override
+  Future<bool> unlock() async {
+    unlocks++;
+    if (unlockThrows) throw StateError('unlock boom');
+    return true;
+  }
+}
+
+User _user({int branchId = 1}) => User(
+  id: 3,
+  name: 'ครัว',
+  username: 'kitchen',
+  role: 'kitchen',
+  isActive: true,
+  branchId: branchId,
+);
 
 KitchenStation _station(int id, String code, {bool isDefault = false}) =>
     KitchenStation(id: id, code: code, name: code, isDefault: isDefault);
@@ -451,6 +505,327 @@ void main() {
 
       expect(controller.stations, isEmpty);
       expect(controller.visibleQueue.length, 3);
+    });
+  });
+
+  group('KitchenController — ตั๋วเข้า (ticket 37)', () {
+    late _FakeChime chime;
+    late KitchenController kds;
+    final t0 = DateTime(2026, 10, 8, 18);
+
+    KitchenController build({StorageService? store}) => KitchenController(
+      getQueue: GetKitchenQueueUseCase(repository),
+      updateItemStatus: UpdateOrderItemStatusUseCase(repository),
+      session: session,
+      getStations: GetKitchenStationsUseCase(menuRepository),
+      storage: store ?? storage,
+      chime: chime,
+    );
+
+    Future<void> loadWith(List<OrderItem> rows) async {
+      repository.nextQueueResult = Result.success(rows);
+      await kds.load();
+    }
+
+    setUp(() {
+      AppClock.freeze(t0);
+      chime = _FakeChime();
+      kds = build();
+    });
+
+    tearDown(() {
+      kds.onClose();
+      AppClock.unfreeze();
+    });
+
+    test(
+      'โหลดแรกตั้ง baseline ไม่ดัง — รายการ pending ใหม่ในรอบถัดไปดังและขึ้น "ใหม่"',
+      () async {
+        await loadWith([_item(1), _item(2), _item(3)]);
+        expect(chime.plays, 0);
+        expect(kds.newItems, isEmpty);
+
+        await loadWith([_item(1), _item(2), _item(3), _item(4)]);
+        expect(chime.plays, 1);
+        expect(kds.isNew(_item(4)), isTrue);
+        expect(kds.isNew(_item(1)), isFalse);
+      },
+    );
+
+    test('โหลดแรกล้มเหลว → รอบที่สำเร็จรอบแรกเป็น baseline ไม่ดัง', () async {
+      repository.nextQueueResult = Result.failure(NetworkFailure('หลุด'));
+      await kds.load();
+      await loadWith([_item(1), _item(2)]);
+      expect(chime.plays, 0);
+    });
+
+    test('เปลี่ยนสถานะ และเลิกทำถอยกลับ pending ไม่ใช่ตั๋วเข้า', () async {
+      await loadWith([_item(1)]);
+      await loadWith([_item(1, status: OrderItemStatus.cooking)]);
+      await loadWith([_item(1)]);
+      expect(chime.plays, 0);
+    });
+
+    test(
+      'เลือกชิปบาร์ → รายการของครัวร้อนเข้ามาไม่ดัง และสลับชิปทีหลังก็ไม่ดังย้อน',
+      () async {
+        kds.stations.assignAll([
+          _station(1, 'hot', isDefault: true),
+          _station(3, 'bar'),
+        ]);
+        await kds.selectStation('bar');
+        await loadWith([_item(1, stationCode: 'bar')]);
+
+        await loadWith([
+          _item(1, stationCode: 'bar'),
+          _item(2, stationCode: 'hot'),
+        ]);
+        expect(chime.plays, 0);
+
+        await kds.selectStation('hot');
+        await loadWith([
+          _item(1, stationCode: 'bar'),
+          _item(2, stationCode: 'hot'),
+        ]);
+        expect(chime.plays, 0);
+
+        await loadWith([
+          _item(1, stationCode: 'bar'),
+          _item(2, stationCode: 'hot'),
+          _item(5, stationCode: 'hot'),
+        ]);
+        expect(chime.plays, 1);
+      },
+    );
+
+    test(
+      'ตั๋วเข้าติดกันภายในช่วงพัก → ดังครั้งเดียว ทุกใบขึ้น "ใหม่"; พ้นช่วงพักแล้วดังใหม่',
+      () async {
+        await loadWith([_item(1)]);
+        await loadWith([_item(1), _item(2), _item(3)]);
+        AppClock.freeze(t0.add(const Duration(seconds: 1)));
+        await loadWith([_item(1), _item(2), _item(3), _item(4)]);
+        expect(chime.plays, 1);
+        expect(kds.newItems.keys, containsAll([2, 3, 4]));
+
+        AppClock.freeze(t0.add(const Duration(seconds: 5)));
+        await loadWith([_item(1), _item(2), _item(3), _item(4), _item(6)]);
+        expect(chime.plays, 2);
+      },
+    );
+
+    test(
+      'ตอน socket หลุด ตั๋วที่มาทาง polling ก็ดัง (ทางเดียวกันคือ load)',
+      () async {
+        kds.isOffline.value = true;
+        await loadWith([_item(1)]);
+        await loadWith([_item(1), _item(2)]);
+        expect(chime.plays, 1);
+      },
+    );
+
+    test('ป้าย "ใหม่" หายเมื่อแตะ / สถานะเปลี่ยน / ครบ 2 นาที', () async {
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2), _item(3), _item(4)]);
+
+      kds.acknowledge(_item(2));
+      expect(kds.isNew(_item(2)), isFalse);
+
+      await loadWith([
+        _item(1),
+        _item(3, status: OrderItemStatus.cooking),
+        _item(4),
+      ]);
+      expect(kds.isNew(_item(3)), isFalse);
+
+      AppClock.freeze(t0.add(KitchenController.highlightWindow));
+      expect(kds.isNew(_item(4)), isFalse);
+    });
+
+    test(
+      'ปิดเสียง → ไม่ดังแต่ยังไฮไลต์ และค่าที่ปิดไว้รอดการสร้าง controller ใหม่',
+      () async {
+        await kds.toggleMute();
+        expect(kds.muted.value, isTrue);
+
+        await loadWith([_item(1)]);
+        await loadWith([_item(1), _item(2)]);
+        expect(chime.plays, 0);
+        expect(kds.isNew(_item(2)), isTrue);
+
+        final revived = build();
+        expect(revived.muted.value, isTrue);
+        revived.onClose();
+      },
+    );
+
+    test('เบราว์เซอร์บล็อกเสียง → soundLocked; แตะปลดล็อกแล้วหาย', () async {
+      chime.playResult = false;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      expect(kds.soundLocked.value, isTrue);
+
+      await kds.unlockSound();
+      expect(chime.unlocks, 1);
+      expect(kds.soundLocked.value, isFalse);
+    });
+
+    test('play() โยน error → soundLocked ไม่มี error หลุด', () async {
+      chime.playThrows = true;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      expect(chime.plays, 1);
+      expect(kds.soundLocked.value, isTrue);
+    });
+
+    test('unlock() โยน error → soundLocked ยังเป็น true', () async {
+      chime.playResult = false;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      chime.unlockThrows = true;
+      await kds.unlockSound();
+      expect(chime.unlocks, 1);
+      expect(kds.soundLocked.value, isTrue);
+    });
+
+    test('advance() ตั๋วที่เพิ่งเข้า → ป้าย "ใหม่" หายทันที', () async {
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      expect(kds.isNew(_item(2)), isTrue);
+      await kds.advance(_item(2));
+      expect(kds.isNew(_item(2)), isFalse);
+    });
+
+    test(
+      'timer จริง: socket หลุด → polling ทุก 30 วิ ดังเมื่อมีตั๋วใหม่ และล้างป้ายที่ครบ 2 นาที',
+      () {
+        fakeAsync((async) {
+          repository.nextQueueResult = Result.success([_item(1)]);
+          kds.onInit();
+          async.flushMicrotasks();
+          kds.isOffline.value = true;
+          expect(chime.plays, 0);
+
+          repository.nextQueueResult = Result.success([_item(1), _item(2)]);
+          async.elapse(const Duration(seconds: 30));
+          async.flushMicrotasks();
+          expect(chime.plays, 1);
+          expect(kds.newItems.keys, contains(2));
+
+          // เลย highlightWindow แล้ว timer ต้องล้างป้ายออกจาก newItems เอง
+          AppClock.freeze(t0.add(KitchenController.highlightWindow));
+          async.elapse(const Duration(seconds: 30));
+          async.flushMicrotasks();
+          expect(kds.newItems, isEmpty);
+          kds.onClose();
+        });
+      },
+    );
+
+    test(
+      'socket หลุดแล้วต่อกลับ → โหลดคิวใหม่หนึ่งครั้ง ดังหนึ่งครั้ง ตั๋วค้างขึ้น "ใหม่"',
+      () async {
+        repository.nextQueueResult = Result.success([_item(1)]);
+        kds.onInit();
+        await Future<void>.delayed(Duration.zero);
+        session.socket.connected.value = true;
+        await Future<void>.delayed(Duration.zero);
+        session.socket.connected.value = false;
+        await Future<void>.delayed(Duration.zero);
+        expect(kds.isOffline.value, isTrue);
+
+        repository.nextQueueResult = Result.success([_item(1), _item(2)]);
+        final callsBefore = repository.queueCalls;
+        session.socket.connected.value = true;
+        await Future<void>.delayed(Duration.zero);
+
+        expect(repository.queueCalls - callsBefore, 1);
+        expect(chime.plays, 1);
+        expect(kds.isNew(_item(2)), isTrue);
+        expect(kds.isOffline.value, isFalse);
+      },
+    );
+
+    test(
+      'สลับสาขา (ผู้ใช้เดิม สาขาใหม่) → ตั้ง baseline ใหม่ คิว 5 ใบของสาขาปลายทางไม่ดัง; ตั๋วใหม่จริงหลังจากนั้นดัง',
+      () async {
+        session.start(user: _user(branchId: 1), token: 't1');
+        repository.nextQueueResult = Result.success([_item(1)]);
+        kds.onInit();
+        await Future<void>.delayed(Duration.zero);
+
+        repository.nextQueueResult = Result.success([
+          for (var i = 10; i < 15; i++) _item(i),
+        ]);
+        session.start(user: _user(branchId: 2), token: 't2');
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(chime.plays, 0);
+        expect(kds.newItems, isEmpty);
+        expect(kds.queue.length, 5);
+
+        // socket ต่อกลับจากการสลับสาขา → ไม่ดังย้อนทั้งคิว
+        session.socket.connected.value = true;
+        await Future<void>.delayed(Duration.zero);
+        expect(chime.plays, 0);
+
+        AppClock.freeze(t0.add(const Duration(seconds: 10)));
+        repository.nextQueueResult = Result.success([
+          for (var i = 10; i < 16; i++) _item(i),
+        ]);
+        await kds.load();
+        expect(chime.plays, 1);
+        expect(kds.isNew(_item(15)), isTrue);
+        session.socket.disconnect();
+      },
+    );
+
+    test('onClose → ChimePlayer.dispose ถูกเรียกหนึ่งครั้ง', () {
+      final own = build();
+      own.onClose();
+      expect(chime.disposes, 1);
+    });
+
+    test('เล่นสำเร็จหลังเคยล็อก → soundLocked หาย', () async {
+      kds.soundLocked.value = true;
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      await Future<void>.delayed(Duration.zero);
+      expect(chime.plays, 1);
+      expect(kds.soundLocked.value, isFalse);
+    });
+
+    test('โหลดซ้อนกัน คำตอบเก่ามาทีหลัง → ถูกทิ้ง ป้าย "ใหม่" ไม่หาย', () async {
+      await loadWith([_item(1)]);
+      await loadWith([_item(1), _item(2)]);
+      expect(kds.isNew(_item(2)), isTrue);
+
+      repository.holdQueue = true;
+      final older = kds.load(showLoader: false);
+      final newer = kds.load(showLoader: false);
+      // รอบใหม่ตอบก่อน (ยังมีตั๋ว 2 เป็น pending) แล้วรอบเก่าตอบทีหลังด้วยคิวที่ไม่มีตั๋ว 2
+      repository.held[1].complete(
+        Result.success([_item(1), _item(2), _item(3)]),
+      );
+      await newer;
+      expect(kds.isNew(_item(3)), isTrue);
+      repository.held[0].complete(Result.success([_item(1)]));
+      await older;
+
+      expect(kds.queue.length, 3);
+      expect(kds.isNew(_item(2)), isTrue);
+      expect(kds.isNew(_item(3)), isTrue);
+    });
+
+    test('ChimePlayer ที่เริ่มแบบล็อก (เว็บ) → soundLocked ตั้งแต่สร้าง', () {
+      chime = _FakeChime(startsLocked: true);
+      final web = build();
+      expect(web.soundLocked.value, isTrue);
+      web.onClose();
     });
   });
 }

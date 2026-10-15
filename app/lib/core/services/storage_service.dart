@@ -113,4 +113,10 @@ class StorageService {
 
   Future<void> saveKitchenStation(String value) =>
       _write(StorageKeys.kitchenStation, value);
+
+  /// ปิดเสียงเตือนตั๋วเข้าของจอครัว (ticket 37) — ผูกกับเครื่องเหมือนชิปสถานี จึงไม่ถูกล้างตอน [clear]
+  bool get kitchenChimeMuted => _read(StorageKeys.kitchenChimeMuted) == 'true';
+
+  Future<void> saveKitchenChimeMuted(bool muted) =>
+      _write(StorageKeys.kitchenChimeMuted, muted ? 'true' : 'false');
 }

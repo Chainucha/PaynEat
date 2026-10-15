@@ -27,6 +27,9 @@ class ApiEndpoints {
   // Kitchen stations (ticket 34)
   static const String kitchenStations = '/kitchen-stations';
   static String kitchenStation(int id) => '/kitchen-stations/$id';
+  static const String kitchenStationStatus = '/kitchen-stations/status';
+  static String closeKitchenStation(int id) => '/kitchen-stations/$id/close';
+  static String openKitchenStation(int id) => '/kitchen-stations/$id/open';
 
   // Menu
   static const String menuItems = '/menu-items';

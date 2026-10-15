@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:payneat_pos/core/constants/app_constants.dart';
 import 'package:payneat_pos/features/auth/domain/entities/user.dart';
 import 'package:payneat_pos/features/menu/data/models/menu_item_model.dart';
+import 'package:payneat_pos/features/menu/data/models/station_status_model.dart';
 import 'package:payneat_pos/features/order/domain/entities/order.dart';
 import 'package:payneat_pos/features/order/domain/entities/order_item.dart';
 import 'package:payneat_pos/features/order/data/models/order_model.dart';
@@ -310,5 +311,53 @@ void main() {
         expect(item.scalePlu, isNull);
       },
     );
+  });
+
+  group('ticket 36 — สถานีปิด', () {
+    test(
+      'MenuItemModel อ่าน closedStation และ isOrderable ตามทั้งสองเงื่อนไข',
+      () {
+        final open = MenuItemModel.fromJson(const {
+          'id': 1,
+          'categoryId': 1,
+          'name': 'ชาไทย',
+          'price': 45,
+          'isAvailable': true,
+          'closedStation': null,
+        });
+        final closed = MenuItemModel.fromJson(const {
+          'id': 2,
+          'categoryId': 1,
+          'name': 'ชาไทย',
+          'price': 45,
+          'isAvailable': true,
+          'closedStation': {
+            'id': 3,
+            'name': 'บาร์',
+            'nameEn': 'Bar',
+            'nameKo': '바',
+          },
+        });
+        expect(open.isOrderable, isTrue);
+        expect(closed.isOrderable, isFalse);
+        expect(closed.closedStation!.name, 'บาร์');
+      },
+    );
+
+    test('StationStatusModel อ่านค่าปิด/เปิดและจำนวนค้าง', () {
+      final status = StationStatusModel.fromJson(const {
+        'stationId': 3,
+        'code': 'bar',
+        'name': 'บาร์',
+        'icon': '🥤',
+        'isClosed': true,
+        'closedAt': '2026-10-08 14:03:00',
+        'closedByName': 'เชฟต้น',
+        'pendingCount': 2,
+      });
+      expect(status.isClosed, isTrue);
+      expect(status.pendingCount, 2);
+      expect(status.labelWithIcon, '🥤 บาร์');
+    });
   });
 }

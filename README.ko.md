@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1290%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1357%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -359,6 +359,20 @@ Docker 절차는 [설치 안내의 "백업과 복원"](https://suruchboss.github
   화면이 계정의 스테이션으로 열립니다. 비어 있는 태블릿을 아무거나 집어 쓰는 매장도 교대마다 다시
   고르지 않아도 됩니다. 잠금이 아니라 **기본값**이므로 칩은 계속 쓸 수 있고, 기기에서 고른 값이 계정
   설정을 덮어씁니다 (`docs/DECISIONS.md` #98)
+- **지점별 스테이션 닫기/열기** — 주방 화면 상단 버튼(주방/매니저/관리자)에서 이 지점의 스테이션을 한 번에 닫습니다.
+  바가 저녁 9시에 닫혀도 메뉴를 하나씩 품절 처리할 필요가 없습니다. 대기 중인 항목이 있으면 "N건 대기 중"을 먼저
+  알려 주지만 막지는 않으며(주방이 끝까지 조리), 주방 화면과 직원 주문 화면에 "닫힌 시각·담당자" 배너가 떠서 다시
+  여는 것을 잊지 않게 합니다(자동 재개 없음). 닫힌 스테이션의 메뉴는 직원 주문·추가 주문·QR 주문·저장된 계산서의
+  주방 전송 모두에서 409로 거절되고(장바구니는 유지), 다른 스테이션으로 대체되지 않으며 메뉴의 품절 상태
+  (`is_available`)는 건드리지 않으므로 다시 열면 이전 상태 그대로 돌아옵니다. 직원 화면에서는 해당 메뉴가 회색 +
+  "바 닫힘" 표시이고 QR 손님에게는 보이지 않습니다. 직원 주문 화면의 버튼은 매니저/관리자 전용입니다
+  (`docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
+- **티켓 도착 알림음** — 선택한 스테이션 칩에 해당하는 새 티켓(새 주문, 추가 주문, QR 주문)이 들어오면 주방 화면에서 두 음
+  알림음이 한 번 울리고, 카드에 "신규" 표시와 굵은 테두리가 터치·상태 변경·2분 경과 전까지 표시됩니다. 매번 대기열을 불러올 때
+  기기에서 이전 목록과 비교하여 감지하므로 소켓이 끊겨 백업 폴링으로 데이터가 와도 울립니다. 상태 변경·취소·되돌리기·첫 로드·칩 전환은
+  울리지 않고, 3초 안에 여러 건이 와도 한 번만 울립니다. 상단 스피커 버튼으로 음소거(기기별 저장, 로그아웃 후에도 유지)하며,
+  웹에서는 첫 터치 전까지 "소리를 켜려면 터치" 막대가 표시됩니다 — 앱이 백그라운드일 때의 푸시, 진동, 소리 선택, 확인할 때까지
+  반복은 아직 지원하지 않습니다 (`docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
 - **잘못 변경한 상태 되돌리기** — 상태를 변경하면 화면 하단에 **"되돌리기"** 막대가 8초 동안 표시되어 한 단계
   되돌릴 수 있습니다 (조리 중 → 대기, 조리 완료 → 조리 중). 서빙 완료 상태는 되돌릴 수 없습니다. 시스템은 주방이 어디까지
   진행했는지 항상 기억하므로, 되돌리기를 해도 이미 조리한 음식이 직원이 직접 삭제·취소할 수 있는 항목으로 바뀌지 않습니다
@@ -526,20 +540,22 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1274건**의 자동화 테스트를 통과합니다.
+공개 전 **1357건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 607건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 629건 — domain / controller / widget
+cd backend && npm test      # 612건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 691건 — domain / controller / widget
 cd app && flutter test test_e2e   # 54건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1274건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1357건에 미포함)
 ```
+
+Windows 개발 PC에서는 환경 때문에(경로, 파일 잠금, 시간대) 3건의 테스트만 실패하며 CI에서는 통과합니다.
 
 `app/test_e2e/`의 E2E 테스트 54건은 실행할 때마다 새 임시 DB로 실제 백엔드(`node src/server.js`)를 기동하고, 앱의
 실제 data/domain 코드로 매장의 하루 업무를 처음부터 끝까지 수행합니다. 대상 업무는 로그인, 주문, 주방, 근무 시작,
 결제, 세금계산서, 환불, 근무 마감(차액 0), Z-report와 CSV, 감사 로그, 손님의 QR 주문, 지점·권한입니다. 나머지
 Flutter 테스트는 모두 데모 모드에서 실행되므로, 앱이 **백엔드가 실제로 반환한 JSON을 해석하는지** 검증하는 테스트는
-이 E2E 테스트뿐입니다. 이 테스트는 기존 659건의 테스트가 모두 통과한 상태에서도 존재하던 실제 버그 5건을 발견했으며,
+이 E2E 테스트뿐입니다. 이 테스트는 당시 기존 659건의 테스트가 모두 통과한 상태에서도 존재하던 실제 버그 5건을 발견했으며,
 해당 버그는 모두 수정되었습니다 (`docs/DECISIONS.md` #43–#47). 정육 카운터 및 거래처 시나리오도 별도로 검증합니다: 저울
 라벨 스캔 → 장바구니 금액이 백엔드와 1사땅 단위까지 일치 → 한도 초과 외상 거부 → 외상 판매 시 kg 단위
 재고 차감 → 청구서 → 현금 수금 → 교대 마감 차액 0 (`meat_shop_b2b_e2e_test.dart`). 백업은 교대 마감 → 백업 파일 생성 → 실제 `db:restore` 명령으로 새 데이터베이스에 복원 → 복원된 데이터베이스의 Z-report가 복원 전과 일치하는지까지 확인합니다 (`backup_restore_e2e_test.dart`). 또한 테스트가 TCP
@@ -564,6 +580,10 @@ PDF로 내려받기 → 청구서 이메일 발송 (`scale_documents_e2e_test.da
   글리프가 포함되어 있는지 확인합니다 (재료·메뉴 설명 번역을 추가할 때 누락되었던 8글자 `깃걀틸끈짠쌀걸쭉`을 이 테스트로
   검출하여 폰트를 다시 subset했습니다). 또한 모든 굵기에 KS X 1001 한글 2,350자와 입력 중 표시되는 자모가 모두 포함되어
   있는지 확인하며, 474자만 포함된 이전 폰트로 되돌리면 이 테스트가 실패합니다 (`docs/DECISIONS.md` #74)
+- `kitchen_controller_test.dart`("티켓 도착" 그룹), `storage_service_test.dart`, `kitchen_arrival_test.dart`, `kitchen_header_360_test.dart` —
+  주방 도착 알림음(ticket 37)을 확인합니다. 첫 로드와 칩 전환에서는 울리지 않는지, 상태 변경·되돌리기는 울리지 않는지, 3초 안의 여러 건은 한 번만 울리는지,
+  소켓이 끊긴 폴링에서도 울리는지, 음소거 값이 `clear()` 후에도 유지되는지, 긴 테이블 이름이 있어도 360px에서 "신규" 표시가 넘치지 않고
+  카드 높이가 같은지, 소리 켜기 막대와 음소거 버튼이 동작하는지 확인합니다
 - `audit_summary_text_test.dart`, `demo_store_test.dart` — 변경 이력 문장을 `metadata.summaryArgs`로 재구성했을 때
   태국어 문장은 저장된 문장과 완전히 일치하고, 한국어·영어 문장에는 사용자 입력값 외에 태국어가 남지 않는지를
   데모 모드가 생성한 **모든** 로그를 대상으로 확인합니다. 백엔드의 `audit-summary-args.test.js`는 소스를 직접 읽어

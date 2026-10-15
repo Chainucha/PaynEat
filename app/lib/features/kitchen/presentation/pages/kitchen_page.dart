@@ -6,12 +6,22 @@ import 'package:get/get.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/session_service.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../order/domain/entities/order_item.dart';
 import '../controllers/kitchen_controller.dart';
+import '../controllers/station_status_controller.dart';
+import '../widgets/chime_controls.dart';
 import '../widgets/kitchen_ticket_card.dart';
+import '../widgets/station_closed_banner.dart';
 import '../widgets/station_filter_bar.dart';
+import '../widgets/station_status_sheet.dart';
+
+/// เปิด/ปิดสถานีได้เฉพาะบทบาทที่ backend อนุญาต (พนักงานเสิร์ฟมีแท็บครัวแต่จะได้ 403 เสมอ)
+bool get _canToggleStations => UserRole.canToggleStations(
+  Get.find<SessionService>().currentUser?.role ?? '',
+);
 
 /// จอครัว — แบ่งเป็น 3 คอลัมน์ตามสถานะ เห็นภาพรวมงานทั้งครัวในจอเดียว
 class KitchenPage extends GetView<KitchenController> {
@@ -19,11 +29,18 @@ class KitchenPage extends GetView<KitchenController> {
 
   @override
   Widget build(BuildContext context) {
+    // ให้ StationStatusController ถูกสร้าง (onInit โหลดสถานะและฟัง event) ตั้งแต่เปิดจอครัว
+    Get.find<StationStatusController>();
     return Column(
       children: [
         const _KitchenHeader(),
         const StationFilterBar(),
+        // แบนเนอร์เห็นได้ทุกบทบาท (พนักงานควรรู้ว่าสถานีไหนปิด) แต่แตะเปิดชีตได้เฉพาะคนที่สลับได้
+        StationClosedBanner(
+          onTap: _canToggleStations ? StationStatusSheet.show : null,
+        ),
         const _OfflineBanner(),
+        const SoundUnlockBar(),
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value && controller.queue.isEmpty) {
@@ -50,6 +67,8 @@ class KitchenPage extends GetView<KitchenController> {
 
             // อ่านค่า tick เพื่อให้ "เวลารอ" อัปเดตทุก 30 วินาที
             controller.tick.value;
+            // อ่าน newItems เพื่อให้ป้าย "ใหม่" อัปเดตตอนตั๋วเข้า/หมดเวลา/ถูกรับทราบ (ticket 37)
+            controller.newItems.length;
 
             final columns = [
               (
@@ -185,17 +204,20 @@ class _KitchenHeader extends GetView<KitchenController> {
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.surface,
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
       child: Obx(
         () => Row(
           children: [
-            Icon(Icons.soup_kitchen_rounded, color: AppColors.brandInk),
-            const SizedBox(width: 8),
+            // มือถือตัดไอคอนนำหน้าออก + ลดขอบ/ช่องไฟเพื่อให้ปุ่มสถานี+ลำโพง+รีเฟรชพอดีที่ 360px (ticket 36/37)
+            if (!Responsive.isMobile(context)) ...[
+              Icon(Icons.soup_kitchen_rounded, color: AppColors.brandInk),
+              const SizedBox(width: 8),
+            ],
             Text(
               'kitchen_header_title'.tr,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 4),
             // ตัวนับคิว + ป้ายเกินเวลาอยู่ใน Wrap — บนมือถือ 360px ฉบับอังกฤษ ("Queue 5" + "3 late")
             // ยาวเกินจนหัวจอครัวล้นขวา 30px ปุ่มรีเฟรชหลุดจอ — docs/DECISIONS.md #62
             Expanded(
@@ -258,7 +280,25 @@ class _KitchenHeader extends GetView<KitchenController> {
                 ],
               ),
             ),
+            const ChimeMuteButton(),
+            // admin โหมด "ทุกสาขา" ใช้ไม่ได้ (canUse false) และบทบาทที่สลับไม่ได้ → ซ่อนปุ่ม
+            if (_canToggleStations &&
+                Get.find<StationStatusController>().canUse)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 36,
+                  height: 40,
+                ),
+                tooltip: 'station_status_button'.tr,
+                onPressed: StationStatusSheet.show,
+                icon: const Icon(Icons.storefront_outlined),
+              ),
             IconButton(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 40),
               onPressed: controller.load,
               icon: const Icon(Icons.refresh_rounded),
               tooltip: 'kitchen_refresh_tooltip'.tr,
@@ -360,6 +400,8 @@ class _TicketList extends GetView<KitchenController> {
         return KitchenTicketCard(
           item: item,
           isLate: controller.isLate(item),
+          isNew: controller.isNew(item),
+          onTap: () => controller.acknowledge(item),
           onAdvance: () => controller.advance(item),
           // โชว์ป้ายสถานีเฉพาะตอนดู "ทุกสถานี" — กรองอยู่แล้วป้ายก็ซ้ำซ้อน และหัวตั๋วก็แน่นพอแล้ว
           stationLabel: controller.selectedStationCode.value == null

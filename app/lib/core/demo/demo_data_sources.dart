@@ -24,6 +24,7 @@ import '../../features/menu/data/datasources/menu_remote_data_source.dart';
 import '../../features/menu/data/models/category_model.dart';
 import '../../features/menu/data/models/kitchen_station_model.dart';
 import '../../features/menu/data/models/menu_item_model.dart';
+import '../../features/menu/data/models/station_status_model.dart';
 import '../../features/menu/domain/entities/menu_item_payload.dart';
 import '../../features/order/data/datasources/order_remote_data_source.dart';
 import '../../features/order/domain/entities/order_item_payload.dart';

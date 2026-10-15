@@ -7,6 +7,7 @@ import '../models/category_model.dart';
 import '../models/kitchen_station_model.dart';
 import '../../domain/entities/menu_item_payload.dart';
 import '../models/menu_item_model.dart';
+import '../models/station_status_model.dart';
 
 abstract class MenuRemoteDataSource {
   Future<List<CategoryModel>> getCategories({bool activeOnly});
@@ -21,6 +22,11 @@ abstract class MenuRemoteDataSource {
     Map<String, dynamic> body,
   );
   Future<void> deleteKitchenStation(int id);
+  Future<List<StationStatusModel>> getStationStatuses();
+  Future<StationStatusModel> setStationClosed(
+    int stationId, {
+    required bool closed,
+  });
 
   Future<List<MenuItemModel>> getMenuItems({
     int? categoryId,
@@ -105,6 +111,27 @@ class MenuRemoteDataSourceImpl implements MenuRemoteDataSource {
   @override
   Future<void> deleteKitchenStation(int id) =>
       _client.delete(ApiEndpoints.kitchenStation(id));
+
+  @override
+  Future<List<StationStatusModel>> getStationStatuses() async {
+    final result = await _client.get(ApiEndpoints.kitchenStationStatus);
+    return result.asList
+        .map(StationStatusModel.fromJson)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<StationStatusModel> setStationClosed(
+    int stationId, {
+    required bool closed,
+  }) async {
+    final result = await _client.post(
+      closed
+          ? ApiEndpoints.closeKitchenStation(stationId)
+          : ApiEndpoints.openKitchenStation(stationId),
+    );
+    return StationStatusModel.fromJson(result.asMap);
+  }
 
   @override
   Future<List<MenuItemModel>> getMenuItems({

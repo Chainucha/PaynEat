@@ -3,6 +3,7 @@
 
 /// คำแปลของฟีเจอร์ menu
 const Map<String, String> menuTranslationsTh = {
+  'menu_station_not_found_error': 'ไม่พบสถานีครัวนี้',
   'menu_station_button': 'สถานีครัว',
   'menu_form_station_label': 'สถานีครัว',
   'menu_form_station_inherit': 'ตามหมวดหมู่ (@station)',
@@ -111,6 +112,7 @@ const Map<String, String> menuTranslationsTh = {
   // Item card badges
   'menu_recommended_badge': 'แนะนำ',
   'menu_sold_out_badge': 'ของหมด',
+  'menu_station_closed_badge': '@stationปิด',
 
   // Controller feedback messages
   'menu_mark_available_success': 'เปิดขาย "@name" แล้ว',
@@ -149,6 +151,7 @@ const Map<String, String> menuTranslationsTh = {
 };
 
 const Map<String, String> menuTranslationsEn = {
+  'menu_station_not_found_error': 'Kitchen station not found',
   'menu_station_button': 'Stations',
   'menu_form_station_label': 'Kitchen station',
   'menu_form_station_inherit': 'Follow the category (@station)',
@@ -260,6 +263,7 @@ const Map<String, String> menuTranslationsEn = {
   // Item card badges
   'menu_recommended_badge': 'Recommended',
   'menu_sold_out_badge': 'Sold out',
+  'menu_station_closed_badge': '@station closed',
 
   // Controller feedback messages
   'menu_mark_available_success': 'Marked "@name" as available',
@@ -297,6 +301,7 @@ const Map<String, String> menuTranslationsEn = {
 };
 
 const Map<String, String> menuTranslationsKo = {
+  'menu_station_not_found_error': '주방 스테이션을 찾을 수 없습니다',
   'menu_station_button': '스테이션',
   'menu_form_station_label': '주방 스테이션',
   'menu_form_station_inherit': '카테고리 따름 (@station)',
@@ -395,6 +400,7 @@ const Map<String, String> menuTranslationsKo = {
   'menu_option_price_delta_label': '+THB',
   'menu_recommended_badge': '추천',
   'menu_sold_out_badge': '품절',
+  'menu_station_closed_badge': '@station 닫힘',
   'menu_mark_available_success': '"@name"을(를) 판매 중으로 변경했습니다',
   'menu_mark_unavailable_success': '"@name"을(를) 판매 중지로 변경했습니다',
   'menu_item_created_success': '메뉴를 추가했습니다',

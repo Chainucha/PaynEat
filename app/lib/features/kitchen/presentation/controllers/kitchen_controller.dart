@@ -9,9 +9,12 @@ import 'package:get/get.dart';
 import '../../../../app/config/app_config.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/network/socket_client.dart';
+import '../../../../core/services/chime_player.dart';
 import '../../../../core/services/session_service.dart';
+import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_dialogs.dart';
+import '../../../auth/domain/entities/user.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../menu/domain/entities/kitchen_station.dart';
 import '../../../menu/domain/usecases/menu_usecases.dart';
@@ -29,17 +32,22 @@ class KitchenController extends GetxController {
     required SessionService session,
     required GetKitchenStationsUseCase getStations,
     required StorageService storage,
+    ChimePlayer chime = const NoopChimePlayer(),
   }) : _getQueue = getQueue,
        _updateItemStatus = updateItemStatus,
        _session = session,
        _getStations = getStations,
-       _storage = storage;
+       _storage = storage,
+       _chime = chime,
+       muted = storage.kitchenChimeMuted.obs,
+       soundLocked = chime.startsLocked.obs;
 
   final GetKitchenQueueUseCase _getQueue;
   final UpdateOrderItemStatusUseCase _updateItemStatus;
   final SessionService _session;
   final GetKitchenStationsUseCase _getStations;
   final StorageService _storage;
+  final ChimePlayer _chime;
 
   final RxList<OrderItem> queue = <OrderItem>[].obs;
 
@@ -65,6 +73,37 @@ class KitchenController extends GetxController {
   /// แถบเลิกทำค้างให้กดได้นานเท่านี้ พอให้คนเห็นว่ากดผิด แต่ไม่ค้างจนบังตั๋วถัดไป
   static const undoWindow = Duration(seconds: 8);
 
+  /// ตั๋วเข้า (ticket 37): id รายการ → เวลาที่เข้า ใช้ขึ้นป้าย "ใหม่" บนการ์ด
+  final RxMap<int, DateTime> newItems = <int, DateTime>{}.obs;
+
+  /// ปิดเสียงเตือนไว้ — จำต่อเครื่อง ([StorageService.kitchenChimeMuted])
+  final RxBool muted;
+
+  /// เบราว์เซอร์ยังไม่ยอมให้เล่นเสียง — จอขึ้นแถบ "แตะเพื่อเปิดเสียง"
+  final RxBool soundLocked;
+
+  /// ป้าย "ใหม่" ค้างได้นานเท่านี้ ถ้าไม่มีใครแตะหรือเริ่มทำ
+  static const highlightWindow = Duration(minutes: 2);
+
+  /// ตั๋วเข้าติด ๆ กันภายในช่วงนี้ดังครั้งเดียว — ไม่ให้ออเดอร์โต๊ะใหญ่กลายเป็นเสียงรัว
+  static const chimeCooldown = Duration(seconds: 3);
+
+  /// id ของทุกรายการที่จอนี้เคยเห็นใน session — null = ยังไม่เคยโหลดสำเร็จ (โหลดแรกคือ baseline)
+  /// ไม่ล้างตอนสลับชิป เพราะเทียบจากคิวทั้งหมด ไม่ใช่เฉพาะที่กรองอยู่ สลับชิปจึงไม่ทำให้ดังย้อนหลัง
+  Set<int>? _seenIds;
+  DateTime? _lastChimeAt;
+
+  /// socket เชื่อมอยู่ก่อนหน้านี้หรือไม่ — ใช้จับขอบ หลุด→ต่อกลับ เพื่อโหลดคิวที่อาจพลาดไประหว่างนั้น
+  bool _wasConnected = false;
+
+  /// ผู้ใช้/สาขาที่จอนี้เห็นล่าสุด — สลับสาขาแล้วต้องเริ่ม baseline ใหม่ ไม่งั้นคิวทั้งสาขาใหม่จะดังรัว
+  int? _lastUserId;
+  int? _lastBranchId;
+  Worker? _userWorker;
+
+  /// ลำดับของคำขอโหลดคิว — ผลที่ไม่ใช่รอบล่าสุดถูกทิ้ง กันคำตอบเก่าที่มาช้าไปลบป้าย "ใหม่"
+  int _loadSeq = 0;
+
   final List<VoidCallback> _unsubscribers = [];
   Timer? _elapsedTimer;
   Timer? _undoTimer;
@@ -83,8 +122,14 @@ class KitchenController extends GetxController {
     _loadStations();
     _listenToRealtimeUpdates();
 
+    _wasConnected = _session.socket.connected.value;
     _syncConnectionState();
-    _session.socket.connected.addListener(_syncConnectionState);
+    _session.socket.connected.addListener(_onConnectionChanged);
+
+    final user = _session.currentUser;
+    _lastUserId = user?.id;
+    _lastBranchId = user?.branchId;
+    _userWorker = ever(_session.currentUserRx, _onUserChanged);
 
     // ตัวจับเวลานี้ทำสองหน้าที่:
     // 1. เดินตัวเลข "รอมาแล้วกี่นาที" บนตั๋ว
@@ -93,6 +138,8 @@ class KitchenController extends GetxController {
     //    ยังเดินอยู่ ทำให้ดูเหมือนทุกอย่างปกติ
     _elapsedTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       tick.value++;
+      final now = AppClock.now();
+      newItems.removeWhere((_, at) => now.difference(at) >= highlightWindow);
       if (isOffline.value) load(showLoader: false);
     });
   }
@@ -101,7 +148,10 @@ class KitchenController extends GetxController {
   void onClose() {
     _elapsedTimer?.cancel();
     _undoTimer?.cancel();
-    _session.socket.connected.removeListener(_syncConnectionState);
+    _session.socket.connected.removeListener(_onConnectionChanged);
+    _userWorker?.dispose();
+    // ปล่อย AudioPlayer (CODING_STANDARDS §3.4) — ไม่ต้องรอ
+    unawaited(_chime.dispose());
     for (final unsubscribe in _unsubscribers) {
       unsubscribe();
     }
@@ -112,6 +162,28 @@ class KitchenController extends GetxController {
   /// ไม่ใช่ความผิดปกติที่ต้องเตือน — ถ้าไม่กันไว้ แถบแดงจะขึ้นค้างตลอดทั้งที่ทุกอย่างใช้ได้
   void _syncConnectionState() =>
       isOffline.value = !AppConfig.demoMode && !_session.socket.connected.value;
+
+  /// socket ต่อกลับ (เน็ตสะดุด หรือ start() ตอนสลับสาขา) อาจพลาด event ไประหว่างหลุด
+  /// → โหลดคิวใหม่ทันที ไม่รอ polling 30 วิ; ตั๋วที่ค้างมาจะดังและขึ้น "ใหม่" ผ่าน [_detectArrivals]
+  void _onConnectionChanged() {
+    _syncConnectionState();
+    final connected = _session.socket.connected.value;
+    final reconnected = connected && !_wasConnected;
+    _wasConnected = connected;
+    if (reconnected) load(showLoader: false);
+  }
+
+  /// สลับสาขา (หรือเปลี่ยนผู้ใช้) → คิวเดิมไม่ใช่ของสาขานี้แล้ว ล้างป้ายและตั้ง baseline ใหม่จากรอบโหลดนี้
+  /// ทำก่อนที่ socket จะต่อกลับ จึงไม่ดังรัวทั้งคิวของสาขาปลายทาง
+  void _onUserChanged(User? user) {
+    if (user == null) return; // ออกจากระบบ — ไม่ใช่การสลับสาขา
+    if (user.id == _lastUserId && user.branchId == _lastBranchId) return;
+    _lastUserId = user.id;
+    _lastBranchId = user.branchId;
+    _seenIds = null;
+    newItems.clear();
+    load(showLoader: false);
+  }
 
   /// สถานีค่าเริ่มต้นของร้าน — ตั๋วที่ไม่มีสถานีประทับไว้ถือเป็นของสถานีนี้ (ticket 34)
   String? get defaultStationCode =>
@@ -180,15 +252,20 @@ class KitchenController extends GetxController {
     if (showLoader) isLoading.value = true;
     errorMessage.value = null;
 
+    final seq = ++_loadSeq;
     final result = await _getQueue(const [
       OrderItemStatus.pending,
       OrderItemStatus.cooking,
       OrderItemStatus.ready,
     ]);
+    if (seq != _loadSeq) return;
 
     isLoading.value = false;
     result.fold(
-      onSuccess: queue.assignAll,
+      onSuccess: (rows) {
+        _detectArrivals(rows);
+        queue.assignAll(rows);
+      },
       onFailure: (failure) => errorMessage.value = failure.message,
     );
   }
@@ -197,6 +274,7 @@ class KitchenController extends GetxController {
   Future<void> advance(OrderItem item) async {
     final next = item.nextStatus;
     if (next == null) return;
+    acknowledge(item);
 
     // อัปเดตในเครื่องก่อนเพื่อให้ปุ่มตอบสนองทันที แล้วค่อย sync กับเซิร์ฟเวอร์
     final index = queue.indexWhere((row) => row.id == item.id);
@@ -254,6 +332,79 @@ class KitchenController extends GetxController {
     _undoTimer?.cancel();
     _undoTimer = null;
     lastChange.value = null;
+  }
+
+  /// ตั๋วเข้า = รายการ pending ที่ไม่เคยเห็นใน session นี้และตรงกับชิปที่เลือก (CONTEXT.md "Ticket arrival")
+  /// เทียบในเครื่องทุกครั้งที่โหลดคิว จึงดังได้ทั้งตอนมี event และตอน polling สำรองระหว่าง socket หลุด
+  /// รายการที่ถูกเลิกทำถอยกลับมา pending ไม่นับ เพราะ id เคยเห็นแล้ว
+  /// ขอบที่ยอมรับ: ตั๋วเก่าที่ไม่มี stationCode เข้ามาก่อน [stations] โหลดเสร็จ ขณะกู้ชิปเฉพาะสถานีไว้
+  /// จะไม่ดัง (ถูกนับว่าเห็นแล้ว) เพราะ [defaultStationCode] ยังไม่รู้
+  void _detectArrivals(List<OrderItem> rows) {
+    final seen = _seenIds;
+    _seenIds = {...?seen, for (final row in rows) row.id};
+
+    // รายการที่เลยขั้นรอทำไปแล้ว (หรือหายจากคิว) ไม่ใช่ "ใหม่" อีกต่อไป
+    final stillPending = {
+      for (final row in rows)
+        if (row.status == OrderItemStatus.pending) row.id,
+    };
+    newItems.removeWhere((id, _) => !stillPending.contains(id));
+
+    if (seen == null) return;
+    final arrivals = rows
+        .where(
+          (row) =>
+              !seen.contains(row.id) &&
+              row.status == OrderItemStatus.pending &&
+              _matchesStation(row),
+        )
+        .toList(growable: false);
+    if (arrivals.isEmpty) return;
+
+    final now = AppClock.now();
+    newItems.addAll({for (final row in arrivals) row.id: now});
+    _ring(now);
+  }
+
+  void _ring(DateTime now) {
+    if (muted.value) return;
+    final last = _lastChimeAt;
+    if (last != null && now.difference(last) < chimeCooldown) return;
+    _lastChimeAt = now;
+    _play();
+  }
+
+  /// เครื่องเล่นโยน error ถือเหมือนเล่นไม่ได้ — ขึ้นแถบ "แตะเพื่อเปิดเสียง" แทนที่จะเป็น error หลุดโซน
+  Future<void> _play() async {
+    try {
+      // เล่นสำเร็จ = เบราว์เซอร์ยอมแล้ว แถบ "แตะเพื่อเปิดเสียง" ไม่ต้องค้าง
+      soundLocked.value = !await _chime.play();
+    } catch (_) {
+      soundLocked.value = true;
+    }
+  }
+
+  bool isNew(OrderItem item) {
+    final at = newItems[item.id];
+    return at != null && AppClock.now().difference(at) < highlightWindow;
+  }
+
+  /// แตะการ์ดหรือกดเดินสถานะ = เห็นแล้ว
+  void acknowledge(OrderItem item) => newItems.remove(item.id);
+
+  Future<void> toggleMute() async {
+    muted.toggle();
+    await _storage.saveKitchenChimeMuted(muted.value);
+  }
+
+  /// เรียกจากปุ่มบนแถบ "แตะเพื่อเปิดเสียง" เท่านั้น — ต้องอยู่ใน gesture ของผู้ใช้
+  Future<void> unlockSound() async {
+    try {
+      soundLocked.value = !await _chime.unlock();
+    } catch (_) {
+      // ปลดล็อกไม่สำเร็จ → แถบยังอยู่ให้ลองแตะใหม่
+      soundLocked.value = true;
+    }
   }
 
   void _listenToRealtimeUpdates() {

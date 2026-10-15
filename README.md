@@ -13,7 +13,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1357%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1371%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -21,7 +21,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1357 automated tests.
+control and 1371 automated tests.
 
 > 👤 **พัฒนาและดูแลโดย [SuruchBoss](https://github.com/SuruchBoss)** — การ fork หรือนำโปรเจกต์นี้ไปต่อยอดทำได้
 > โดยต้องคงไฟล์ [`NOTICE`](NOTICE) ไว้ตามเงื่อนไขของ Apache License 2.0 · ติดต่อผู้พัฒนาได้ทาง
@@ -812,8 +812,8 @@ tag `vX.Y.Z` (ดู [`docs/store/README.md`](docs/store/README.md)) ขณะ�
 ### 🧪 การรันเทสต์
 
 ```bash
-cd backend && npm test      # 612 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
-cd app && flutter test      # 691 เคส — domain / controller / widget
+cd backend && npm test      # 624 เคส — รวมเทสต์ที่ไล่เส้นทางทั้งร้าน 17 ขั้น
+cd app && flutter test      # 693 เคส — domain / controller / widget
 cd app && flutter test test_e2e   # 54 เคส — แอปจริงคุยกับ backend จริง (ต้อง npm ci ใน backend ก่อน)
 ```
 
@@ -1474,15 +1474,15 @@ _unsubscribers.add(socket.on(SocketEvents.kitchenTicket, (_) => load()));
 ## 🧪 การทดสอบ
 
 ```bash
-cd backend && npm test      # 612 เคส
-cd app && flutter test      # 691 เคส
+cd backend && npm test      # 624 เคส
+cd app && flutter test      # 693 เคส
 cd app && flutter test test_e2e   # 54 เคส (ต้อง npm ci ใน backend ก่อน)
 node --test scripts/android-version.test.mjs   # 3 เคส — versionCode ของ build Google Play (ไม่นับใน badge)
 ```
 
 บนเครื่องพัฒนา Windows จะมีเทสต์ 3 เคสที่ล้มเพราะสภาพแวดล้อมเท่านั้น (path, ไฟล์ถูกล็อก, เขตเวลา) และผ่านบน CI
 
-badge นับเฉพาะเทสต์ของ backend และแอป (612 + 691 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
+badge นับเฉพาะเทสต์ของ backend และแอป (624 + 693 + 54) ส่วนเทสต์ของสคริปต์ `android-version.mjs` ตรวจว่า tag `vX.Y.Z` ให้ค่า `versionCode` ที่เพิ่มขึ้นเสมอ
 และหยุดพร้อมแจ้งเหตุผลเมื่อ tag ผิดรูปแบบหรือเกินช่วง — รันก่อน build ทุกครั้งใน workflow `android-release.yml` (ดู `docs/DECISIONS.md` #75)
 
 **E2E — แอปทำงานร่วมกับ backend จริง (54 เคส)** — `app/test_e2e/` เปิด backend จริง
@@ -1529,7 +1529,7 @@ backend และโหมดสาธิต: ใบกำกับภาษี�
 เพื่อยืนยันว่า API ตอบ `/health`, เข้าสู่ระบบได้, ตาชั่งจำลองทำงานอยู่ และเว็บตอบ 200 — เมื่อผ่านแล้วจึงอัปโหลดเป็น release `demo` ของทางเลือก D
 (job นี้ป้องกันไม่ให้ Dockerfile ที่ build ไม่ผ่านหลุดรอดโดยไม่มีการแจ้งเตือน ดู `docs/DECISIONS.md` #63, #65)
 
-**Backend (612 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
+**Backend (624 เคส)** — `node:test` + `supertest` ทดสอบผ่าน HTTP จริงบนฐานข้อมูลที่แยกต่างหาก
 `kitchen-stations.test.js` คุม CRUD สิทธิ์และ 409 ทุกกรณีของสถานีครัว ส่วน `kitchen-station-routing.test.js`
 คุมกฎการตัดสินสถานี (เมนู → หมวดหมู่ → ค่าเริ่มต้น) และกฎว่าย้ายเมนูหรือเปลี่ยนชื่อสถานีภายหลังต้องไม่ดึงตั๋ว
 ที่ครัวกำลังทำอยู่ข้ามจอ (ticket 34) และ `station-closures.test.js` คุมการปิด/เปิดสถานีรายสาขา (ticket 36):
@@ -1830,7 +1830,7 @@ path นั้นโหลดได้โดยไม่ต้อง login ไ�
 `password-hash.test.js` (2 เคส) ทดสอบการตรวจรหัสผ่านบน worker thread: ผลตรงกับ bcryptjs ทั้งถูกและผิด, hash ที่สร้างใช้ตรวจได้ และระหว่างตรวจ
 5 ครั้งพร้อมกัน thread หลักไม่ค้างเกิน 40ms (แบบเดิมค้างราว 370ms, `docs/DECISIONS.md` #101)
 
-**Flutter (629 เคส)** — แบ่งเป็น 3 ระดับ:
+**Flutter (693 เคส)** — แบ่งเป็น 3 ระดับ:
 
 | ระดับ | ไฟล์ | ทดสอบอะไร |
 |---|---|---|

@@ -12,7 +12,7 @@
   <img alt="Flutter" src="https://img.shields.io/badge/Flutter-3.35-02569B?logo=flutter&logoColor=white">
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1357%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1371%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -540,13 +540,13 @@ Developer Certificate of Origin(DCO)에 따른 서명(sign-off)이 필요합니�
 
 ## 테스트
 
-공개 전 **1357건**의 자동화 테스트를 통과합니다.
+공개 전 **1371건**의 자동화 테스트를 통과합니다.
 
 ```bash
-cd backend && npm test      # 612건 — 매장 전체 흐름 17단계 테스트 포함
-cd app && flutter test      # 691건 — domain / controller / widget
+cd backend && npm test      # 624건 — 매장 전체 흐름 17단계 테스트 포함
+cd app && flutter test      # 693건 — domain / controller / widget
 cd app && flutter test test_e2e   # 54건 — 실제 앱 ↔ 실제 백엔드 (먼저 backend에서 npm ci)
-node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1357건에 미포함)
+node --test scripts/android-version.test.mjs   # 3건 — Google Play 빌드의 versionCode (1371건에 미포함)
 ```
 
 Windows 개발 PC에서는 환경 때문에(경로, 파일 잠금, 시간대) 3건의 테스트만 실패하며 CI에서는 통과합니다.

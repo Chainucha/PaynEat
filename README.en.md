@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1357%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1371%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1357 automated tests.
+control and 1371 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -899,8 +899,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 612 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 691 cases — domain / controller / widget
+cd backend && npm test      # 624 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 693 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -1647,15 +1647,15 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 612 cases
-cd app && flutter test      # 691 cases
+cd backend && npm test      # 624 cases
+cd app && flutter test      # 693 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
 On a Windows development machine 3 tests fail for environment reasons only (path, file lock, timezone); they pass on CI.
 
-The badge counts the backend and app tests (612 + 691 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+The badge counts the backend and app tests (624 + 693 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1715,7 +1715,7 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (612 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (624 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
 `station-closures.test.js` covers closing and reopening kitchen stations per branch (ticket 36): permissions for every role,
 branch isolation, repeated close/open, the audit log, cascade, `pendingCount`, a 409 on all three ways to order plus sending a
 saved bill to the kitchen, no fallback to the default station, legacy bills without a station counting as the default station, and `is_available` / `auto_disabled_by_stock` staying untouched (the 0008 block is in
@@ -2074,7 +2074,7 @@ less than 2× does not, a 2× change does, and an empty database does not break 
 passwords, a created hash can be checked, and during 5 simultaneous checks the main thread never stalls for 40 ms or more
 (the old way stalled about 370 ms, `docs/DECISIONS.md` #101)
 
-**Flutter (629 cases)** — organized into 3 levels:
+**Flutter (693 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|

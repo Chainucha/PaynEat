@@ -438,6 +438,12 @@ use `simulator` in a production shop, because the weights it reports are not rea
 Stop the system with `Ctrl+C`, then run `docker compose down`
 (use `docker compose down -v` to also delete all stored data).
 
+> 🏪 **Running it in a real shop: a PC in the shop as the server + customers scanning QR on mobile data** — see
+> [`deploy/shop/README.md`](deploy/shop/README.md) (Thai). It layers `deploy/shop/docker-compose.shop.yml` over `docker-compose.yml`:
+> staff use the shop LAN, customers open the shop's own domain through a Cloudflare Tunnel that only lets the ordering
+> endpoints in. Printed QR codes stay valid, staff keep selling when the shop's internet is down, and everything comes back
+> by itself after a power cut (`docs/DECISIONS.md` #104)
+
 ---
 
 ### 🆑 Option C — Just look at the app, no backend needed
@@ -960,6 +966,9 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   change the limits with `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY` (#99)
 - **Payment is handled by the cashier** — this feature covers order taking only, not self-checkout
   (see `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37)
+- **Works on shop WiFi and on mobile data** with the in-shop server setup ([`deploy/shop/`](deploy/shop/README.md)) — the QR
+  opens the shop's own domain, and from the internet only the ordering page is reachable; staff screens and every other
+  API stay inside the shop (see `docs/DECISIONS.md` #104)
 - **An invalid link is reported clearly as invalid** — whether the QR has been regenerated, the
   table deactivated, or the link truncated while being forwarded (e.g. over LINE) — instead of a
   "no internet" screen whose retry button can never succeed (#46)
@@ -2294,6 +2303,10 @@ Completed work, planned work, and known limitations, with the reasoning for each
   restaurant connects / run from source); each lists the time required, the prerequisites, steps with copy buttons, and
   the expected result, followed by the demo accounts, a go-live checklist, and troubleshooting keyed to the installer's
   actual messages. Every "Install guide" link on the landing page points here (`docs/DECISIONS.md` #72)
+- [x] **In-shop server + customers ordering by QR on mobile data** — `deploy/shop/` builds the web app twice (staff on the
+  LAN / customers on the shop's domain) with a named Cloudflare Tunnel that only routes `/api/v1/public/*` to the API, so QR
+  codes stay fixed; `SELF_ORDER_BASE_URL` became a build arg of `app/Dockerfile`, the second backup copy goes to another
+  disk, and `init-env.sh` generates the secrets (`docs/DECISIONS.md` #104)
 
 **Intentionally out of scope** (not backlog items — full reasoning in
 [`docs/DECISIONS.md`](docs/DECISIONS.md)):

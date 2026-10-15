@@ -12,6 +12,7 @@ services:
       # ค่าเริ่มต้นคือรันดูในเครื่องด้วยบัญชีเดโม (admin/admin123 ฯลฯ) — production จะไม่ยอม seed บัญชีด้วย
       # รหัสผ่านเดโมที่เผยแพร่อยู่ (SECURITY.md) เดิมตั้ง production ตายตัวไว้ API จึงไม่ยอมสตาร์ตเลย
       # deploy จริง: NODE_ENV=production + SEED_*_PASSWORD ครบ 6 ตัว + JWT_SECRET/CORS_ORIGIN ของจริง
+      # (เครื่องเซิร์ฟเวอร์ในร้าน + QR จากเน็ตมือถือ: ใช้ไฟล์นี้คู่กับ deploy/shop/docker-compose.shop.yml)
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3000
       # ไม่ตั้งค่า = compose หยุดพร้อมข้อความนี้ ใน production ค่าต้องสุ่มเองและยาวอย่างน้อย 32 ตัว (DECISIONS #83)
@@ -58,6 +59,8 @@ services:
         # เบราว์เซอร์ของผู้ใช้เป็นคนเรียก API จึงต้องชี้มาที่ localhost ของเครื่องเขา
         API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
         DEMO_MODE: "false"
+        # ว่าง = QR ของโต๊ะใช้ที่อยู่ที่เปิดแอปอยู่ — เซิร์ฟเวอร์ในร้านที่ให้ลูกค้าสั่งจากเน็ตมือถือ ดู deploy/shop/README.md
+        SELF_ORDER_BASE_URL: ${SELF_ORDER_BASE_URL:-}
     container_name: payneat-web
     ports:
       - "8080:80"

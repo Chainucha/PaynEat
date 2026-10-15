@@ -1,0 +1,19 @@
+# route ของ tunnel สำหรับเครื่องเซิร์ฟเวอร์ในร้าน (docs/DECISIONS.md #104)
+# คัดลอกเป็น config.yml ในโฟลเดอร์นี้ แล้วแทน <TUNNEL_ID> และ order.example.com ด้วยค่าจริง
+# ไฟล์ credential <TUNNEL_ID>.json วางไว้ข้างกัน — config.yml และ *.json ถูก .gitignore ไว้แล้ว
+tunnel: <TUNNEL_ID>
+credentials-file: /etc/cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # หน้าสั่งเองผ่าน QR ต้องการแค่ endpoint สาธารณะของโต๊ะ
+  - hostname: order.example.com
+    path: ^/api/v1/public/
+    service: http://api:3000
+  # API ของพนักงาน, realtime, เอกสาร API และ health ใช้ได้เฉพาะในวง LAN
+  - hostname: order.example.com
+    path: ^/(api|socket\.io|docs|openapi\.json|health)(/|$)
+    service: http_status:404
+  # ที่เหลือคือไฟล์ของแอปเว็บชุดที่ชี้ API ไปที่โดเมนสาธารณะ
+  - hostname: order.example.com
+    service: http://web-public:80
+  - service: http_status:404

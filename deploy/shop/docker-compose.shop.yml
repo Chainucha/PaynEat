@@ -1,0 +1,69 @@
+# เครื่องเซิร์ฟเวอร์ในร้าน: พนักงานใช้ในวง LAN, ลูกค้าสแกน QR จากเน็ตมือถือผ่าน Cloudflare Tunnel (docs/DECISIONS.md #104)
+# ใช้ซ้อนกับ docker-compose.yml ที่ราก — ตั้ง COMPOSE_FILE ใน .env ที่รากตาม deploy/shop/.env.example แล้วสั่งแค่
+#   docker compose up -d --build
+# ขั้นตอนเต็ม (เครื่อง, ดิสก์สำรอง, tunnel, ทดสอบ) อยู่ที่ deploy/shop/README.md
+#
+#   พนักงาน  http://<SHOP_LAN_HOST>:8080   → web (API ชี้ไปที่ http://<SHOP_LAN_HOST>:3000 ในร้าน)
+#   ลูกค้า    https://<PUBLIC_HOST>          → cloudflared → web-public (+ /api/v1/public/* เท่านั้นที่ถึง api)
+# เน็ตร้านล่ม = สั่งผ่าน QR ไม่ได้ชั่วคราว แต่พนักงานรับออเดอร์และเก็บเงินต่อได้ เพราะทั้งหมดอยู่ในวง LAN
+services:
+  api:
+    environment:
+      NODE_ENV: production
+      CORS_ORIGIN: http://${SHOP_LAN_HOST:?ตั้ง SHOP_LAN_HOST}:8080,https://${PUBLIC_HOST:?ตั้ง PUBLIC_HOST}
+      # เชื่อ X-Forwarded-For เฉพาะคำขอที่มาจาก cloudflared (IP ตายตัวข้างล่าง) — เครื่องในวง LAN ต่อตรง
+      # จึงยังเป็น IP จริงของตัวเอง และปลอม header มาเปลี่ยน IP ที่ใช้นับการล็อกอินผิดไม่ได้
+      TRUST_PROXY: 172.30.0.10
+      # ชุดที่สองของการสำรองข้อมูลอยู่บนอีกดิสก์ (ticket 33) — mount ทั้งจุด mount ไม่ใช่โฟลเดอร์ย่อย ถ้าดิสก์หาย
+      # ตอนบูต โฟลเดอร์ payneat จะไม่มี การสำรองชุดที่สองจึงล้มเหลวให้เห็นในหน้าสำรองข้อมูล แทนที่จะเขียนลงดิสก์ระบบเงียบ ๆ
+      BACKUP_COPY_DIR: /backup-copy/payneat
+    volumes:
+      - type: bind
+        source: ${BACKUP_DISK_MOUNT:?ตั้ง BACKUP_DISK_MOUNT เป็นจุด mount ของดิสก์สำรอง เช่น /mnt/backup}
+        target: /backup-copy
+        bind:
+          # ดิสก์ที่ mount ทีหลัง container เริ่ม (บูตช้า, เสียบใหม่) ก็มองเห็น
+          propagation: rslave
+
+  web:
+    build:
+      args:
+        API_BASE_URL: http://${SHOP_LAN_HOST}:3000
+        # QR ที่พิมพ์จากจอพนักงานต้องพาลูกค้าไปโดเมนสาธารณะ ไม่ใช่ที่อยู่ในวง LAN ที่จอพนักงานเปิดอยู่
+        SELF_ORDER_BASE_URL: https://${PUBLIC_HOST}/
+
+  # แอปชุดเดียวกัน build อีกรอบให้คุยกับ API ผ่านโดเมนสาธารณะ — ไม่เปิดพอร์ต มีแค่ cloudflared ที่ต่อเข้ามา
+  web-public:
+    build:
+      context: ./app
+      args:
+        API_BASE_URL: https://${PUBLIC_HOST}
+        DEMO_MODE: "false"
+    container_name: payneat-web-public
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # tunnel แบบมีชื่อ: โดเมนคงที่ QR ที่พิมพ์แล้วจึงใช้ได้ตลอด — route อยู่ใน deploy/shop/cloudflared/config.yml
+  # (คัดลอกจาก config.example.yml) ซึ่งส่งเฉพาะ /api/v1/public/* ไปที่ api ส่วน API ของพนักงานและ /docs ตอบ 404
+  cloudflared:
+    image: cloudflare/cloudflared:2026.9.3
+    container_name: payneat-tunnel
+    command: ["tunnel", "--config", "/etc/cloudflared/config.yml", "run"]
+    # อ่านไฟล์ credential ของ tunnel ที่เป็นของผู้ใช้บนเครื่อง (chmod 600) ได้โดยไม่ต้องเปิดสิทธิ์ให้คนอื่น
+    user: "${PAYNEAT_UID:-1000}:${PAYNEAT_GID:-1000}"
+    volumes:
+      - ./deploy/shop/cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - api
+      - web-public
+    networks:
+      default:
+        ipv4_address: 172.30.0.10
+    restart: unless-stopped
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

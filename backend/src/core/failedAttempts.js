@@ -33,6 +33,17 @@ export const createFailedAttemptLimiter = ({ maxFailures, windowMs, now = Date.n
       for (const key of keys) counter.hit(key, at);
     },
 
+    /** คืนหนึ่งครั้งที่นับไว้ล่วงหน้าด้วย recordFailure — ใช้เมื่อความพยายามนั้นไม่ได้ล้มเหลวเพราะรหัสผ่าน */
+    release(keys) {
+      const at = now();
+      for (const key of keys) {
+        const bucket = counter.peek(key, at);
+        if (!bucket) continue;
+        bucket.count -= 1;
+        if (bucket.count <= 0) counter.reset(key);
+      }
+    },
+
     reset(keys) {
       for (const key of keys) counter.reset(key);
     },

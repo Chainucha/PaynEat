@@ -1,8 +1,8 @@
 // Copyright 2026 Suruch Chakrapeesirisuk
 // SPDX-License-Identifier: Apache-2.0
 
-import bcrypt from 'bcryptjs';
 import { ApiError } from '../../core/ApiError.js';
+import { comparePassword, hashPassword } from '../../core/passwordHash.js';
 import { signToken, signPendingBranchSelectionToken } from '../../middlewares/auth.js';
 import { userRepository } from '../users/user.repository.js';
 import { toUserDto } from '../users/user.mapper.js';
@@ -21,9 +21,11 @@ const buildSessionResult = (user, branch) => ({
 });
 
 export const authService = {
-  login({ username, password }) {
+  // ตรวจรหัสผ่านบน worker thread ให้คำขออื่นทำงานต่อได้ — แบบ sync บล็อกทั้งเซิร์ฟเวอร์ราว 60 ms ต่อการเข้าสู่ระบบหนึ่งครั้ง
+  // (ดู core/passwordHash.js, docs/DECISIONS.md #101)
+  async login({ username, password }) {
     const user = userRepository.findByUsername(username);
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    if (!user || !(await comparePassword(password, user.password_hash))) {
       throw ApiError.unauthorized('username หรือรหัสผ่านไม่ถูกต้อง');
     }
     if (!user.is_active) {
@@ -78,15 +80,15 @@ export const authService = {
     return toUserDto(user, branch, userRepository.findStations(user.id));
   },
 
-  changePassword(userId, { currentPassword, newPassword }) {
+  async changePassword(userId, { currentPassword, newPassword }) {
     const user = userRepository.findById(userId);
     if (!user) throw ApiError.unauthorized();
 
     const full = userRepository.findByUsername(user.username);
-    if (!bcrypt.compareSync(currentPassword, full.password_hash)) {
+    if (!(await comparePassword(currentPassword, full.password_hash))) {
       throw ApiError.badRequest('รหัสผ่านปัจจุบันไม่ถูกต้อง');
     }
-    userRepository.updatePassword(userId, bcrypt.hashSync(newPassword, 10));
+    userRepository.updatePassword(userId, await hashPassword(newPassword));
   },
 };
 

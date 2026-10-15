@@ -88,3 +88,19 @@ test('rateLimit — เกิน max ภายใน window ได้ 429 แย
   assert.equal(call('t1')?.statusCode, 429);
   assert.equal(call('t2'), undefined);
 });
+
+test('createFailedAttemptLimiter — release คืนครั้งที่นับไว้ล่วงหน้า และไม่ติดลบ', () => {
+  const clock = fakeClock();
+  const limiter = createFailedAttemptLimiter({ maxFailures: 2, windowMs: 10 * MINUTE, ...clock });
+
+  limiter.recordFailure(['k']);
+  limiter.recordFailure(['k']);
+  assert.ok(limiter.retryAfterSeconds(['k']) > 0);
+  limiter.release(['k']);
+  assert.equal(limiter.retryAfterSeconds(['k']), 0);
+  limiter.release(['k']);
+  limiter.release(['k']);
+  assert.equal(limiter.size, 0);
+  limiter.recordFailure(['k']);
+  assert.equal(limiter.retryAfterSeconds(['k']), 0);
+});

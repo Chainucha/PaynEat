@@ -242,7 +242,12 @@ components:
         nameEn: { type: string }
         description: { type: string }
         price: { type: number, example: 75 }
-        imageUrl: { type: string, nullable: true }
+        imageUrl:
+          type: string
+          nullable: true
+          description: >-
+            รูปที่อัปโหลดจากแอปได้เป็น path `/api/v1/public/menu-images/{id}?v=...` (โหลดรูปแยก ไม่ต้อง login)
+            ส่วน URL ภายนอกส่งตามเดิม — ส่ง path นี้กลับมาตอนแก้เมนู = ไม่เปลี่ยนรูป (DECISIONS #101)
         isAvailable: { type: boolean }
         isRecommended: { type: boolean }
         prepMinutes: { type: integer }
@@ -316,7 +321,12 @@ components:
         nameEn: { type: string, nullable: true }
         description: { type: string, nullable: true }
         price: { type: number, example: 75 }
-        imageUrl: { type: string, nullable: true }
+        imageUrl:
+          type: string
+          nullable: true
+          description: >-
+            รูปที่อัปโหลดจากแอปได้เป็น path `/api/v1/public/menu-images/{id}?v=...` (โหลดรูปแยก ไม่ต้อง login)
+            ส่วน URL ภายนอกส่งตามเดิม — ส่ง path นี้กลับมาตอนแก้เมนู = ไม่เปลี่ยนรูป (DECISIONS #101)
         isAvailable: { type: boolean }
         isRecommended: { type: boolean }
         optionGroups:
@@ -2864,6 +2874,30 @@ paths:
                           maxQuantityPerLine: { type: integer, example: 10 }
                           maxOrderQuantity: { type: integer, example: 60 }
         '404': { description: ไม่พบโต๊ะนี้ / โต๊ะหรือสาขาปิดใช้งานอยู่ }
+  /public/menu-images/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+      - in: query
+        name: v
+        required: false
+        description: เวอร์ชันของรูปตามที่รายการเมนูให้มา — ตรงรูปปัจจุบันได้ cache 1 ปี ไม่ตรงได้ no-cache
+        schema: { type: string }
+    get:
+      tags: [PublicOrder]
+      summary: รูปเมนูที่อัปโหลดไว้ (DECISIONS #101) — ไม่ต้อง login เสิร์ฟเฉพาะ JPEG/PNG/WebP/GIF
+      security: []
+      responses:
+        '200':
+          description: ไบต์ของรูป
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+            image/gif: { schema: { type: string, format: binary } }
+        '404': { description: ไม่พบเมนู หรือเมนูนี้ไม่มีรูปที่อัปโหลดไว้ }
   /public/tables/{qrToken}/items:
     parameters:
       - in: path

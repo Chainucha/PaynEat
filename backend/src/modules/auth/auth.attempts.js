@@ -24,10 +24,13 @@ const loginAttempts = createFailedAttemptLimiter(limiterOptions);
 const passwordChangeAttempts = createFailedAttemptLimiter(limiterOptions);
 
 /**
- * รัน `action` ถ้าคีย์ยังไม่ถูกพัก — ล้มเหลวแบบ `isFailure` นับเพิ่ม, สำเร็จล้างตัวนับ, error อื่น
+ * รัน `action` (async) ถ้าคีย์ยังไม่ถูกพัก — ล้มเหลวแบบ `isFailure` นับเพิ่ม, สำเร็จล้างตัวนับ, error อื่น
  * (เช่นบัญชีถูกปิด) ไม่นับทั้งสองทาง ถูกพักอยู่ได้ 429 พร้อม header Retry-After (วินาที)
+ *
+ * ตรวจรหัสผ่านแบบ async (ไม่บล็อกคำขออื่นระหว่าง bcrypt) จึงนับเป็นความล้มเหลวไว้ก่อนเริ่ม แล้วล้าง/คืนทีหลัง —
+ * คำขอที่ยิงมาพร้อมกันเห็นครั้งที่ยังตรวจไม่เสร็จในตัวนับด้วย จึงลองเกินเพดานพร้อมกันไม่ได้
  */
-const guard = (limiter, keys, res, isFailure, action) => {
+const guard = async (limiter, keys, res, isFailure, action) => {
   const waitSeconds = limiter.retryAfterSeconds(keys);
   if (waitSeconds > 0) {
     res.set('Retry-After', String(waitSeconds));
@@ -35,12 +38,13 @@ const guard = (limiter, keys, res, isFailure, action) => {
       `ใส่รหัสผ่านผิดหลายครั้งเกินไป กรุณาลองใหม่ในอีก ${Math.ceil(waitSeconds / 60)} นาที`,
     );
   }
+  limiter.recordFailure(keys);
   try {
-    const result = action();
+    const result = await action();
     limiter.reset(keys);
     return result;
   } catch (err) {
-    if (isFailure(err)) limiter.recordFailure(keys);
+    if (!isFailure(err)) limiter.release(keys);
     throw err;
   }
 };

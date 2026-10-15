@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toBaht } from '../../core/money.js';
+import { menuImageUrl } from './menu.images.js';
 
 export const toOptionDto = (row) => ({
   id: row.id,
@@ -37,7 +38,7 @@ export const toMenuItemDto = (row, optionGroups = [], ingredientLinks = []) => {
     nameEn: row.name_en,
     description: row.description,
     price: toBaht(row.price),
-    imageUrl: row.image_url,
+    imageUrl: menuImageUrl(row),
     isAvailable: Boolean(row.is_available),
     isRecommended: Boolean(row.is_recommended),
     prepMinutes: row.prep_minutes,

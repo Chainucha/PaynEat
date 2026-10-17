@@ -153,7 +153,22 @@ extension DemoStoreOrders on DemoStore {
       throw ApiException(message: 'order_error_no_items'.tr, statusCode: 400);
     }
 
+    // mirror ของ order.service.js#sendToKitchen (ticket 36) — บิลที่รออยู่แล้วสถานีปิดไปก่อนส่ง
     if (order['status'] == OrderStatus.open) {
+      for (final item in active) {
+        if (isStationClosed(item['stationId'] ?? defaultStation()['id'])) {
+          throw ApiException(
+            message: 'order_error_station_closed'.trParams({
+              'station':
+                  item['stationName'] as String? ??
+                  defaultStation()['name'] as String? ??
+                  '',
+              'name': item['name'] as String? ?? '',
+            }),
+            statusCode: 409,
+          );
+        }
+      }
       order['status'] = OrderStatus.inKitchen;
     }
 

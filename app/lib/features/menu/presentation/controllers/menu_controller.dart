@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 
+import '../../../kitchen/presentation/controllers/station_status_controller.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/menu_item.dart';
 import '../../domain/usecases/menu_usecases.dart';
@@ -18,8 +19,10 @@ class MenuBrowseController extends GetxController {
     required GetMenuItemsUseCase getMenuItems,
     required GetCategoriesUseCase getCategories,
     this.availableOnly = true,
+    StationStatusController? stationStatus,
   }) : _getMenuItems = getMenuItems,
-       _getCategories = getCategories;
+       _getCategories = getCategories,
+       _stationStatus = stationStatus;
 
   final GetMenuItemsUseCase _getMenuItems;
   final GetCategoriesUseCase _getCategories;
@@ -34,17 +37,28 @@ class MenuBrowseController extends GetxController {
   final RxnInt selectedCategoryId = RxnInt();
   final RxString searchQuery = ''.obs;
 
+  final StationStatusController? _stationStatus;
+  Worker? _stationWorker;
   Timer? _debounce;
 
   @override
   void onInit() {
     super.onInit();
     load();
+    // สถานีปิด/เปิดระหว่างที่หน้าสั่งอาหารเปิดอยู่ (ticket 36) — โหลดเมนูใหม่เงียบ ๆ ให้การ์ดเทา/หายเทา
+    final status = _stationStatus;
+    if (status != null) {
+      _stationWorker = ever<int>(
+        status.closedVersion,
+        (_) => load(showLoader: false),
+      );
+    }
   }
 
   @override
   void onClose() {
     _debounce?.cancel();
+    _stationWorker?.dispose();
     super.onClose();
   }
 
@@ -69,8 +83,8 @@ class MenuBrowseController extends GetxController {
   int countByCategory(int categoryId) =>
       items.where((item) => item.categoryId == categoryId).length;
 
-  Future<void> load() async {
-    isLoading.value = true;
+  Future<void> load({bool showLoader = true}) async {
+    if (showLoader) isLoading.value = true;
     errorMessage.value = null;
 
     final results = await Future.wait([

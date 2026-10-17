@@ -3,6 +3,11 @@
 
 /// คำแปลของฟีเจอร์ audit log (ดู docs/tickets/08-audit-log.md)
 const Map<String, String> auditLogTranslationsTh = {
+  'audit_log_action_kitchen_station_close': 'ปิดสถานีครัว',
+  'audit_log_action_kitchen_station_open': 'เปิดสถานีครัว',
+  'audit_summary_kitchen_station_close':
+      'ปิดสถานี @station (ค้างในครัว @pending รายการ)',
+  'audit_summary_kitchen_station_open': 'เปิดสถานี @station',
   'audit_log_action_erp_connect': 'เชื่อมต่อ PaynEat ERP',
   'audit_log_action_erp_disconnect': 'ออกจากการเชื่อมต่อ PaynEat ERP',
   'audit_summary_erp_connect': 'เชื่อมต่อ PaynEat ERP ในนาม POS @instance',
@@ -143,6 +148,11 @@ const Map<String, String> auditLogTranslationsTh = {
 };
 
 const Map<String, String> auditLogTranslationsEn = {
+  'audit_log_action_kitchen_station_close': 'Close kitchen station',
+  'audit_log_action_kitchen_station_open': 'Reopen kitchen station',
+  'audit_summary_kitchen_station_close':
+      'Closed @station (@pending still in the kitchen)',
+  'audit_summary_kitchen_station_open': 'Reopened @station',
   'audit_log_action_erp_connect': 'Connect PaynEat ERP',
   'audit_log_action_erp_disconnect': 'Leave PaynEat ERP',
   'audit_summary_erp_connect': 'Connected to PaynEat ERP as POS @instance',
@@ -282,6 +292,10 @@ const Map<String, String> auditLogTranslationsEn = {
 };
 
 const Map<String, String> auditLogTranslationsKo = {
+  'audit_log_action_kitchen_station_close': '주방 스테이션 닫기',
+  'audit_log_action_kitchen_station_open': '주방 스테이션 다시 열기',
+  'audit_summary_kitchen_station_close': '@station 닫음 (주방에 남은 항목 @pending개)',
+  'audit_summary_kitchen_station_open': '@station 다시 엶',
   'audit_log_action_erp_connect': 'PaynEat ERP 연결',
   'audit_log_action_erp_disconnect': 'PaynEat ERP 연결 해제',
   'audit_summary_erp_connect': 'POS @instance(으)로 PaynEat ERP에 연결',

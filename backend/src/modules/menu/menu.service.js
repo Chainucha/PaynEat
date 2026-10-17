@@ -11,6 +11,7 @@ import { ingredientRepository } from '../ingredients/ingredient.repository.js';
 import { kitchenStationService } from '../kitchen-stations/kitchen-station.service.js';
 import { menuRepository } from './menu.repository.js';
 import { toMenuItemDto } from './menu.mapper.js';
+import { decodeMenuImage, imageVersion, isServedImagePath } from './menu.images.js';
 
 const assertCategoryExists = (categoryId) => {
   if (categoryId === undefined) return;
@@ -105,10 +106,17 @@ export const menuService = {
     const ingredientsByItem = menuRepository.findIngredientLinksForItems(
       items.map((item) => item.id),
     );
+    // สถานีของจานปิดอยู่ไหม (ticket 36) — "สั่งได้" ตัดสินตอนอ่าน ไม่แตะ is_available
+    const closedStationOf = kitchenStationService.closedStationLookup();
     return {
-      items: items.map((item) =>
-        toMenuItemDto(item, groupsByItem.get(item.id) ?? [], ingredientsByItem.get(item.id) ?? []),
-      ),
+      items: items.map((item) => ({
+        ...toMenuItemDto(
+          item,
+          groupsByItem.get(item.id) ?? [],
+          ingredientsByItem.get(item.id) ?? [],
+        ),
+        closedStation: closedStationOf(item),
+      })),
       total,
     };
   },
@@ -116,11 +124,16 @@ export const menuService = {
   getById(id) {
     const item = menuRepository.findById(id);
     if (!item) throw ApiError.notFound('ไม่พบเมนูนี้');
-    return toMenuItemDto(
-      item,
-      menuRepository.findOptionGroups(id),
-      menuRepository.findIngredientLinks(id),
-    );
+    // สถานีของจานปิดอยู่ไหม (ticket 36) — "สั่งได้" ตัดสินตอนอ่าน ไม่แตะ is_available
+    const closedStationOf = kitchenStationService.closedStationLookup();
+    return {
+      ...toMenuItemDto(
+        item,
+        menuRepository.findOptionGroups(id),
+        menuRepository.findIngredientLinks(id),
+      ),
+      closedStation: closedStationOf(item),
+    };
   },
 
   create(payload, currentBranchId) {
@@ -138,7 +151,7 @@ export const menuService = {
         ...payload,
         ...codes,
         price: toSatang(payload.price),
-        imageUrl: payload.imageUrl || null,
+        imageUrl: isServedImagePath(payload.imageUrl) ? null : payload.imageUrl || null,
         branchId,
       });
       if (payload.optionGroups?.length) {
@@ -171,7 +184,12 @@ export const menuService = {
         ...payload,
         ...codes,
         price: newPriceSatang,
-        imageUrl: payload.imageUrl === '' ? null : payload.imageUrl,
+        // path รูปที่ API ส่งออกไปเอง = แอปส่งรูปเดิมกลับมา ไม่ได้ตั้งใจเปลี่ยนรูป (DECISIONS #101)
+        imageUrl: isServedImagePath(payload.imageUrl)
+          ? undefined
+          : payload.imageUrl === ''
+            ? null
+            : payload.imageUrl,
         // แก้ isAvailable ผ่านฟอร์มแก้ไขปกติ = พนักงานตั้งใจ override เอง เลยล้างสถานะ
         // "ปิดขายอัตโนมัติเพราะสต๊อกหมด" ทิ้งเหมือนกับตอนกดสลับผ่าน setAvailability
         autoDisabledByStock: payload.isAvailable === undefined ? undefined : false,
@@ -198,6 +216,14 @@ export const menuService = {
     });
     run();
     return this.getById(id);
+  },
+
+  /** รูปเมนูที่อัปโหลดไว้ (ไม่ต้อง login — หน้า QR ของลูกค้าใช้ด้วย) `isCurrent` = URL ที่ขอมีเวอร์ชันตรงรูปปัจจุบัน */
+  image(id, version) {
+    const row = menuRepository.findById(id);
+    const image = row && decodeMenuImage(row.image_url);
+    if (!image) throw ApiError.notFound();
+    return { ...image, isCurrent: version === imageVersion(row) };
   },
 
   setAvailability(id, isAvailable) {

@@ -15,7 +15,7 @@
   <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white">
   <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white">
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-1274%20passing-2F9E44">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-1371%20passing-2F9E44">
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
 </p>
 
@@ -23,7 +23,7 @@
 a Flutter client (mobile / tablet / web from one codebase, structured with Clean Architecture + GetX) communicating
 with a Node.js REST + WebSocket backend. It covers the complete floor-to-cash workflow — table map, order taking with
 modifiers, live kitchen display, split payments, receipts, and management dashboards — with role-based access
-control and 1274 automated tests.
+control and 1371 automated tests.
 
 > 👤 **Created and maintained by [SuruchBoss](https://github.com/SuruchBoss)** — forks and derivative works are
 > welcome, provided that the [`NOTICE`](NOTICE) file is retained as required by the Apache License 2.0. Contact:
@@ -36,7 +36,7 @@ control and 1274 automated tests.
 
 ## 🍽 The problem menu
 
-Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,139 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
+Each item is a problem big restaurants really face every day, and each is fixed by **several features working together**, not a single button — all behind 1,290 automated tests. Every picture is captured from the real app by golden tests ([`story_test.dart`](app/tool/screenshots/story_test.dart)). Try it yourself in the **[web demo](https://suruchboss.github.io/PaynEat/app/)** or read it as a web page on the **[landing page](https://suruchboss.github.io/PaynEat/index.en.html)**.
 
 | # | The restaurant's problem | The set that fixes it | What you get |
 |---|---|---|---|
@@ -438,6 +438,12 @@ use `simulator` in a production shop, because the weights it reports are not rea
 Stop the system with `Ctrl+C`, then run `docker compose down`
 (use `docker compose down -v` to also delete all stored data).
 
+> 🏪 **Running it in a real shop: a PC in the shop as the server + customers scanning QR on mobile data** — see
+> [`deploy/shop/README.md`](deploy/shop/README.md) (Thai). It layers `deploy/shop/docker-compose.shop.yml` over `docker-compose.yml`:
+> staff use the shop LAN, customers open the shop's own domain through a Cloudflare Tunnel that only lets the ordering
+> endpoints in. Printed QR codes stay valid, staff keep selling when the shop's internet is down, and everything comes back
+> by itself after a power cut (`docs/DECISIONS.md` #104)
+
 ---
 
 ### 🆑 Option C — Just look at the app, no backend needed
@@ -693,6 +699,28 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 
 **Business rules you can try**
 
+- **Close / reopen a kitchen station per branch** (ticket 36) → sign in as `kitchen` → on the kitchen header tap **"Station
+  status"** → switch **Bar closed** (a station with items still queued asks for confirmation and says how many, but never
+  blocks) → the kitchen screen and the staff order screen show a banner **"Bar closed since … by …"** → open the order
+  screen as `waiter1`: drink dishes are greyed out with a **"Bar closed"** badge and cannot be tapped (calling the API directly
+  gets a 409 for the whole submit) → open a table's QR menu: no drinks at all → reopen the bar → the menu is back at once, and
+  dishes that were already sold out (by hand or by stock) stay sold out, because closing a station never touches a dish's
+  availability · sign in as `admin` and switch to the Thonglor branch → that branch can still order from the bar · `waiter1` sees the
+  banner but has no button to open the sheet (the order-screen button is for `manager`/`admin` only) · a bill saved before the
+  bar closed and then **sent to the kitchen** → refused with 409 and nothing is sent
+  (see `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
+
+- **Kitchen arrival chime** (ticket 37) → keep the kitchen screen open (sign in as `kitchen`; on the web, tap the
+  **"Tap to enable new-ticket sound"** bar once first, because browsers block audio until a tap) and order food from another
+  device or from a table's QR → the kitchen screen plays a two-note chime once and the new card shows a **"NEW"** badge with
+  a thick border until you tap the card, change its status, or 2 minutes pass · several dishes within 3 seconds ring only
+  once and every card is highlighted · pick the **Bar** chip and order a hot-kitchen dish → no sound, no highlight · advance,
+  cancel or undo a ticket → no sound · switch chips or open the screen with tickets already queued → no sound · tap the speaker
+  button on the header to mute → the next order is silent but still highlighted (remembered per device, survives logout) ·
+  cut the kitchen device's internet for a moment and order from another device → while it is down the 30-second backup polling rings, and once the socket reconnects the screen reloads the queue at once (the backlog rings once, every card highlighted) ·
+  switch branch and the kitchen starts counting afresh, so the other branch's whole queue doesn't ring · in Demo Mode: sign in as admin, order in the order tab, go back to the kitchen tab and press refresh and it can ring
+  (see `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
+
 - **Backups** (Options A/B/D) → run `npm run db:restore` while the server is still up → the command refuses and says how to stop
   the server (restoring over data in use is not possible) · log in as `cashier` or `waiter` → no Backups card and no warning
   (the API answers 403) · `manager` sees the home-screen warning when no backup has succeeded for 26 hours, but has no backup button ·
@@ -703,6 +731,11 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 - (Options A/B/D) On the login screen, enter `waiter2` with a wrong password 10 times → the next try, even with the correct
   `waiter123`, says to wait 15 minutes, while other accounts on other devices still sign in normally — the count lives in the
   server's memory, so restarting the server starts it over
+
+- (Options A/B/D) Log in as `admin` → **Menu** → edit an item, add a photo and save → open order taking or a table's QR page and
+  watch the browser's Network tab: the menu list is small (no photos inside) and each photo loads on its own from
+  `/api/v1/public/menu-images/…`; reopening serves photos from the cache · change the item's price without touching the photo →
+  the photo stays · change the photo → every device sees the new one at once, never the old one (`docs/DECISIONS.md` #101)
 
 - Log in as `admin` → **Staff** → the signed-in user's own row has no ⋮ menu, only a **"You"** badge (users cannot
   demote, deactivate, or delete their own account; a direct API call returns 400). Other rows allow role changes and
@@ -866,8 +899,8 @@ In demo mode, the login page provides a demo-account chip for every role; **a si
 ### 🧪 Running the tests
 
 ```bash
-cd backend && npm test      # 593 cases — including a 17-step end-to-end walkthrough
-cd app && flutter test      # 627 cases — domain / controller / widget
+cd backend && npm test      # 624 cases — including a 17-step end-to-end walkthrough
+cd app && flutter test      # 693 cases — domain / controller / widget
 cd app && flutter test test_e2e   # 54 cases — the real app talking to the real backend (run npm ci in backend first)
 ```
 
@@ -960,6 +993,9 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   change the limits with `SELF_ORDER_MAX_QTY_PER_LINE` / `SELF_ORDER_MAX_ORDER_QTY` (#99)
 - **Payment is handled by the cashier** — this feature covers order taking only, not self-checkout
   (see `docs/tickets/17-qr-self-order.md`, `docs/DECISIONS.md` #37)
+- **Works on shop WiFi and on mobile data** with the in-shop server setup ([`deploy/shop/`](deploy/shop/README.md)) — the QR
+  opens the shop's own domain, and from the internet only the ordering page is reachable; staff screens and every other
+  API stay inside the shop (see `docs/DECISIONS.md` #104)
 - **An invalid link is reported clearly as invalid** — whether the QR has been regenerated, the
   table deactivated, or the link truncated while being forwarded (e.g. over LINE) — instead of a
   "no internet" screen whose retry button can never succeed (#46)
@@ -975,6 +1011,14 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   turns food already cooked into an item staff can remove or cancel themselves (see `docs/DECISIONS.md` #86)
 - One-tap status changes, designed to be easy to operate in kitchen conditions
 - Mark a menu item as sold out immediately, without manager involvement
+- **Chime when a ticket arrives** — a new ticket (new order, added items or QR) matching the selected station chip makes the
+  kitchen screen play a two-note chime once, and its card shows a "NEW" badge with a thick border until it is tapped, changes
+  status or 2 minutes pass. Arrivals are detected on the device by diffing the queue on every load, so it rings even when
+  the socket is down and data comes from the backup polling; status changes, cancellations, undo, the first load and chip
+  switches never ring, and a burst within 3 seconds rings once. A speaker button on the header mutes it (per device, survives
+  logout) and on the web a "Tap to enable sound" bar stays until the first tap —
+  not done: push while the app is in the background, vibration, selectable sounds, repeating until acknowledged
+  (see `docs/tickets/37-kitchen-arrival-chime.md`, `docs/DECISIONS.md` #103)
 - **Distinct icon/label per order type** on every ticket — table 🍽️ / takeaway 🥡 / delivery 🛵 — identifiable
   at a glance without opening the ticket's details
 - **One screen per kitchen station** (Hot Kitchen / Cold Kitchen / Bar — add your own) — every dish is tied to a
@@ -989,6 +1033,11 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   to re-pick every shift. It is a **default, not a lock**: the chips still work and a choice made on the device
   overrides the account, so a mis-assigned account can never make tickets quietly disappear
   (see `docs/tickets/35-staff-kitchen-stations.md`, `docs/DECISIONS.md` #98)
+- **Close or reopen this branch's kitchen stations** from the button on the kitchen header (kitchen / manager / admin) —
+  when the bar closes at 9pm it is one switch, not an hour of marking dishes sold out one by one. Closing a station that
+  still has queued items warns "N items still pending" first (it never blocks; the kitchen finishes them). The kitchen screen
+  and the staff order screen show a "Closed since … by …" banner so nobody forgets to reopen (there is no automatic reopening)
+  (see `docs/tickets/36-station-open-close.md`, `docs/DECISIONS.md` #102)
 
 ### 💰 Cashier
 
@@ -1087,6 +1136,9 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   with an **Export CSV** button for each report type (sales summary/top items/sales by day) for the
   selected date range (web only — see `docs/tickets/12-report-export.md`). Files include a
   UTF-8 BOM, so Thai text opens correctly in Excel, both in Demo Mode and with the real backend (#45)
+- **Open or close a kitchen station from the order screen** (manager / admin) — the **"Station status"** button in the app
+  bar opens the same sheet as the kitchen screen. An admin in "All branches" mode has to pick a branch first (no button),
+  and Menu management is chain-level setup, so it deliberately has no such button (see `docs/DECISIONS.md` #102)
 - **Menu management** — add/edit/delete items and define custom modifier groups; mark an item as
   **sold by weight** (price per kg) and assign a **barcode/scale PLU** (a code already used by another
   item in the same branch is rejected)
@@ -1180,6 +1232,10 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
 ### 🔐 System
 
 - JWT authentication with 5 role-based permission levels, enforced both in the API and in the app's menu visibility
+- **Dishes of a closed station cannot be ordered through any channel** — staff opening a bill, adding items, QR customers
+  and sending a saved bill to the kitchen all get a 409 for the whole submit (the cart is kept); there is no fallback to
+  another station, and a dish's `is_available` is never touched, so reopening restores exactly the previous state. Items
+  already in the queue carry on, and every close/reopen lands in the audit log (see `docs/DECISIONS.md` #102)
 - Responsive UI: mobile (bottom nav) / tablet (nav rail) / web (expanded rail)
 - A realtime connection indicator that alerts staff immediately when the connection drops
 - **Pending-sync badge** — if the connection drops while items are being added to an order, an AppBar badge shows
@@ -1256,13 +1312,21 @@ cd app && flutter test test_e2e   # 54 cases — the real app talking to the rea
   `payneat_backup_failures_total` (see `docs/tickets/33-automatic-backup.md`, `docs/DECISIONS.md` #94)
 - **Sign-in pauses for a while after repeated wrong passwords** — 10 wrong passwords within 15 minutes (counted per username
   and per device) means waiting until that time is up before trying again; the login screen shows how many minutes are left in
-  the chosen language, a successful sign-in clears the count right away, and the same applies to entering the wrong current
+  the chosen language (simultaneous tries cannot exceed the limit), a successful sign-in clears the count right away, and the same applies to entering the wrong current
   password when changing it. Tune it with `AUTH_MAX_FAILED_ATTEMPTS` / `AUTH_FAILED_ATTEMPT_WINDOW_MINUTES` · when the server sits
   behind a reverse proxy (nginx, a tunnel), set `TRUST_PROXY` so the server sees the user's real device (see `backend/.env.example`)
 - **First web load about 3× faster on phones** — the Docker image (`app/nginx.conf`) now compresses `canvaskit.wasm` and fonts, not only
   JavaScript, and the Korean font (1.5 MB) loads after the first frame for users of other languages. What loads before the first screen
   drops from 10.6 MB to 3.9 MB (fast 4G: ~11 s → ~5 s); QR customers gain the most. After an app update, a browser that opened it before
   gets the new version on its next load instead of keeping the old one for up to 7 days (see `docs/DECISIONS.md` #100)
+- **Menu photos no longer weigh down the menu** — the menu list carries each photo's address, not the photo (30 photos used to mean
+  6 MB every time order taking opened and 5 MB per QR scan). Photos load on their own from `/api/v1/public/menu-images/:id` without
+  signing in and are cached for a year, since the URL changes whenever the item is edited. Newly picked photos are scaled to 640 px
+  (about 40–80 KB), and only JPEG/PNG/WebP/GIF are served (see `docs/DECISIONS.md` #101)
+- **The server keeps its speed as data builds up (in part)** — the server runs `ANALYZE` at startup and every 6 hours once the order
+  count has changed 2×, so SQLite picks the right index (floor plan with a year of data: 37 ms → 3 ms), and checks passwords on a
+  worker thread without stopping other requests (62 ms each before) — reports, the dashboard and backup checks still slow down as data
+  grows (see 🔭 Roadmap and `docs/DECISIONS.md` #101)
 
 ---
 
@@ -1583,13 +1647,15 @@ All endpoints share the same response format:
 ## 🧪 Testing
 
 ```bash
-cd backend && npm test      # 593 cases
-cd app && flutter test      # 627 cases
+cd backend && npm test      # 624 cases
+cd app && flutter test      # 693 cases
 cd app && flutter test test_e2e   # 54 cases (run npm ci in backend first)
 node --test scripts/android-version.test.mjs   # 3 cases — the Google Play build's versionCode (not in the badge)
 ```
 
-The badge counts the backend and app tests (593 + 627 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
+On a Windows development machine 3 tests fail for environment reasons only (path, file lock, timezone); they pass on CI.
+
+The badge counts the backend and app tests (624 + 693 + 54). The `android-version.mjs` script tests verify that a `vX.Y.Z` tag always
 produces a higher `versionCode` and that a malformed or out-of-range tag fails with a reason; the `android-release.yml` workflow runs them
 before every build (see `docs/DECISIONS.md` #75)
 
@@ -1649,7 +1715,19 @@ images from the production Dockerfiles whenever `main` changes (and on every PR 
 and the web app returns 200. Only then are the images uploaded as the `demo` release for Option D. The job ensures that a broken
 Dockerfile cannot go unnoticed (see `docs/DECISIONS.md` #63, #65)
 
-**Backend (593 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+**Backend (624 cases)** — `node:test` + `supertest`, run over real HTTP against an isolated test database.
+`station-closures.test.js` covers closing and reopening kitchen stations per branch (ticket 36): permissions for every role,
+branch isolation, repeated close/open, the audit log, cascade, `pendingCount`, a 409 on all three ways to order plus sending a
+saved bill to the kitchen, no fallback to the default station, legacy bills without a station counting as the default station, and `is_available` / `auto_disabled_by_stock` staying untouched (the 0008 block is in
+`migrations.test.js`). On the app side `station_status_controller_test.dart`, `station_status_sheet_test.dart`,
+`menu_item_card_closed_test.dart`, `kitchen_header_360_test.dart` and `kitchen_station_gating_test.dart` cover the sheet
+controller (reload on socket reconnect / user change), the sheet, the greyed-out menu card, the kitchen header at 360px and
+role-based hiding of the station button.
+The arrival chime (ticket 37) has no backend change: `kitchen_controller_test.dart` gains a "ticket arrival (ticket 37)" group covering the queue
+diff (baseline on first load and chip switch, other stations, status changes / undo staying silent, the 3-second cooldown, mute, the 2-minute highlight expiry,
+polling while the socket is down using fakeAsync, reloading on socket reconnect, a fresh baseline on branch switch, discarding a late load response and disposing the player on close), the new `session_service_test.dart` checks that switching branch with the same account notifies `currentUser` listeners, `storage_service_test.dart` checks that the mute flag survives `clear()`, the new `kitchen_arrival_test.dart`
+covers the NEW badge at 360px with a long table name, equal card height with or without the badge, the sound-unlock bar, the mute button, and the advance button versus a card tap,
+and `kitchen_header_360_test.dart` is extended to cover the mute button.
 The central test is `tests/order-flow.test.js`, which covers the entire floor-to-cash path in 17 steps:
 
 > Select a table → open an order with modifiers → verify the total → the table becomes occupied →
@@ -1975,15 +2053,28 @@ creating and editing a customer / searching by phone leaving no name, phone, e-m
 or token in the log, malformed JSON containing a password returning 400 (previously 500) without exposing the body, and no
 table QR token in the log (see `docs/DECISIONS.md` #68)
 
-`login-attempts.test.js` (7 cases), `trust-proxy.test.js` (2 cases) and `failed-attempts.test.js` (5 cases) cover pausing
+`login-attempts.test.js` (9 cases), `trust-proxy.test.js` (2 cases) and `failed-attempts.test.js` (6 cases) cover pausing
 sign-in after repeated wrong passwords: reaching the limit returns 429 with `Retry-After` even if the next try is correct,
 counting per username across devices (ignoring case and surrounding spaces) and per IP without affecting other accounts,
 a successful sign-in clearing the count, the message following the request language, the same pause for a wrong current
 password when changing it, `TRUST_PROXY` reaching Express (by default `X-Forwarded-For` is not read), and the in-memory
-counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock
+counters (including `core/rateLimit.js` used by QR self-ordering) dropping expired keys on their own, tested with a fake clock;
+with passwords checked on a worker thread, 8 simultaneous wrong tries against a limit of 3 get three 401s and five 429s (simultaneous
+tries cannot exceed the limit, `docs/DECISIONS.md` #101)
 
-**Flutter (627 cases)** — organized into 3 levels:
-**Flutter (621 cases)** — organized into 3 levels:
+`menu-images.test.js` (6 cases) covers menu photos: the menu list and the QR menu send a `/api/v1/public/menu-images/:id?v=...` path
+instead of a data URL; that path loads without signing in, with the right bytes and type and a one-year cache; an old version gets
+`no-cache`; a new photo gets a new URL; sending the same path back when editing an item keeps the photo, and `""` removes it;
+external image URLs pass through unchanged; and HTML/SVG data URLs are never served
+
+`planner-stats.test.js` (3 cases) covers query-planner statistics: no statistics yet runs `ANALYZE`, an order count that changed by
+less than 2× does not, a 2× change does, and an empty database does not break (`docs/DECISIONS.md` #101)
+
+`password-hash.test.js` (2 cases) covers checking passwords on a worker thread: results match bcryptjs for right and wrong
+passwords, a created hash can be checked, and during 5 simultaneous checks the main thread never stalls for 40 ms or more
+(the old way stalled about 370 ms, `docs/DECISIONS.md` #101)
+
+**Flutter (693 cases)** — organized into 3 levels:
 
 | Level | File | What it tests |
 |---|---|---|
@@ -2028,6 +2119,7 @@ counters (including `core/rateLimit.js` used by QR self-ordering) dropping expir
 | Controller | `audit_log_controller_test.dart` | Sending filters (action/date range) correctly with `load`/`loadMore`, `setDateRange` converting to ISO dates and clearing filters, `hasMore`/pagination (ticket 14) |
 | Controller | `ai_assistant_controller_test.dart` | `ask` trims the question/clears the input/stores the answer+chart, guards against an empty/too-long question and sending while already waiting on one, and separates a `ServerFailure`'s `errorCode` (e.g. `AI_ASSISTANT_DISABLED`) from a generic error (ticket 15) |
 | Widget | `widgets_test.dart` | Button taps and widget state, including `KitchenTicketCard` rendering the correct icon/label for all 3 order types (table/takeaway/delivery) (ticket 10) |
+| Widget | `menu_item_thumbnail_test.dart` | A menu photo path from the API is prefixed with the server address; external image URLs are used as they are (`docs/DECISIONS.md` #101) |
 | Widget | `hourly_chart_range_test.dart` | The chart's time range must come from real data, not a hardcoded value |
 | Widget | `weight_entry_dialog_test.dart` | Turning the typed weight (kg, a comma works as the decimal point) into whole grams, rounding, and rejecting anything outside 1–99,999 g (ticket 18) |
 | Core | `destructive_labels_test.dart` | The accounts-receivable "void document" button must never share a label with the ordinary Cancel/Close buttons, in every language (the Korean edition previously used "취소" for both, next to "닫기") (see `docs/DECISIONS.md` #60) |
@@ -2077,6 +2169,16 @@ translation, consistent with the adjacent code.
 
 Completed work, planned work, and known limitations, with the reasoning for each.
 
+- [x] **Kitchen arrival chime (ticket 37)** — arrivals are detected on the device by diffing the queue on every load (so it rings even when the
+  socket is down), one chime per burst within 3 seconds, a "NEW" badge on the card until it is tapped or 2 minutes pass, a per-device mute button, a
+  "tap to enable sound" bar on the web, a self-generated sound, and `audioplayers` as the only dependency behind `ChimePlayer` — not done: push while
+  the app is in the background, vibration, selectable sounds, repeating until acknowledged, notifying waiters (see `docs/DECISIONS.md` #103)
+- [x] **Close / reopen a kitchen station per branch (ticket 36)** — a `station_closures` table (a row means closed), separate
+  from a chain-wide "inactive" station. Dishes of a closed station cannot be ordered through any channel (a 409 for the whole
+  submit, including sending a saved bill to the kitchen), with no fallback to another station and `is_available` untouched.
+  Staff see the dish greyed out, QR customers do not see it; there is a status sheet, a banner and a `station:status` event —
+  not done: scheduled opening hours / automatic reopening, falling back to another station, per-branch `is_active`
+  (see `docs/DECISIONS.md` #102)
 - [x] **Move table / merge bills / split bill per person** — `PATCH /orders/:id/move-table`,
   `POST /orders/:id/merge`, and splitting the bill by item (`POST /payments` with `itemIds` +
   `POST /payments/order/:id/split-preview`), with full UI for all 3 features (see the ✨ Features section)
@@ -2268,6 +2370,14 @@ Completed work, planned work, and known limitations, with the reasoning for each
   Ticket 33 is done. Round 2: T07 a bill never dropping below what was paid (`docs/DECISIONS.md` #95) is done. Next: the rest of
   round 2 (including net sales that subtract a refund twice, #143) are what must be done before the first real
   shop, closed by a test in which a shop owner runs a whole shift (`docs/DECISIONS.md` #93)
+- [x] **Menu photos load separately + query-planner statistics + non-blocking password checks** — a speed check on a year of
+  simulated data before going live through the tunnel: the menu list carries no photos any more (6 MB → 19 KB), photos load on
+  their own with caching, `ANALYZE` runs automatically (floor plan 37 ms → 3 ms) and sign-in no longer stops other requests
+  (see `docs/DECISIONS.md` #101)
+- [ ] **Reports and backups that keep their speed as data builds up** — the dashboard reads every past order (223 ms with a year of
+  data; needs indexes through a migration and date conditions written as time ranges), the `integrity_check` after a backup stops the
+  server for 1.9 s (move it to a worker thread), and realtime events make the floor plan and order list reload twice
+  (see `docs/DECISIONS.md` #101)
 - [ ] **Link previews and web-app icons that match the product** — no outdated figures in the share image, and the
   PaynEat logo when the web app is installed from the browser (see ticket 31)
 - [x] **Automatic backups the owner can restore without a developer (ticket 33, #145)** — a backup at every shift close, every six
@@ -2294,6 +2404,10 @@ Completed work, planned work, and known limitations, with the reasoning for each
   restaurant connects / run from source); each lists the time required, the prerequisites, steps with copy buttons, and
   the expected result, followed by the demo accounts, a go-live checklist, and troubleshooting keyed to the installer's
   actual messages. Every "Install guide" link on the landing page points here (`docs/DECISIONS.md` #72)
+- [x] **In-shop server + customers ordering by QR on mobile data** — `deploy/shop/` builds the web app twice (staff on the
+  LAN / customers on the shop's domain) with a named Cloudflare Tunnel that only routes `/api/v1/public/*` to the API, so QR
+  codes stay fixed; `SELF_ORDER_BASE_URL` became a build arg of `app/Dockerfile`, the second backup copy goes to another
+  disk, and `init-env.sh` generates the secrets (`docs/DECISIONS.md` #104)
 
 **Intentionally out of scope** (not backlog items — full reasoning in
 [`docs/DECISIONS.md`](docs/DECISIONS.md)):

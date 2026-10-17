@@ -60,7 +60,7 @@ const assertOrderMutable = (order) => {
  * แปลง input ของรายการอาหาร → แถวที่พร้อมบันทึก
  * ตรวจว่าเมนูมีอยู่จริง / เปิดขาย / ตัวเลือกเป็นของเมนูนั้นจริง / ครบตามกลุ่มที่บังคับ
  */
-const buildItemRow = (input) => {
+const buildItemRow = (input, branchId) => {
   const menuItem = menuRepository.findById(input.menuItemId);
   if (!menuItem) throw ApiError.badRequest(`ไม่พบเมนู id=${input.menuItemId}`);
   if (!menuItem.is_available) throw ApiError.conflict(`เมนู "${menuItem.name}" ปิดการขายอยู่`);
@@ -109,6 +109,11 @@ const buildItemRow = (input) => {
   // สถานีครัวตัดสินตอนนี้ครั้งเดียวแล้วประทับลงรายการ (ticket 34, docs/DECISIONS.md #97) —
   // ทุกทางที่เพิ่มรายการ (พนักงานเปิดบิล, สั่งเพิ่ม, ลูกค้าสแกน QR) ผ่าน buildItemRow ทางเดียว
   const station = kitchenStationService.resolveForMenuItem(menuItem);
+  // สถานีปิดอยู่ที่สาขาของออเดอร์ (ticket 36) — ปฏิเสธทั้ง submit เหมือนเมนูปิดขาย ไม่ถอยไปสถานีอื่น
+  // เพราะส่งตั๋วไปสถานีที่ทำจานนี้ไม่ได้แย่กว่า "สั่งไม่ได้"
+  if (kitchenStationService.isClosed(branchId, station.id)) {
+    throw ApiError.conflict(`สถานี "${station.name}" ปิดอยู่ สั่ง "${menuItem.name}" ไม่ได้`);
+  }
 
   return {
     menuItemId: menuItem.id,
@@ -294,7 +299,7 @@ export const orderService = {
       throw ApiError.badRequest('ไม่พบลูกค้าที่ระบุ');
     }
 
-    const itemRows = (payload.items ?? []).map(buildItemRow);
+    const itemRows = (payload.items ?? []).map((input) => buildItemRow(input, branchId));
 
     const created = changeOrder(() => {
       const order = orderRepository.create({
@@ -341,7 +346,7 @@ export const orderService = {
     const order = loadOrder(orderId);
     assertOrderMutable(order);
 
-    const itemRows = items.map(buildItemRow);
+    const itemRows = items.map((input) => buildItemRow(input, order.branch_id));
     const updated = changeOrder(() => {
       for (const item of itemRows) {
         const created = orderRepository.addItem(order.id, item);
@@ -580,6 +585,21 @@ export const orderService = {
 
     const items = orderRepository.findItems(order.id).filter((item) => item.status !== 'cancelled');
     if (items.length === 0) throw ApiError.badRequest('ออเดอร์ยังไม่มีรายการอาหาร');
+    // ออเดอร์ที่บันทึกไว้แต่ยังไม่ส่งครัว — สถานีอาจปิดไปตอนที่บิลรออยู่ (ticket 36) ตรวจซ้ำก่อนส่ง
+    // ออเดอร์ที่อยู่ในครัวแล้วไม่ต้องตรวจ รายการที่สั่งเพิ่มถูกตรวจตอน addItems ไปแล้ว
+    if (order.status === 'open') {
+      // บิลเก่าก่อน ticket 34 ไม่มี station_id → ถือเป็นสถานีค่าเริ่มต้น เหมือนที่จอครัวนับตั๋วพวกนี้
+      const fallback = items.some((item) => item.station_id == null)
+        ? kitchenStationService.defaultStation()
+        : null;
+      for (const item of items) {
+        if (kitchenStationService.isClosed(order.branch_id, item.station_id ?? fallback.id)) {
+          throw ApiError.conflict(
+            `สถานี "${item.station_name_snapshot ?? fallback.name}" ปิดอยู่ สั่ง "${item.name_snapshot}" ไม่ได้`,
+          );
+        }
+      }
+    }
 
     const updated = changeOrder(
       () => {

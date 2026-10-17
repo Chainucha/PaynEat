@@ -51,6 +51,9 @@ class AuditLogAction {
   static const String erpBranchCreate = 'erp.branch_create';
   // กู้คืนข้อมูลจากไฟล์สำรองด้วยคำสั่งบนเครื่องเซิร์ฟเวอร์ (ticket 33)
   static const String systemRestore = 'system.restore';
+  // ปิด/เปิดสถานีครัวรายสาขา (ticket 36)
+  static const String kitchenStationClose = 'kitchen_station.close';
+  static const String kitchenStationOpen = 'kitchen_station.open';
 
   static const List<String> all = [
     orderCreate,
@@ -88,6 +91,8 @@ class AuditLogAction {
     erpDisconnect,
     erpBranchCreate,
     systemRestore,
+    kitchenStationClose,
+    kitchenStationOpen,
   ];
 
   static const Map<String, String> _keys = {
@@ -126,6 +131,8 @@ class AuditLogAction {
     erpDisconnect: 'audit_log_action_erp_disconnect',
     erpBranchCreate: 'audit_log_action_erp_branch_create',
     systemRestore: 'audit_log_action_system_restore',
+    kitchenStationClose: 'audit_log_action_kitchen_station_close',
+    kitchenStationOpen: 'audit_log_action_kitchen_station_open',
   };
 
   static String translationKey(String action) => _keys[action] ?? action;

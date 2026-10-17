@@ -486,3 +486,30 @@ describe('0006 kitchen_stations (ticket 34)', () => {
     assert.deepEqual(db.pragma('foreign_key_check'), []);
   });
 });
+
+describe('0008 station_closures (ticket 36)', () => {
+  test('starts with every station open, one row per branch and station, gone with its station', () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, MIGRATIONS.slice(0, 7));
+
+    assert.deepEqual(runMigrations(db, MIGRATIONS.slice(0, 8)), ['0008_station_closures']);
+    assert.ok(tableExists(db, 'station_closures'));
+    assert.equal(db.prepare('SELECT COUNT(*) AS c FROM station_closures').get().c, 0);
+
+    const branch = db
+      .prepare("INSERT INTO branches (name, code) VALUES ('สาขาทดสอบ', 'T36')")
+      .run().lastInsertRowid;
+    const station = db
+      .prepare("INSERT INTO kitchen_stations (code, name) VALUES ('grill', 'เตาย่าง')")
+      .run().lastInsertRowid;
+    const close = db.prepare(
+      "INSERT INTO station_closures (branch_id, station_id, closed_by_name) VALUES (?, ?, 'เชฟต้น')",
+    );
+    close.run(branch, station);
+    assert.throws(() => close.run(branch, station), /UNIQUE constraint failed/);
+
+    db.prepare('DELETE FROM kitchen_stations WHERE id = ?').run(station);
+    assert.equal(db.prepare('SELECT COUNT(*) AS c FROM station_closures').get().c, 0);
+  });
+});

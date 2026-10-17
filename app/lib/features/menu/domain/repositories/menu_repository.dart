@@ -6,6 +6,7 @@ import '../entities/menu_item_payload.dart';
 import '../entities/category.dart';
 import '../entities/kitchen_station.dart';
 import '../entities/menu_item.dart';
+import '../entities/station_status.dart';
 
 abstract class MenuRepository {
   Future<Result<List<Category>>> getCategories({bool activeOnly});
@@ -30,6 +31,13 @@ abstract class MenuRepository {
     bool? isDefault,
   });
   Future<Result<void>> deleteKitchenStation(int id);
+
+  /// สถานะเปิด/ปิดของสถานีในสาขาปัจจุบัน (ticket 36)
+  Future<Result<List<StationStatus>>> getStationStatuses();
+  Future<Result<StationStatus>> setStationClosed(
+    int stationId, {
+    required bool closed,
+  });
 
   Future<Result<List<MenuItem>>> getMenuItems({
     int? categoryId,

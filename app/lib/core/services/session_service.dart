@@ -33,12 +33,21 @@ class SessionService extends GetxService {
 
   /// เรียกหลัง login สำเร็จ หรือตอนเปิดแอปแล้วพบเซสชันเดิม
   void start({required User user, required String token}) {
-    _currentUser.value = user;
+    _replaceUser(user);
     // โหมดสาธิตไม่มีเซิร์ฟเวอร์ให้ต่อ จึงข้ามการเชื่อม socket
     if (!AppConfig.demoMode) _socket.connect(token);
   }
 
-  void updateUser(User user) => _currentUser.value = user;
+  void updateUser(User user) => _replaceUser(user);
+
+  /// `User.==` เทียบแค่ id และ Rx ข้ามการกำหนดค่าที่ "เท่ากัน" — สลับสาขาด้วยบัญชีเดิมจึงไม่มีใครรู้
+  /// ถ้าผู้ใช้เท่ากับของเดิมต้องบังคับเอง เพื่อให้ `ever(currentUserRx)` เห็น branchId ใหม่
+  void _replaceUser(User user) {
+    // ตั้งค่าตรง ๆ จะถูก Rx ข้ามทั้งแจ้งเตือนและการเก็บค่าใหม่ (เปลี่ยน branchId ก็ยังได้ค่าเดิม)
+    // จึงผ่าน null ก่อนเพื่อบังคับให้ค่าใหม่ถูกเก็บและ listener ถูกเรียก (listener ที่ไม่สน null ข้ามเอง)
+    if (_currentUser.value == user) _currentUser.value = null;
+    _currentUser.value = user;
+  }
 
   Future<void> end() async {
     _socket.disconnect();

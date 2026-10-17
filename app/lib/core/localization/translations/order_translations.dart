@@ -3,6 +3,7 @@
 
 /// คำแปลของฟีเจอร์ order
 const Map<String, String> orderTranslationsTh = {
+  'order_error_station_closed': 'สถานี "@station" ปิดอยู่ สั่ง "@name" ไม่ได้',
   // ป้ายเรียกใช้ร่วมกันหลายจุด
   'order_table_prefix': 'โต๊ะ @table',
   'order_number_prefix': 'ออเดอร์ #@id',
@@ -184,6 +185,8 @@ const Map<String, String> orderTranslationsTh = {
 };
 
 const Map<String, String> orderTranslationsEn = {
+  'order_error_station_closed':
+      '"@station" is closed — "@name" can\'t be ordered right now',
   'order_table_prefix': 'Table @table',
   'order_number_prefix': 'Order #@id',
   'order_remove_item': 'Remove item',
@@ -354,6 +357,8 @@ const Map<String, String> orderTranslationsEn = {
 };
 
 const Map<String, String> orderTranslationsKo = {
+  'order_error_station_closed':
+      '"@station"이(가) 닫혀 있어 "@name"을(를) 지금 주문할 수 없습니다',
   'order_table_prefix': '테이블 @table',
   'order_number_prefix': '주문 #@id',
   'order_remove_item': '메뉴 삭제',

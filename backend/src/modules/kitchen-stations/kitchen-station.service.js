@@ -4,7 +4,16 @@
 import { ApiError } from '../../core/ApiError.js';
 import { getDb } from '../../db/index.js';
 import { kitchenStationRepository } from './kitchen-station.repository.js';
-import { toKitchenStationDto } from './kitchen-station.mapper.js';
+import { emit, EVENTS, ROOMS } from '../../realtime/socket.js';
+import { auditLogService } from '../audit-logs/audit-log.service.js';
+import { toKitchenStationDto, toStationStatusDto } from './kitchen-station.mapper.js';
+
+/** คีย์ของคู่ (สาขา, สถานี) ในชุดสถานีที่ปิดอยู่ */
+export const closureKey = (branchId, stationId) => `${branchId}:${stationId}`;
+
+const requireBranch = (branchId) => {
+  if (!branchId) throw ApiError.badRequest('เลือกสาขาก่อนดูหรือเปลี่ยนสถานะสถานีครัว');
+};
 
 export const kitchenStationService = {
   list(filters) {
@@ -53,6 +62,85 @@ export const kitchenStationService = {
     const station = stationId ? kitchenStationRepository.findById(stationId) : null;
     const resolved = station ?? this.defaultStation();
     return { id: resolved.id, name: resolved.name };
+  },
+
+  /** สถานีนี้ปิดอยู่ที่สาขานี้หรือไม่ (ticket 36) — ไม่มีสาขา (ข้อมูลเก่า) ถือว่าเปิด */
+  isClosed(branchId, stationId) {
+    if (!branchId || !stationId) return false;
+    return Boolean(kitchenStationRepository.findClosure(branchId, stationId));
+  },
+
+  /**
+   * ฟังก์ชันตัดสิน "สถานีที่ปิดอยู่ของจานนี้" สำหรับรายการเมนูทั้งก้อน — อ่านตารางปิดครั้งเดียว
+   * แล้วตัดสินทีละแถวด้วยกฎเมนู → หมวดหมู่ → ค่าเริ่มต้น เทียบกับสาขาของจานเอง (admin โหมดทุกสาขา
+   * จึงเห็นสถานะของแต่ละสาขาถูกต้อง) คืน null เมื่อสถานีเปิดอยู่
+   */
+  closedStationLookup() {
+    const closed = new Set(
+      kitchenStationRepository
+        .findClosures()
+        .map((row) => closureKey(row.branch_id, row.station_id)),
+    );
+    if (closed.size === 0) return () => null;
+    const defaultId = this.defaultStation().id;
+    const stations = new Map(kitchenStationRepository.findAllBasic().map((row) => [row.id, row]));
+    return (menuRow) => {
+      const stationId = menuRow.station_id ?? menuRow.category_station_id ?? defaultId;
+      if (!closed.has(closureKey(menuRow.branch_id, stationId))) return null;
+      const station = stations.get(stationId);
+      return {
+        id: station.id,
+        name: station.name,
+        nameEn: station.name_en,
+        nameKo: station.name_ko,
+      };
+    };
+  },
+
+  listStatus(branchId) {
+    requireBranch(branchId);
+    return kitchenStationRepository.findStatuses(branchId).map(toStationStatusDto);
+  },
+
+  /**
+   * ปิด/เปิดสถานีที่สาขาปัจจุบัน — idempotent: สถานะเดิมอยู่แล้วตอบ 200 โดยไม่ลง audit และไม่ส่ง event
+   * รายการที่อยู่ในคิวแล้วไม่ถูกแตะ ครัวทำต่อจนเสร็จ (ticket 36)
+   */
+  setClosed(id, closed, { branchId, user }) {
+    requireBranch(branchId);
+    const before = kitchenStationRepository.findStatus(branchId, id);
+    if (!before) throw ApiError.notFound('ไม่พบสถานีครัวนี้');
+
+    const changed = getDb().transaction(() => {
+      const didChange = closed
+        ? kitchenStationRepository.close(branchId, id, user)
+        : kitchenStationRepository.open(branchId, id);
+      if (didChange) {
+        const pending = before.pending_count ?? 0;
+        auditLogService.log({
+          actorUser: user,
+          action: closed ? 'kitchen_station.close' : 'kitchen_station.open',
+          summaryArgs: { station: before.name, pending },
+          entityType: 'kitchen_station',
+          entityId: id,
+          summary: closed
+            ? `ปิดสถานี ${before.name} (ค้างในครัว ${pending} รายการ)`
+            : `เปิดสถานี ${before.name}`,
+          metadata: { branchId, stationCode: before.code, pending },
+        });
+      }
+      return didChange;
+    })();
+
+    const status = toStationStatusDto(kitchenStationRepository.findStatus(branchId, id));
+    if (changed) {
+      emit(EVENTS.STATION_STATUS, { branchId, ...status }, [
+        ROOMS.KITCHEN,
+        ROOMS.SERVICE,
+        ROOMS.MANAGEMENT,
+      ]);
+    }
+    return status;
   },
 
   create(payload) {

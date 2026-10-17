@@ -348,6 +348,92 @@ extension DemoStoreMenu on DemoStore {
     );
   }
 
+  /// สถานีนี้ปิดอยู่จริงไหม — มีแถวปิด และสถานียังเปิดใช้งาน (ปิดใช้งานแล้วแถวปิดค้างไม่มีผล)
+  bool isStationClosed(Object? stationId) {
+    if (!stationClosures.containsKey(stationId)) return false;
+    final station = kitchenStations.where((row) => row['id'] == stationId);
+    return station.isEmpty || station.first['isActive'] != false;
+  }
+
+  /// สถานีที่ปิดอยู่ของจานนี้ (ticket 36) — mirror ของ kitchenStationService.closedStationLookup
+  /// สถานีที่ถูกปิดใช้งานไม่นับ แม้ยังมีแถวปิดค้าง
+  Map<String, dynamic>? closedStationFor(Map<String, dynamic> menu) {
+    final station = resolveStationFor(menu);
+    if (!isStationClosed(station['id'])) return null;
+    return {
+      'id': station['id'],
+      'name': station['name'],
+      'nameEn': station['nameEn'],
+      'nameKo': station['nameKo'],
+    };
+  }
+
+  List<Map<String, dynamic>> stationStatusList() => [
+    for (final station in kitchenStationList(activeOnly: true))
+      {
+        'stationId': station['id'],
+        'code': station['code'],
+        'name': station['name'],
+        'nameEn': station['nameEn'],
+        'nameKo': station['nameKo'],
+        'icon': station['icon'],
+        'isClosed': stationClosures.containsKey(station['id']),
+        'closedAt': stationClosures[station['id']]?['closedAt'],
+        'closedByName': stationClosures[station['id']]?['closedByName'],
+        'pendingCount': kitchenQueue(const ['pending', 'cooking'])
+            .where(
+              (item) =>
+                  (item['stationId'] ?? defaultStation()['id']) ==
+                  station['id'],
+            )
+            .length,
+      },
+  ];
+
+  /// mirror ของ kitchenStationService.setClosed — ครัว/ผู้จัดการ/แอดมินเท่านั้น, ปิดซ้ำได้
+  Map<String, dynamic> setStationClosed(int id, bool closed, {int? actorId}) {
+    final role = _actorRole(actorId);
+    if (role != null &&
+        role != UserRole.admin &&
+        role != UserRole.manager &&
+        role != UserRole.kitchen) {
+      throw ApiException(message: 'error_forbidden'.tr, statusCode: 403);
+    }
+    final station = kitchenStations.firstWhere(
+      (row) => row['id'] == id && row['isActive'] != false,
+      orElse: () => throw ApiException(
+        message: 'menu_station_not_found_error'.tr,
+        statusCode: 404,
+      ),
+    );
+    final wasClosed = stationClosures.containsKey(id);
+    if (closed && !wasClosed) {
+      stationClosures[id] = {
+        'closedAt': AppClock.now().toUtc().toIso8601String(),
+        'closedByName': actorId == null ? null : _findUser(actorId)['name'],
+      };
+    } else if (!closed && wasClosed) {
+      stationClosures.remove(id);
+    }
+    if (closed != wasClosed) {
+      final pending = stationStatusList().firstWhere(
+        (row) => row['stationId'] == id,
+      )['pendingCount'];
+      _logAudit(
+        actorId: actorId,
+        action: closed ? 'kitchen_station.close' : 'kitchen_station.open',
+        summaryArgs: {'station': station['name'], 'pending': pending},
+        entityType: 'kitchen_station',
+        entityId: id,
+        summary: closed
+            ? 'ปิดสถานี ${station['name']} (ค้างในครัว $pending รายการ)'
+            : 'เปิดสถานี ${station['name']}',
+        metadata: {'stationCode': station['code'], 'pending': pending},
+      );
+    }
+    return stationStatusList().firstWhere((row) => row['stationId'] == id);
+  }
+
   /// `itemCount` นับจานที่ตกลงสถานีนี้จริงตามกฎการตัดสิน ไม่ใช่แค่จานที่ผูกตรง ๆ
   List<Map<String, dynamic>> kitchenStationList({bool activeOnly = false}) =>
       kitchenStations

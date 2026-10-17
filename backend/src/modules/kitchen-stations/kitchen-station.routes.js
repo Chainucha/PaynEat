@@ -14,6 +14,7 @@ import {
 
 const router = Router();
 const manager = authorize('admin', 'manager');
+const operator = authorize('admin', 'manager', 'kitchen');
 
 // อ่านได้ทุกบทบาทที่ล็อกอิน — จอครัวต้องอ่านรายการสถานีมาทำชิปกรอง
 router.get(
@@ -21,6 +22,24 @@ router.get(
   authenticate,
   validate({ query: listKitchenStationQuerySchema }),
   kitchenStationController.list,
+);
+// สถานะเปิด/ปิดรายสาขา (ticket 36) — ต้องอยู่ก่อน '/:id' ไม่งั้น "status" ถูกตีเป็น id แล้วได้ 422
+// อ่านได้ทุกบทบาท (แบนเนอร์ "บาร์ปิดตั้งแต่ ... โดย ..." บนหน้าสั่งอาหารของพนักงานเสิร์ฟ) แต่ปิด/เปิด
+// ได้เฉพาะครัว/ผู้จัดการ/แอดมิน — ครัวปิดได้ทุกสถานีในสาขาของตัวเอง ไม่จำกัดเฉพาะสถานีที่ผูก (#98)
+router.get('/status', authenticate, kitchenStationController.status);
+router.post(
+  '/:id/close',
+  authenticate,
+  operator,
+  validate({ params: idParamSchema }),
+  kitchenStationController.close,
+);
+router.post(
+  '/:id/open',
+  authenticate,
+  operator,
+  validate({ params: idParamSchema }),
+  kitchenStationController.open,
 );
 router.get(
   '/:id',

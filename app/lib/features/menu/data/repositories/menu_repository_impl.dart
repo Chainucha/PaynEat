@@ -6,6 +6,7 @@ import '../../../../core/usecases/result.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/kitchen_station.dart';
 import '../../domain/entities/menu_item.dart';
+import '../../domain/entities/station_status.dart';
 import '../../domain/repositories/menu_repository.dart';
 import '../datasources/menu_remote_data_source.dart';
 import '../models/category_model.dart';
@@ -90,6 +91,18 @@ class MenuRepositoryImpl implements MenuRepository {
   @override
   Future<Result<void>> deleteKitchenStation(int id) =>
       guard(() => _remote.deleteKitchenStation(id));
+
+  @override
+  Future<Result<List<StationStatus>>> getStationStatuses() =>
+      guard(() async => await _remote.getStationStatuses());
+
+  @override
+  Future<Result<StationStatus>> setStationClosed(
+    int stationId, {
+    required bool closed,
+  }) => guard(
+    () async => await _remote.setStationClosed(stationId, closed: closed),
+  );
 
   @override
   Future<Result<List<MenuItem>>> getMenuItems({

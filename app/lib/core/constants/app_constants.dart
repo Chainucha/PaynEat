@@ -27,6 +27,10 @@ class UserRole {
 
   static bool isManagement(String role) => role == admin || role == manager;
 
+  /// เปิด/ปิดสถานีครัวรายสาขาได้ (ticket 36) — mirror ของ authorize('admin', 'manager', 'kitchen')
+  static bool canToggleStations(String role) =>
+      role == admin || role == manager || role == kitchen;
+
   /// บัญชีที่ผู้จัดการจัดการได้ — ผู้จัดการและแอดมินเป็นของแอดมินเท่านั้น
   /// (mirror ของ user.service.js STAFF_ROLES, T22 #86)
   static const List<String> staffRoles = [waiter, cashier, kitchen];
@@ -249,6 +253,7 @@ class StorageKeys {
   static const String locale = 'app_locale';
   static const String contrast = 'app_contrast';
   static const String kitchenStation = 'kitchen_station';
+  static const String kitchenChimeMuted = 'kitchen_chime_muted';
 }
 
 /// ชิปกรองสถานีบนจอครัว (ticket 34) — เก็บเป็น "รหัสสถานี" ต่อเครื่อง

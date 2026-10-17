@@ -12,6 +12,25 @@ export const kitchenStationController = {
   detail: asyncHandler(async (req, res) =>
     ok(res, kitchenStationService.getById(req.validated.params.id)),
   ),
+  status: asyncHandler(async (req, res) => ok(res, kitchenStationService.listStatus(req.branchId))),
+  close: asyncHandler(async (req, res) =>
+    ok(
+      res,
+      kitchenStationService.setClosed(req.validated.params.id, true, {
+        branchId: req.branchId,
+        user: req.user,
+      }),
+    ),
+  ),
+  open: asyncHandler(async (req, res) =>
+    ok(
+      res,
+      kitchenStationService.setClosed(req.validated.params.id, false, {
+        branchId: req.branchId,
+        user: req.user,
+      }),
+    ),
+  ),
   create: asyncHandler(async (req, res) => created(res, kitchenStationService.create(req.body))),
   update: asyncHandler(async (req, res) =>
     ok(res, kitchenStationService.update(req.validated.params.id, req.body)),

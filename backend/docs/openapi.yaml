@@ -242,7 +242,12 @@ components:
         nameEn: { type: string }
         description: { type: string }
         price: { type: number, example: 75 }
-        imageUrl: { type: string, nullable: true }
+        imageUrl:
+          type: string
+          nullable: true
+          description: >-
+            รูปที่อัปโหลดจากแอปได้เป็น path `/api/v1/public/menu-images/{id}?v=...` (โหลดรูปแยก ไม่ต้อง login)
+            ส่วน URL ภายนอกส่งตามเดิม — ส่ง path นี้กลับมาตอนแก้เมนู = ไม่เปลี่ยนรูป (DECISIONS #101)
         isAvailable: { type: boolean }
         isRecommended: { type: boolean }
         prepMinutes: { type: integer }
@@ -274,6 +279,17 @@ components:
           description: >-
             สถานีครัวของจานนี้ (ดู ticket 34) — null = ตามหมวดหมู่ ซึ่งถอยไปหาสถานีค่าเริ่มต้นถ้า
             หมวดหมู่ก็ไม่ได้กำหนดไว้ สถานีถูกตัดสินและประทับลงรายการตอนบันทึก ไม่ใช่ตอนอ่านคิวครัว
+        closedStation:
+          type: object
+          nullable: true
+          description: >-
+            สถานีของจานนี้ที่ปิดอยู่ในสาขาของจาน (ดู ticket 36) — null = เปิดอยู่ ส่งเฉพาะเมนูพนักงาน
+            เมนู QR ของลูกค้าไม่มีจานของสถานีที่ปิดเลย `isAvailable` ไม่ถูกแตะ
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            nameEn: { type: string, nullable: true }
+            nameKo: { type: string, nullable: true }
     PublicCategory:
       type: object
       description: หมวดหมู่ในเมนูฝั่งลูกค้า (ticket 17) — เฉพาะที่แถบหมวดหมู่หน้า QR ใช้ เรียงตาม sortOrder มาแล้ว
@@ -316,7 +332,12 @@ components:
         nameEn: { type: string, nullable: true }
         description: { type: string, nullable: true }
         price: { type: number, example: 75 }
-        imageUrl: { type: string, nullable: true }
+        imageUrl:
+          type: string
+          nullable: true
+          description: >-
+            รูปที่อัปโหลดจากแอปได้เป็น path `/api/v1/public/menu-images/{id}?v=...` (โหลดรูปแยก ไม่ต้อง login)
+            ส่วน URL ภายนอกส่งตามเดิม — ส่ง path นี้กลับมาตอนแก้เมนู = ไม่เปลี่ยนรูป (DECISIONS #101)
         isAvailable: { type: boolean }
         isRecommended: { type: boolean }
         optionGroups:
@@ -1052,6 +1073,40 @@ paths:
       responses:
         '201': { description: สร้างสำเร็จ }
         '409': { description: รหัสสถานีถูกใช้แล้ว }
+  /kitchen-stations/status:
+    get:
+      tags: [Kitchen stations]
+      summary: สถานะเปิด/ปิดของทุกสถานีที่เปิดใช้งานในสาขาปัจจุบัน (ทุกบทบาทที่ล็อกอิน) — ticket 36
+      responses:
+        '200': { description: 'สำเร็จ — [{ stationId, code, name, nameEn, nameKo, icon, isClosed, closedAt, closedByName, pendingCount }]' }
+        '400': { description: โหมดทุกสาขา — ต้องเลือกสาขาก่อน }
+
+  /kitchen-stations/{id}/close:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    post:
+      tags: [Kitchen stations]
+      summary: ปิดสถานีที่สาขาปัจจุบัน (admin/manager/kitchen) — จานของสถานีนี้สั่งไม่ได้จนกว่าจะเปิดคืน ปิดซ้ำได้ 200
+      responses:
+        '200': { description: สถานะหลังปิด }
+        '400': { description: โหมดทุกสาขา }
+        '401': { description: ยังไม่ได้ล็อกอิน }
+        '403': { description: บทบาทไม่มีสิทธิ์ (waiter/cashier) }
+        '404': { description: ไม่พบสถานี หรือสถานีถูกปิดใช้งาน }
+
+  /kitchen-stations/{id}/open:
+    parameters:
+      - { in: path, name: id, required: true, schema: { type: integer } }
+    post:
+      tags: [Kitchen stations]
+      summary: เปิดสถานีคืนที่สาขาปัจจุบัน (admin/manager/kitchen) — เปิดซ้ำได้ 200
+      responses:
+        '200': { description: สถานะหลังเปิด }
+        '400': { description: โหมดทุกสาขา }
+        '401': { description: ยังไม่ได้ล็อกอิน }
+        '403': { description: บทบาทไม่มีสิทธิ์ (waiter/cashier) }
+        '404': { description: ไม่พบสถานี หรือสถานีถูกปิดใช้งาน }
+
   /kitchen-stations/{id}:
     parameters:
       - in: path
@@ -1402,7 +1457,9 @@ paths:
                   success: { type: boolean }
                   data: { $ref: '#/components/schemas/Order' }
         '409':
-          description: โต๊ะนี้มีออเดอร์เปิดอยู่แล้ว
+          description: >-
+            โต๊ะนี้มีออเดอร์เปิดอยู่แล้ว หรือสถานีของจานปิดอยู่ (ticket 36 — ข้อความบอกชื่อสถานีและจาน
+            ไม่มีอะไรถูกบันทึก)
   /orders/kitchen/queue:
     get:
       tags: [Orders]
@@ -1461,6 +1518,7 @@ paths:
       summary: เพิ่มรายการอาหาร (สั่งเพิ่มรอบสอง)
       responses:
         '201': { description: เพิ่มสำเร็จ }
+        '409': { description: 'สถานีของจานปิดอยู่ (ticket 36) — ไม่มีรายการใดถูกเพิ่ม ข้อความบอกชื่อสถานีและจาน' }
   /orders/{id}/items/{itemId}:
     parameters:
       - { in: path, name: id, required: true, schema: { type: integer } }
@@ -1502,6 +1560,7 @@ paths:
       summary: ส่งออเดอร์เข้าครัว (ยิง event `kitchen:ticket`)
       responses:
         '200': { description: สำเร็จ }
+        '409': { description: 'บิลที่บันทึกไว้ (open) มีจานของสถานีที่ปิดอยู่ (ticket 36) — ยังส่งไม่ได้ บิลคงเป็น open; รายการเก่าที่ไม่มีสถานีถือเป็นสถานีค่าเริ่มต้น' }
   /orders/{id}/discount:
     parameters:
       - in: path
@@ -2864,6 +2923,30 @@ paths:
                           maxQuantityPerLine: { type: integer, example: 10 }
                           maxOrderQuantity: { type: integer, example: 60 }
         '404': { description: ไม่พบโต๊ะนี้ / โต๊ะหรือสาขาปิดใช้งานอยู่ }
+  /public/menu-images/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer }
+      - in: query
+        name: v
+        required: false
+        description: เวอร์ชันของรูปตามที่รายการเมนูให้มา — ตรงรูปปัจจุบันได้ cache 1 ปี ไม่ตรงได้ no-cache
+        schema: { type: string }
+    get:
+      tags: [PublicOrder]
+      summary: รูปเมนูที่อัปโหลดไว้ (DECISIONS #101) — ไม่ต้อง login เสิร์ฟเฉพาะ JPEG/PNG/WebP/GIF
+      security: []
+      responses:
+        '200':
+          description: ไบต์ของรูป
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+            image/gif: { schema: { type: string, format: binary } }
+        '404': { description: ไม่พบเมนู หรือเมนูนี้ไม่มีรูปที่อัปโหลดไว้ }
   /public/tables/{qrToken}/items:
     parameters:
       - in: path

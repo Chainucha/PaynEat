@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import '../../../ingredient/data/models/ingredient_model.dart';
+import '../../domain/entities/closed_station.dart';
 import '../../domain/entities/menu_item.dart';
 import '../../domain/entities/menu_option.dart';
 
@@ -67,6 +68,7 @@ class MenuItemModel extends MenuItem {
     super.barcode,
     super.scalePlu,
     super.stationId,
+    super.closedStation,
   });
 
   factory MenuItemModel.fromJson(Map<String, dynamic> json) => MenuItemModel(
@@ -87,6 +89,9 @@ class MenuItemModel extends MenuItem {
     barcode: json['barcode'] as String?,
     scalePlu: json['scalePlu'] as String?,
     stationId: (json['stationId'] as num?)?.toInt(),
+    closedStation: json['closedStation'] is Map<String, dynamic>
+        ? ClosedStation.fromJson(json['closedStation'] as Map<String, dynamic>)
+        : null,
     optionGroups: (json['optionGroups'] as List? ?? const [])
         .whereType<Map<String, dynamic>>()
         .map(MenuOptionGroupModel.fromJson)

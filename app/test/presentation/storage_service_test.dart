@@ -63,4 +63,14 @@ void main() {
       },
     );
   });
+
+  test('ปิดเสียงจอครัวจำต่อเครื่อง ไม่ถูกล้างตอน logout (ticket 37)', () async {
+    final storage = StorageService.memory();
+    expect(storage.kitchenChimeMuted, isFalse);
+
+    await storage.saveKitchenChimeMuted(true);
+    await storage.clear();
+
+    expect(storage.kitchenChimeMuted, isTrue);
+  });
 }

@@ -1,0 +1,4 @@
+# credential ของ tunnel และ route ที่มีโดเมนจริงของร้าน — อยู่บนเครื่องเซิร์ฟเวอร์เท่านั้น
+*
+!.gitignore
+!config.example.yml
